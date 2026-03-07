@@ -29,6 +29,8 @@ import { useCurrency } from '../../context/CurrencyContext';
 import { formatCurrency } from '../../utils/formatters';
 import Markdown from 'react-native-markdown-display';
 import { useProfile } from '../../context/ProfileContext';
+import { useSubscription } from '../../context/SubscriptionContext';
+import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
@@ -67,6 +69,8 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
   const { colors } = useTheme();
   const { currencySymbol } = useCurrency();
   const { profile } = useProfile();
+  const { isPremium } = useSubscription();
+  const navigation = useNavigation();
   const [exportingPDF, setExportingPDF] = useState(false);
 
   // Finansal Sağlık Skoru Hesaplama (0-100)
@@ -110,6 +114,22 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
 
   // PDF Export Fonksiyonu
   const handleExportPDF = async () => {
+    if (!isPremium) {
+      Alert.alert(
+        'Premium Özellik',
+        'Bu özellik sadece Premium abonelerimize özeldir. Devam etmek için lütfen abone olun.',
+        [
+          { text: 'İptal', style: 'cancel' },
+          { text: 'Abone Ol', onPress: () => {
+              onClose(); // Close the modal before navigating
+              navigation.navigate('Paywall');
+            }
+          },
+        ]
+      );
+      return;
+    }
+
     if (!reportData) {
       Alert.alert('Hata', 'Rapor verisi bulunamadı.');
       return;
@@ -350,7 +370,7 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
               <div class="category-desc">Nakit akışı ve ödeme gücü</div>
             </div>
             <div class="category-card">
-              <div class="category-title">🛡️ Borçlanma</div>
+              <div class="category-title">🛡️ Borç Yönetimi</div>
               <div class="category-score">${Math.round(debtScore)}/100</div>
               <div class="category-desc">Borç yönetimi kalitesi</div>
             </div>
@@ -360,7 +380,7 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
               <div class="category-desc">Net varlık değeri</div>
             </div>
             <div class="category-card">
-              <div class="category-title">🎯 Taksit Yükü</div>
+              <div class="category-title">🎯 Taksit Yönetimi</div>
               <div class="category-score">${Math.round(installmentScore)}/100</div>
               <div class="category-desc">Aylık taksit oranı</div>
             </div>
@@ -450,17 +470,17 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
   // Kategori skorları
   const liquidityScore = metrics.totalLiabilities > 0
     ? Math.min(100, (metrics.safeToSpend / metrics.totalLiabilities) * 100)
-    : 100;
+    : (metrics.safeToSpend > 0 ? 100 : 0);
 
   const debtScore = metrics.totalAssets > 0
     ? Math.max(0, 100 - (metrics.totalLiabilities / metrics.totalAssets) * 100)
-    : 50;
+    : (metrics.totalLiabilities > 0 ? 0 : 100);
 
   const assetScore = metrics.netWorth > 0 ? Math.min(100, (metrics.netWorth / 10000) * 100) : 0;
 
   const installmentScore = metrics.totalAssets > 0
     ? Math.max(0, 100 - (metrics.totalInstallments / metrics.totalAssets) * 100)
-    : 50;
+    : (metrics.totalInstallments > 0 ? 0 : 100);
 
   const CategoryCard = ({
     title,
@@ -599,7 +619,7 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
                 description="Nakit akışı ve ödeme gücü"
               />
               <CategoryCard
-                title="Borçlanma"
+                title="Borç Yönetimi"
                 score={debtScore}
                 icon={Shield}
                 color={debtScore > 60 ? colors.success : colors.error}
@@ -613,7 +633,7 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
                 description="Net varlık değeri"
               />
               <CategoryCard
-                title="Taksit Yükü"
+                title="Taksit Yönetimi"
                 score={installmentScore}
                 icon={Target}
                 color={installmentScore > 70 ? colors.success : '#F59E0B'}

@@ -12,8 +12,9 @@ import {
   ActivityIndicator,
   Keyboard,
 } from 'react-native';
-import { Send, Bot, Trash2, AlertCircle, WifiOff, Key } from 'lucide-react-native';
+import { Send, Bot, Trash2, AlertCircle, WifiOff, Key, Sparkles } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import Markdown from 'react-native-markdown-display';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
@@ -269,24 +270,46 @@ Yeni bir konuşma başlatalım. **Ne öğrenmek istersin?**`,
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.cardBackground }]}>
-        <View style={styles.headerLeft}>
-          <View style={[styles.botIcon, { backgroundColor: colors.purple.primary }]}>
-            <Bot size={24} color="#FFFFFF" strokeWidth={2.5} />
+      {/* Header with Dashboard Style Gradient */}
+      <View style={styles.modernHeader}>
+        <LinearGradient
+          colors={['#FF0080', '#7928CA', '#0070F3', '#00DFD8']}
+          style={styles.headerGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.decorativePattern}>
+            <View style={styles.patternCircle1} />
+            <View style={styles.patternCircle2} />
+            <View style={styles.patternCircle3} />
           </View>
-          <View>
-            <Text style={[styles.headerTitle, { color: colors.text.primary }]}>
-              AI Finansal Danışman
-            </Text>
-            <Text style={[styles.headerSubtitle, { color: colors.text.tertiary }]}>
-              Gemini Destekli
-            </Text>
+          <View style={styles.headerContent}>
+            <View style={styles.headerLeft}>
+              <View style={styles.botIconContainer}>
+                <View style={styles.botIconInner}>
+                  <Bot size={24} color="#7928CA" strokeWidth={2.5} />
+                </View>
+                <View style={styles.onlineBadge} />
+              </View>
+              <View>
+                <View style={styles.titleRow}>
+                  <Text style={styles.headerTitle}>AI Finansal Danışman</Text>
+                  <Sparkles size={14} color="rgba(255, 255, 255, 0.8)" strokeWidth={2.5} />
+                </View>
+                <Text style={styles.headerSubtitle}>Gemini & Groq Destekli</Text>
+              </View>
+            </View>
+            <TouchableOpacity 
+              onPress={handleClearChat} 
+              style={styles.clearButton}
+              activeOpacity={0.7}
+            >
+              <View style={styles.clearButtonInner}>
+                <Trash2 size={20} color="#FFFFFF" strokeWidth={2} />
+              </View>
+            </TouchableOpacity>
           </View>
-        </View>
-        <TouchableOpacity onPress={handleClearChat} style={styles.clearButton}>
-          <Trash2 size={20} color={colors.text.secondary} strokeWidth={2} />
-        </TouchableOpacity>
+        </LinearGradient>
       </View>
 
       {/* Messages */}
@@ -390,41 +413,127 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
+  modernHeader: {
+    overflow: 'hidden',
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    shadowColor: '#7928CA',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    elevation: 15,
+  },
+  headerGradient: {
+    paddingTop: 60,
+    paddingBottom: 24,
+    paddingHorizontal: 20,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  decorativePattern: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  patternCircle1: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    top: -80,
+    right: -60,
+  },
+  patternCircle2: {
+    position: 'absolute',
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    bottom: -50,
+    left: -40,
+  },
+  patternCircle3: {
+    position: 'absolute',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    top: 50,
+    left: '40%',
+  },
+  headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    paddingTop: 60,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
+    zIndex: 10,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 14,
   },
-  botIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  botIconContainer: {
+    position: 'relative',
+  },
+  botIconInner: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+  },
+  onlineBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#22C55E',
+    borderWidth: 2.5,
+    borderColor: '#FFFFFF',
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   headerTitle: {
-    fontSize: 16,
-    fontWeight: '800',
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
   },
   headerSubtitle: {
     fontSize: 12,
-    marginTop: 2,
+    color: 'rgba(255, 255, 255, 0.85)',
+    fontWeight: '700',
+    marginTop: 1,
+    letterSpacing: 0.2,
   },
   clearButton: {
-    padding: 8,
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  clearButtonInner: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   messagesContainer: {
     flex: 1,

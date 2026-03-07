@@ -24,10 +24,18 @@ export const FinancialCharts: React.FC<FinancialChartsProps> = ({
   const { currencySymbol } = useCurrency();
 
   // Yüzdeler
-  const assetPercentage = totalAssets > 0 ? (totalAssets / (totalAssets + totalLiabilities)) * 100 : 50;
-  const liabilityPercentage = 100 - assetPercentage;
-  const debtRatio = totalAssets > 0 ? (totalLiabilities / totalAssets) * 100 : 0;
-  const liquidityRatio = totalLiabilities > 0 ? ((totalAssets - totalLiabilities) / totalLiabilities) * 100 : 100;
+  const totalCombined = totalAssets + totalLiabilities;
+  // Varlık/Borç dağılımı için: Eğer toplam 0 ise, grafikte 50/50 göster, değilse oranı hesapla.
+  const assetPercentage = totalCombined > 0 ? (totalAssets / totalCombined) * 100 : 50;
+  const liabilityPercentage = totalCombined > 0 ? (totalLiabilities / totalCombined) * 100 : 50;
+
+  // Borç/Varlık Oranı: Varlık 0 ise ve borç varsa, oran "sonsuz" kabul edilir. Arayüzde %100 veya daha yüksek bir tavanla gösterilebilir.
+  // Varlık ve borç 0 ise, oran 0'dır.
+  const debtRatio = totalAssets > 0 ? (totalLiabilities / totalAssets) * 100 : (totalLiabilities > 0 ? 100 : 0);
+
+  // Likidite Oranı (Cari Oran benzeri): Borç 0 ise, likidite "sonsuz" kabul edilir.
+  // Varlık varsa yüksek bir yüzde (örn. %1000) gösterilir, varlık da yoksa 0'dır.
+  const liquidityRatio = totalLiabilities > 0 ? (totalAssets / totalLiabilities) * 100 : (totalAssets > 0 ? 1000 : 0);
 
   return (
     <View style={styles.container}>

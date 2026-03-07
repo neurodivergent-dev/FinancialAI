@@ -7,10 +7,9 @@ import {
   TouchableOpacity,
   TextInput,
   Image,
-  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import { useProfile } from '../context/ProfileContext';
 import { useCustomAlert } from '../hooks/useCustomAlert';
@@ -18,10 +17,10 @@ import { useAuth } from '../hooks/useAuth';
 import { ArrowLeft, User, Mail, Phone, Camera, Save, Scale, Banknote, TrendingUp } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useCurrency } from '../context/CurrencyContext';
-import { gradients } from '../theme/colors';
 
 export const ProfileSettingsScreen = ({ navigation }: any) => {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const { profile, updateProfile } = useProfile();
   const { user } = useAuth();
   const { showAlert, AlertComponent } = useCustomAlert();
@@ -112,28 +111,36 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
-      <LinearGradient
-        colors={gradients.purple}
-        style={styles.headerGradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <View style={styles.backButtonCircle}>
-              <ArrowLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Modern Header with Dashboard Style Gradient - Edge to Edge */}
+      <View style={styles.modernHeader}>
+        <LinearGradient
+          colors={['#FF0080', '#7928CA', '#0070F3', '#00DFD8']}
+          style={[styles.headerGradient, { paddingTop: insets.top }]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.decorativePattern}>
+            <View style={styles.patternCircle1} />
+            <View style={styles.patternCircle2} />
+            <View style={styles.patternCircle3} />
+          </View>
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+              <View style={styles.backButtonCircle}>
+                <ArrowLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
+              </View>
+            </TouchableOpacity>
+            <View style={styles.headerTextContainer}>
+              <Text style={styles.subtitle}>Kullanıcı</Text>
+              <Text style={styles.screenTitle}>Profil Ayarları</Text>
             </View>
-          </TouchableOpacity>
-          <View style={styles.headerTextContainer}>
-            <Text style={styles.subtitle}>Kullanıcı</Text>
-            <Text style={styles.screenTitle}>Profil Ayarları</Text>
+            <View style={styles.headerIcon}>
+              <User size={22} color="#FFFFFF" strokeWidth={2} />
+            </View>
           </View>
-          <View style={styles.headerIcon}>
-            <User size={22} color="#FFFFFF" strokeWidth={2} />
-          </View>
-        </View>
-      </LinearGradient>
+        </LinearGradient>
+      </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Profile Image */}
@@ -157,7 +164,6 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
 
         {/* Form Fields */}
         <View style={styles.form}>
-          {/* Name */}
           <View style={styles.section}>
             <Text style={[styles.label, { color: colors.text.primary }]}>İsim</Text>
             <View style={[styles.inputContainer, { backgroundColor: colors.cardBackground }]}>
@@ -172,7 +178,6 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
             </View>
           </View>
 
-          {/* Email */}
           <View style={styles.section}>
             <View style={styles.labelRow}>
               <Text style={[styles.label, { color: colors.text.primary }]}>E-posta</Text>
@@ -194,7 +199,6 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
             </View>
           </View>
 
-          {/* Phone */}
           <View style={styles.section}>
             <Text style={[styles.label, { color: colors.text.primary }]}>Telefon</Text>
             <View style={[styles.inputContainer, { backgroundColor: colors.cardBackground }]}>
@@ -210,7 +214,6 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
             </View>
           </View>
 
-          {/* Findeks Score */}
           <View style={styles.section}>
             <Text style={[styles.label, { color: colors.text.primary }]}>Findeks Puanı</Text>
             <View style={[styles.inputContainer, { backgroundColor: colors.cardBackground }]}>
@@ -226,7 +229,6 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
             </View>
           </View>
 
-          {/* Salary */}
           <View style={styles.section}>
             <Text style={[styles.label, { color: colors.text.primary }]}>Maaş</Text>
             <View style={[styles.inputContainer, { backgroundColor: colors.cardBackground }]}>
@@ -243,7 +245,6 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
             </View>
           </View>
 
-          {/* Additional Income */}
           <View style={styles.section}>
             <Text style={[styles.label, { color: colors.text.primary }]}>Ek Gelir</Text>
             <View style={[styles.inputContainer, { backgroundColor: colors.cardBackground }]}>
@@ -262,12 +263,11 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
         </View>
       </ScrollView>
 
-      {/* Save Button */}
       {hasChanges && (
-        <View style={[styles.saveButtonContainer, { backgroundColor: colors.background, paddingBottom: 20 }]}>
+        <View style={[styles.saveButtonContainer, { backgroundColor: colors.background, paddingBottom: insets.bottom + 16 }]}>
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
             <LinearGradient
-              colors={[colors.purple.primary, colors.purple.secondary]}
+              colors={['#9333EA', '#7C3AED']}
               style={styles.saveButtonGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -279,9 +279,8 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
         </View>
       )}
 
-      {/* Custom Alert */}
       {AlertComponent}
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -290,20 +289,62 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   // Header Styles
-  headerGradient: {
-    shadowColor: '#9333EA',
-    shadowOffset: { width: 0, height: 6 },
+  modernHeader: {
+    overflow: 'hidden',
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    shadowColor: '#7928CA',
+    shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowRadius: 15,
+    elevation: 10,
+  },
+  headerGradient: {
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  decorativePattern: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  patternCircle1: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    top: -80,
+    right: -60,
+  },
+  patternCircle2: {
+    position: 'absolute',
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    bottom: -50,
+    left: -40,
+  },
+  patternCircle3: {
+    position: 'absolute',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    top: 50,
+    left: '40%',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 16,
+    paddingTop: 16,
+    paddingBottom: 24,
     justifyContent: 'space-between',
+    zIndex: 10,
   },
   backButton: {
     marginRight: 8,
@@ -311,8 +352,6 @@ const styles = StyleSheet.create({
   backButtonCircle: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -337,8 +376,6 @@ const styles = StyleSheet.create({
   headerIcon: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -346,8 +383,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
   },
-
-  // Image Section
   imageSection: {
     alignItems: 'center',
     paddingVertical: 32,
@@ -384,11 +419,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: 'center',
   },
-
-  // Form
   form: {
     gap: 20,
-    paddingBottom: 100,
+    paddingBottom: 150,
   },
   section: {
     gap: 10,
@@ -427,8 +460,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     paddingVertical: 12,
   },
-
-  // Save Button
   saveButtonContainer: {
     position: 'absolute',
     bottom: 0,

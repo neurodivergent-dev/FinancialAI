@@ -11,7 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Info, Github, Mail, Bug, Heart, Code, Sparkles } from 'lucide-react-native';
 import { useTheme } from '../context/ThemeContext';
 import { gradients } from '../theme/colors';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface AboutScreenProps {
   onBack?: () => void;
@@ -19,17 +19,18 @@ interface AboutScreenProps {
 
 export const AboutScreen = ({ onBack }: AboutScreenProps) => {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const openLink = (url: string) => {
     Linking.openURL(url).catch(err => console.error('An error occurred', err));
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
-      {/* Modern Header with Gradient */}
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Modern Header with Gradient - Edge to Edge */}
       <LinearGradient
         colors={gradients.purple}
-        style={styles.headerGradient}
+        style={[styles.headerGradient, { paddingTop: insets.top }]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
@@ -49,7 +50,10 @@ export const AboutScreen = ({ onBack }: AboutScreenProps) => {
         </View>
       </LinearGradient>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 100 }]} 
+        showsVerticalScrollIndicator={false}
+      >
         {/* Hero Card */}
         <View style={styles.heroCardContainer}>
           <LinearGradient
@@ -185,7 +189,7 @@ export const AboutScreen = ({ onBack }: AboutScreenProps) => {
           © {new Date().getFullYear()} Financial AI. Tüm hakları saklıdır.
         </Text>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -196,18 +200,20 @@ const styles = StyleSheet.create({
 
   // Header Styles
   headerGradient: {
-    shadowColor: '#9333EA',
-    shadowOffset: { width: 0, height: 6 },
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    shadowColor: '#7928CA',
+    shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowRadius: 15,
+    elevation: 10,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 16,
+    paddingTop: 16,
+    paddingBottom: 24,
     justifyContent: 'space-between',
   },
   backButton: {
@@ -216,8 +222,6 @@ const styles = StyleSheet.create({
   backButtonCircle: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -242,8 +246,6 @@ const styles = StyleSheet.create({
   headerIcon: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },

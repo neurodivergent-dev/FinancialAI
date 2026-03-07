@@ -13,11 +13,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import Markdown from 'react-native-markdown-display';
+import { useNavigation } from "@react-navigation/native";
 import { useFinanceStore } from "../store/useFinanceStore";
 import { useTheme } from "../context/ThemeContext";
 import { useCurrency } from "../context/CurrencyContext";
 import { useApiKey } from "../context/ApiKeyContext";
 import { useProfile } from "../context/ProfileContext";
+import { useSubscription } from "../context/SubscriptionContext";
 import { gradients } from "../theme/colors";
 import { Wallet, TrendingUp, TrendingDown, PieChart, Sparkles, BarChart3, Lightbulb, Target, AlertCircle } from "lucide-react-native";
 import { geminiService } from "../services/geminiService";
@@ -26,6 +28,8 @@ import { FinancialCharts } from "../components/Charts/FinancialCharts";
 import { formatCurrency, formatNumber, formatPercentage, formatCurrencySmart } from "../utils/formatters";
 
 export const DashboardScreen = () => {
+  const navigation = useNavigation();
+  const { isPremium } = useSubscription();
   const [refreshing, setRefreshing] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
@@ -348,7 +352,7 @@ export const DashboardScreen = () => {
     // Markdown başlıklarını da destekleyecek şekilde daha esnek pattern
     const summaryMatch = rawText.match(/\*?\*?Yönetici Özeti:?\*?\*?\s*([\s\S]*?)(?=\*?\*?Finansal Sağlık Notu|\*?\*?Detaylı Analiz|\*?\*?Stratejik Öneriler|$)/i);
     const risksMatch = rawText.match(/\*?\*?Potansiyel Riskler:?\*?\*?\s*([\s\S]*?)(?=\*?\*?Stratejik Öneriler|\*?\*?Sonuç ve Genel|$)/i);
-    const actionsMatch = rawText.match(/\*?\*?Stratejik Öneriler:?\*?\*?\s*([\s\S]*?)(?=\*?\*?Potansiyel Riskler|\*?\*?Sonuç ve Genel|$)/i);
+    const actionsMatch = rawText.match(/\*?\*?Stratejik Öneriler:?\*?\*?\s*([\s\S]*?)(?=\*?\*?Potensiyel Riskler|\*?\*?Sonuç ve Genel|$)/i);
 
     const parseList = (text: string | undefined) => {
       if (!text) return [];
@@ -431,6 +435,10 @@ export const DashboardScreen = () => {
   };
   
   const handleAiAnalyze = async () => {
+    if (!isPremium) {
+      navigation.navigate('Paywall');
+      return;
+    }
     setAiLoading(true);
     setAiError(null);
     setAiResult(null);

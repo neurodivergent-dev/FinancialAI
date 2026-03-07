@@ -2,8 +2,8 @@ export const AI_CONFIG = {
   groq: {
     apiKey: process.env.EXPO_PUBLIC_GROQ_API_KEY || 'YOUR_GROQ_API_KEY_HERE',
     endpoint: 'https://api.groq.com/openai/v1/chat/completions',
-    model: 'llama-3.1-70b-versatile', // En iyi Türkçe model
-    fallbackModels: ['mixtral-8x7b-32768'],
+    model: 'moonshotai/kimi-k2-instruct-0905', // En iyi Türkçe model
+    fallbackModels: [],
     maxTokens: 8000,
   },
   gemini: {

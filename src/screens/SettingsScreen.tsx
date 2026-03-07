@@ -6,8 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
-  Alert,
-  Share,
   Platform,
   Image,
 } from 'react-native';
@@ -15,26 +13,34 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as Print from 'expo-print';
 import * as DocumentPicker from 'expo-document-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Moon, Sun, User, Bell, Download, Upload, Info, Trash2, DollarSign, Settings as SettingsIcon, ChevronRight, LogOut, Key } from 'lucide-react-native';
+import { Moon, Sun, User, Bell, Download, Upload, Info, Trash2, DollarSign, Settings as SettingsIcon, ChevronRight, LogOut, Key, BookOpen, Smartphone } from 'lucide-react-native';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { useProfile } from '../context/ProfileContext';
+import { useSubscription } from '../context/SubscriptionContext';
 import CurrencyModal from '../../components/CurrencyModal';
+import { ThemeSelectionCard } from '../components/ThemeSelectionCard';
 import { AboutScreen } from './AboutScreen';
 import { gradients } from '../theme/colors';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigation } from '@react-navigation/native';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { useCustomAlert } from '../hooks/useCustomAlert';
-import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context'; // Import useSafeAreaInsets and SafeAreaView
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
+
+import { useOnboardingStore } from '../store/useOnboardingStore';
 
 export const SettingsScreen = () => {
-  const { theme, toggleTheme, colors } = useTheme();
+  const { colors, isDarkMode, amoledEnabled, setAmoledEnabled } = useTheme();
+  const { resetOnboarding } = useOnboardingStore();
   const { currency, currencySymbol } = useCurrency();
   const { profile } = useProfile();
   const { isGuest, user, logout } = useAuth();
   const { showAlert, AlertComponent } = useCustomAlert();
+  const { toggleDebugPremium } = useSubscription();
+  const [tapCount, setTapCount] = useState(0);
   const {
     clearAllData,
     assets,
@@ -49,16 +55,26 @@ export const SettingsScreen = () => {
   const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const navigation = useNavigation();
-  const insets = useSafeAreaInsets(); // Get safe area insets
+  const insets = useSafeAreaInsets();
 
   const settingsOptions = [
     { id: '1', title: 'Profil Ayarları', icon: User },
     { id: '2', title: 'API Key Ayarları', icon: Key },
     { id: '3', title: 'Bildirimler', icon: Bell },
+    { id: '4', title: 'Onboarding\'i Tekrar Göster', icon: BookOpen },
     { id: '5', title: 'Verileri Dışa Aktar', icon: Download },
     { id: '6', title: 'Verileri İçe Aktar', icon: Upload },
     { id: '7', title: 'Hakkında', icon: Info },
   ];
+
+  const handleVersionTap = () => {
+    const newCount = tapCount + 1;
+    setTapCount(newCount);
+    if (newCount >= 7) {
+      toggleDebugPremium();
+      setTapCount(0);
+    }
+  };
 
   const handleLogout = () => {
     showAlert(
@@ -85,15 +101,24 @@ export const SettingsScreen = () => {
   const handleDeleteAllData = () => {
     showAlert(
       'Tüm Verileri Sil',
-      'Bu işlem geri alınamaz! Tüm varlıklarınız, borçlarınız, alacaklarınız ve taksitleriniz kalıcı olarak silinecek. Devam etmek istediğinizden emin misiniz?',
+      'Bu işlem geri alınamaz! Tüm varlıklarınız, borçlarınız, alacaklarınız ve taksitleriniz kalıcı olarak silinecek. Uygulama sıfırlanacak ve yeniden başlatılacaktır.',
       [
         { text: 'İptal', style: 'cancel' },
         {
-          text: 'Sil',
+          text: 'Sıfırla',
           style: 'destructive',
-          onPress: () => {
-            clearAllData();
-            showAlert('Başarılı', 'Tüm veriler silindi.', [], 'success');
+          onPress: async () => {
+            try {
+              clearAllData();
+              await resetOnboarding();
+              if (isGuest) {
+                await logout();
+              }
+              showAlert('Başarılı', 'Uygulama başarıyla sıfırlandı.', [], 'success');
+            } catch (error) {
+              console.error('Reset error:', error);
+              showAlert('Hata', 'Uygulama sıfırlanırken bir hata oluştu.', [], 'error');
+            }
           }
         }
       ],
@@ -101,9 +126,12 @@ export const SettingsScreen = () => {
     );
   };
 
+  const handleResetOnboarding = () => {
+    navigation.navigate('OnboardingModal' as never);
+  };
+
   const handleImportData = async () => {
     try {
-      // Pick a JSON file
       const result = await DocumentPicker.getDocumentAsync({
         type: 'application/json',
         copyToCacheDirectory: true,
@@ -113,17 +141,14 @@ export const SettingsScreen = () => {
         return;
       }
 
-      // Read the file content
       const fileContent = await FileSystem.readAsStringAsync(result.assets[0].uri);
       const importedData = JSON.parse(fileContent);
 
-      // Validate the data structure
       if (!importedData.data) {
         showAlert('Hata', 'Geçersiz dosya formatı. Lütfen Financial AI tarafından dışa aktarılan bir dosya seçin.', [], 'error');
         return;
       }
 
-      // Confirm import
       showAlert(
         'Verileri İçe Aktar',
         `Bu dosya ${importedData.exportDate ? new Date(importedData.exportDate).toLocaleDateString('tr-TR') : 'bilinmeyen bir tarihte'} dışa aktarılmış.\n\nMevcut tüm verileriniz silinecek ve dosyadaki verilerle değiştirilecek. Devam etmek istiyor musunuz?`,
@@ -134,10 +159,7 @@ export const SettingsScreen = () => {
             style: 'default',
             onPress: () => {
               try {
-                // Clear existing data
                 clearAllData();
-
-                // Import assets
                 if (importedData.data.assets && Array.isArray(importedData.data.assets)) {
                   importedData.data.assets.forEach((asset: any) => {
                     addAsset({
@@ -150,7 +172,6 @@ export const SettingsScreen = () => {
                   });
                 }
 
-                // Import liabilities
                 if (importedData.data.liabilities && Array.isArray(importedData.data.liabilities)) {
                   importedData.data.liabilities.forEach((liability: any) => {
                     addLiability({
@@ -165,7 +186,6 @@ export const SettingsScreen = () => {
                   });
                 }
 
-                // Import receivables
                 if (importedData.data.receivables && Array.isArray(importedData.data.receivables)) {
                   importedData.data.receivables.forEach((receivable: any) => {
                     addReceivable({
@@ -177,7 +197,6 @@ export const SettingsScreen = () => {
                   });
                 }
 
-                // Import installments
                 if (importedData.data.installments && Array.isArray(importedData.data.installments)) {
                   importedData.data.installments.forEach((installment: any) => {
                     addInstallment({
@@ -208,7 +227,6 @@ export const SettingsScreen = () => {
 
   const handleExportDataJSON = async () => {
     try {
-      // Prepare data for export
       const exportData = {
         exportDate: new Date().toISOString(),
         appVersion: '1.0.0',
@@ -229,12 +247,9 @@ export const SettingsScreen = () => {
 
       const jsonData = JSON.stringify(exportData, null, 2);
       const fileName = `FinancialAI_Export_${new Date().toISOString().split('T')[0]}.json`;
-
-      // Use legacy File API (simpler and more stable)
       const fileUri = `${FileSystem.documentDirectory}${fileName}`;
       await FileSystem.writeAsStringAsync(fileUri, jsonData);
 
-      // Share file
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(fileUri, {
           mimeType: 'application/json',
@@ -262,7 +277,6 @@ export const SettingsScreen = () => {
         day: 'numeric'
       });
 
-      // Create HTML for PDF
       const html = `
         <!DOCTYPE html>
         <html>
@@ -489,10 +503,8 @@ export const SettingsScreen = () => {
         </html>
       `;
 
-      // Generate PDF
       const { uri } = await Print.printToFileAsync({ html });
 
-      // Share PDF
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(uri, {
           mimeType: 'application/pdf',
@@ -517,7 +529,6 @@ export const SettingsScreen = () => {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Modern Header */}
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <View>
@@ -534,7 +545,6 @@ export const SettingsScreen = () => {
           </View>
         </View>
 
-        {/* Profile Card */}
         <View style={styles.profileCardContainer}>
           <LinearGradient
             colors={gradients.purple}
@@ -569,30 +579,31 @@ export const SettingsScreen = () => {
         {/* Appearance Section */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Görünüm</Text>
-
-          <View style={[styles.option, { backgroundColor: colors.cardBackground }]}>
-            <View style={styles.optionLeft}>
-              <View style={[styles.iconCircle, { backgroundColor: 'rgba(147, 51, 234, 0.15)' }]}>
-                {theme === 'dark' ? (
+          <ThemeSelectionCard />
+          
+          {isDarkMode && (
+            <View style={[styles.option, { backgroundColor: colors.cardBackground, marginTop: 12 }]}>
+              <View style={styles.optionLeft}>
+                <View style={[styles.iconCircle, { backgroundColor: 'rgba(147, 51, 234, 0.15)' }]}>
                   <Moon size={20} color={colors.purple.light} strokeWidth={2.5} />
-                ) : (
-                  <Sun size={20} color={colors.purple.light} strokeWidth={2.5} />
-                )}
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.optionTitle, { color: colors.text.primary }]}>AMOLED Modu</Text>
+                  <Text style={[styles.optionSubtitle, { color: colors.text.tertiary }]}>
+                    Tam siyah arka plan ile pil tasarrufu yapın
+                  </Text>
+                </View>
               </View>
-              <Text style={[styles.optionTitle, { color: colors.text.primary }]}>
-                {theme === 'dark' ? 'Koyu Tema' : 'Açık Tema'}
-              </Text>
+              <Switch
+                value={amoledEnabled}
+                onValueChange={setAmoledEnabled}
+                trackColor={{ false: colors.border.secondary, true: colors.purple.primary }}
+                thumbColor={colors.text.primary}
+              />
             </View>
-            <Switch
-              value={theme === 'dark'}
-              onValueChange={toggleTheme}
-              trackColor={{ false: colors.border.secondary, true: colors.purple.primary }}
-              thumbColor={colors.text.primary}
-            />
-          </View>
+          )}
         </View>
 
-        {/* General Section */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Genel</Text>
 
@@ -640,6 +651,8 @@ export const SettingsScreen = () => {
                   );
                 } else if (option.title === 'Verileri İçe Aktar') {
                   handleImportData();
+                } else if (option.title === 'Onboarding\'i Tekrar Göster') {
+                  handleResetOnboarding();
                 }
               }}
             >
@@ -653,7 +666,6 @@ export const SettingsScreen = () => {
             </TouchableOpacity>
           ))}
 
-          {/* Logout Option - Only show if authenticated */}
           <TouchableOpacity
             style={[styles.option, { backgroundColor: colors.cardBackground }]}
             onPress={handleLogout}
@@ -668,7 +680,6 @@ export const SettingsScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Danger Zone */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Tehlikeli Alan</Text>
           <TouchableOpacity
@@ -684,22 +695,21 @@ export const SettingsScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Footer */}
         <View style={styles.footer}>
-          <Text style={[styles.footerText, { color: colors.text.secondary }]}>Financial AI v1.0.0</Text>
+          <TouchableOpacity onPress={handleVersionTap} activeOpacity={0.6}>
+            <Text style={[styles.footerText, { color: colors.text.secondary }]}>Financial AI v1.0.0</Text>
+          </TouchableOpacity>
           <Text style={[styles.footerSubtext, { color: colors.text.tertiary }]}>
             {isGuest ? 'Misafir modunda kullanıyorsunuz' : 'Kişisel finans yönetim aracınız'}
           </Text>
         </View>
       </ScrollView>
 
-      {/* Currency modal */}
       <CurrencyModal
         visible={currencyModalVisible}
         onClose={() => setCurrencyModalVisible(false)}
       />
 
-      {/* Custom Alert */}
       {AlertComponent}
     </SafeAreaView>
   );
@@ -711,11 +721,9 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 24,
-    paddingTop: 60,
+    paddingTop: 10,
     paddingBottom: 100,
   },
-
-  // Header Styles
   header: {
     marginBottom: 24,
   },
@@ -737,17 +745,11 @@ const styles = StyleSheet.create({
   headerIcon: {
     width: 56,
     height: 56,
-    borderRadius: 28,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#9333EA',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
+    backgroundColor: 'rgba(147, 51, 234, 0.15)',
   },
-
-  // Profile Card
   profileCardContainer: {
     marginBottom: 32,
     borderRadius: 20,
@@ -792,8 +794,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255, 255, 255, 0.8)',
   },
-
-  // Section
   section: {
     marginBottom: 32,
   },
@@ -803,8 +803,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     letterSpacing: -0.3,
   },
-
-  // Option Styles
   option: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -841,8 +839,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontWeight: '500',
   },
-
-  // Danger Option
   dangerOption: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -861,8 +857,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
-
-  // Footer
   footer: {
     alignItems: 'center',
     marginTop: 20,

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { LoginScreen } from '../screens/LoginScreen';
 import { RegisterScreen } from '../screens/RegisterScreen';
@@ -10,6 +10,9 @@ import { ProfileSettingsScreen } from '../screens/ProfileSettingsScreen';
 import { NotificationSettingsScreen } from '../screens/NotificationSettingsScreen';
 import { ApiKeySettingsScreen } from '../screens/ApiKeySettingsScreen';
 import { useAuth } from '../hooks/useAuth';
+import { PaywallScreen } from '../screens/PaywallScreen';
+import { OnboardingScreen } from '../screens/OnboardingScreen';
+import { useOnboardingStore } from '../store/useOnboardingStore';
 
 const Stack = createStackNavigator();
 
@@ -38,22 +41,57 @@ const AuthStack = () => (
   </Stack.Navigator>
 );
 
+const OnboardingModalScreen = ({ navigation }: any) => {
+  const { completeOnboarding } = useOnboardingStore();
+  return (
+    <OnboardingScreen onComplete={async () => {
+      await completeOnboarding();
+      navigation.goBack();
+    }} />
+  );
+};
+
 const AppStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
-    <Stack.Screen name="Main" component={BottomTabNavigator} />
-    <Stack.Screen name="ProfileSettings" component={ProfileSettingsScreen} />
-    <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
-    <Stack.Screen name="ApiKeySettings" component={ApiKeySettingsScreen} />
+    <Stack.Group>
+      <Stack.Screen name="Main" component={BottomTabNavigator} />
+      <Stack.Screen name="ProfileSettings" component={ProfileSettingsScreen} />
+      <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
+      <Stack.Screen name="ApiKeySettings" component={ApiKeySettingsScreen} />
+    </Stack.Group>
+    <Stack.Group screenOptions={{ presentation: 'fullScreenModal' }}>
+      <Stack.Screen name="Paywall" component={PaywallScreen} />
+      <Stack.Screen name="OnboardingModal" component={OnboardingModalScreen} />
+    </Stack.Group>
   </Stack.Navigator>
 );
 
 export const AuthenticatedNavigator = () => {
   const { isAuthenticated, loading } = useAuth();
+  const { isCompleted, checkOnboarding, completeOnboarding } = useOnboardingStore();
 
-  // Show nothing while checking auth status
-  if (loading) {
-    return null; // In a real app, you might want to show a loading spinner here
+  useEffect(() => {
+    checkOnboarding();
+  }, []);
+
+  const handleOnboardingComplete = async () => {
+    await completeOnboarding();
+  };
+
+  if (isCompleted === null) {
+    return null;
   }
 
+  // Eğer onboarding tamamlanmamışsa, auth durumuna bakmaksızın onboarding göster
+  if (!isCompleted) {
+    return <OnboardingScreen onComplete={handleOnboardingComplete} />;
+  }
+
+  // Onboarding tamamlanmışsa ama hala yükleniyorsa bekle
+  if (loading) {
+    return null;
+  }
+
+  // Son olarak giriş durumuna göre stack göster
   return isAuthenticated ? <AppStack /> : <AuthStack />;
 };

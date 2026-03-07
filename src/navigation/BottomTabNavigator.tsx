@@ -21,7 +21,6 @@ import { InstallmentsScreen } from '../screens/InstallmentsScreen';
 import { ChatScreen } from '../screens/ChatScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { useTheme } from '../context/ThemeContext';
-import { gradients } from '../theme/colors';
 
 const Tab = createBottomTabNavigator();
 
@@ -39,7 +38,7 @@ const TabIcon = ({
   <View style={[styles.iconContainer, focused && styles.iconContainerFocused]}>
     {focused && (
       <LinearGradient
-        colors={gradients.purple}
+        colors={['#FF0080', '#7928CA']}
         style={StyleSheet.absoluteFill}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -47,113 +46,84 @@ const TabIcon = ({
     )}
     <Icon
       size={24}
-      color={focused ? activeColor : inactiveColor}
-      strokeWidth={2.5}
+      color={focused ? '#FFFFFF' : inactiveColor}
+      strokeWidth={focused ? 2.5 : 2}
     />
   </View>
 );
 
 export const BottomTabNavigator = () => {
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
   const insets = useSafeAreaInsets();
-
-  const getActiveIconColor = (focused: boolean) => {
-    return focused ? '#FFFFFF' : colors.text.secondary;
-  };
 
   return (
     <Tab.Navigator
       screenOptions={{
         tabBarShowLabel: false,
-        tabBarItemStyle: {
-          justifyContent: 'center',
-          alignItems: 'center',
-          paddingVertical: 5,
+        tabBarStyle: {
+          position: 'absolute',
+          backgroundColor: colors.cardBackground,
+          borderTopWidth: 0,
+          height: Platform.OS === 'ios' ? 60 + insets.bottom : 50 + insets.bottom,
+          paddingBottom: insets.bottom,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          elevation: 0,
+          shadowOpacity: 0,
         },
-        tabBarStyle: [
-          styles.tabBar,
-          {
-            backgroundColor: colors.cardBackground,
-            shadowColor: colors.purple.primary,
-            height: 40 + insets.bottom,
-            paddingBottom: insets.bottom,
-          }
-        ],
         tabBarActiveTintColor: '#FFFFFF',
-        tabBarInactiveTintColor: colors.text.secondary,
-        tabBarLabelStyle: styles.tabLabel,
-        headerStyle: [styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border.secondary }],
-        headerTintColor: colors.text.primary,
-        headerTitleStyle: styles.headerTitle,
-        tabBarBackground: () => (
-          <View style={[styles.tabBarBackground, { backgroundColor: colors.cardBackground }]}>
-            <View style={[styles.tabBarBorder, { backgroundColor: colors.border.primary }]} />
-            <View style={[styles.tabBarExtension, { backgroundColor: colors.cardBackground }]} />
-          </View>
-        ),
+        tabBarInactiveTintColor: colors.text.tertiary,
+        headerShown: false,
       }}
     >
       <Tab.Screen
         name="Dashboard"
         component={DashboardScreen}
         options={{
-          title: 'Ana Sayfa',
-          headerShown: false,
-          tabBarIcon: ({ focused }) => <TabIcon Icon={LayoutDashboard} focused={focused} activeColor={getActiveIconColor(focused)} inactiveColor={colors.text.secondary} />,
+          tabBarIcon: ({ focused }) => <TabIcon Icon={LayoutDashboard} focused={focused} activeColor="#FFFFFF" inactiveColor={colors.text.tertiary} />,
         }}
       />
       <Tab.Screen
         name="Assets"
         component={AssetsScreen}
         options={{
-          title: 'Varlıklar',
-          headerShown: false,
-          tabBarIcon: ({ focused }) => <TabIcon Icon={Coins} focused={focused} activeColor={getActiveIconColor(focused)} inactiveColor={colors.text.secondary} />,
+          tabBarIcon: ({ focused }) => <TabIcon Icon={Coins} focused={focused} activeColor="#FFFFFF" inactiveColor={colors.text.tertiary} />,
         }}
       />
       <Tab.Screen
         name="Liabilities"
         component={LiabilitiesScreen}
         options={{
-          title: 'Borçlar',
-          headerShown: false,
-          tabBarIcon: ({ focused }) => <TabIcon Icon={CreditCard} focused={focused} activeColor={getActiveIconColor(focused)} inactiveColor={colors.text.secondary} />,
+          tabBarIcon: ({ focused }) => <TabIcon Icon={CreditCard} focused={focused} activeColor="#FFFFFF" inactiveColor={colors.text.tertiary} />,
         }}
       />
       <Tab.Screen
         name="Receivables"
         component={ReceivablesScreen}
         options={{
-          title: 'Alacaklar',
-          headerShown: false,
-          tabBarIcon: ({ focused }) => <TabIcon Icon={HandCoins} focused={focused} activeColor={getActiveIconColor(focused)} inactiveColor={colors.text.secondary} />,
+          tabBarIcon: ({ focused }) => <TabIcon Icon={HandCoins} focused={focused} activeColor="#FFFFFF" inactiveColor={colors.text.tertiary} />,
         }}
       />
       <Tab.Screen
         name="Installments"
         component={InstallmentsScreen}
         options={{
-          title: 'Taksitler',
-          headerShown: false,
-          tabBarIcon: ({ focused }) => <TabIcon Icon={Calendar} focused={focused} activeColor={getActiveIconColor(focused)} inactiveColor={colors.text.secondary} />,
+          tabBarIcon: ({ focused }) => <TabIcon Icon={Calendar} focused={focused} activeColor="#FFFFFF" inactiveColor={colors.text.tertiary} />,
         }}
       />
       <Tab.Screen
         name="Chat"
         component={ChatScreen}
         options={{
-          title: 'AI Danışman',
-          headerShown: false,
-          tabBarIcon: ({ focused }) => <TabIcon Icon={MessageCircle} focused={focused} activeColor={getActiveIconColor(focused)} inactiveColor={colors.text.secondary} />,
+          tabBarIcon: ({ focused }) => <TabIcon Icon={MessageCircle} focused={focused} activeColor="#FFFFFF" inactiveColor={colors.text.tertiary} />,
         }}
       />
       <Tab.Screen
         name="Settings"
         component={SettingsScreen}
         options={{
-          title: 'Ayarlar',
-          headerShown: false,
-          tabBarIcon: ({ focused }) => <TabIcon Icon={Settings} focused={focused} activeColor={getActiveIconColor(focused)} inactiveColor={colors.text.secondary} />,
+          tabBarIcon: ({ focused }) => <TabIcon Icon={Settings} focused={focused} activeColor="#FFFFFF" inactiveColor={colors.text.tertiary} />,
         }}
       />
     </Tab.Navigator>
@@ -161,61 +131,15 @@ export const BottomTabNavigator = () => {
 };
 
 const styles = StyleSheet.create({
-  tabBar: {
-    position: 'absolute',
-    bottom: '2%',
-    left: 0,
-    right: 0,
-    borderRadius: 0,
-    borderTopWidth: 0,
-    elevation: 0,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-  },
-  tabBarBackground: {
-    flex: 1,
-    borderRadius: 0,
-  },
-  tabBarBorder: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 1,
-    opacity: 0.1,
-  },
-  tabBarExtension: {
-    position: 'absolute',
-    bottom: -270,
-    left: 0,
-    right: 0,
-    height: 300,
-  },
-  tabLabel: {
-    fontSize: 9,
-    fontWeight: '600',
-    marginTop: 2,
-    paddingBottom: 5,
-  },
   iconContainer: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
+    width: 48,
+    height: 48,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
   },
   iconContainerFocused: {
-    transform: [{ scale: 1.05 }],
-  },
-  header: {
-    borderBottomWidth: 1,
-    elevation: 0,
-    shadowOpacity: 0,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    transform: [{ scale: 1.1 }],
   },
 });
