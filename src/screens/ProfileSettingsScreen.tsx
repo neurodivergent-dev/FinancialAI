@@ -13,7 +13,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import { useProfile } from '../context/ProfileContext';
 import { useCustomAlert } from '../hooks/useCustomAlert';
-import { useAuth } from '../hooks/useAuth';
 import { ArrowLeft, User, Mail, Phone, Camera, Save, Scale, Banknote, TrendingUp } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useCurrency } from '../context/CurrencyContext';
@@ -22,14 +21,13 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { profile, updateProfile } = useProfile();
-  const { user } = useAuth();
   const { showAlert, AlertComponent } = useCustomAlert();
   const { currencySymbol } = useCurrency();
 
-  const [name, setName] = useState(profile.name || user?.user_metadata?.full_name || user?.user_metadata?.name || '');
-  const [email, setEmail] = useState(profile.email || user?.email || '');
-  const [phone, setPhone] = useState(profile.phone);
-  const [profileImage, setProfileImage] = useState(profile.profileImage || user?.user_metadata?.picture || '');
+  const [name, setName] = useState(profile.name || '');
+  const [email, setEmail] = useState(profile.email || '');
+  const [phone, setPhone] = useState(profile.phone || '');
+  const [profileImage, setProfileImage] = useState(profile.profileImage || '');
   const [findeksScore, setFindeksScore] = useState(profile.findeksScore?.toString() || '');
   const [salary, setSalary] = useState(profile.salary?.toString() || '');
   const [additionalIncome, setAdditionalIncome] = useState(profile.additionalIncome?.toString() || '');
@@ -38,13 +36,14 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
   useEffect(() => {
     const changed =
       name !== (profile.name || '') ||
+      email !== (profile.email || '') ||
       phone !== (profile.phone || '') ||
       profileImage !== (profile.profileImage || '') ||
       (findeksScore ? Number(findeksScore) : undefined) !== profile.findeksScore ||
       (salary ? Number(salary) : undefined) !== profile.salary ||
       (additionalIncome ? Number(additionalIncome) : undefined) !== profile.additionalIncome;
     setHasChanges(changed);
-  }, [name, phone, profileImage, findeksScore, salary, additionalIncome, profile]);
+  }, [name, email, phone, profileImage, findeksScore, salary, additionalIncome, profile]);
 
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -164,6 +163,7 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
 
         {/* Form Fields */}
         <View style={styles.form}>
+          {/* Name */}
           <View style={styles.section}>
             <Text style={[styles.label, { color: colors.text.primary }]}>İsim</Text>
             <View style={[styles.inputContainer, { backgroundColor: colors.cardBackground }]}>
@@ -178,27 +178,24 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
             </View>
           </View>
 
+          {/* Email - Artık Düzenlenebilir */}
           <View style={styles.section}>
-            <View style={styles.labelRow}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>E-posta</Text>
-              <Text style={[styles.labelHint, { color: colors.text.tertiary }]}>
-                (Değiştirilemez)
-              </Text>
-            </View>
-            <View style={[styles.inputContainer, { backgroundColor: colors.cardBackground, opacity: 0.6 }]}>
+            <Text style={[styles.label, { color: colors.text.primary }]}>E-posta</Text>
+            <View style={[styles.inputContainer, { backgroundColor: colors.cardBackground }]}>
               <Mail size={20} color={colors.text.tertiary} strokeWidth={2} />
               <TextInput
-                style={[styles.input, { color: colors.text.secondary }]}
+                style={[styles.input, { color: colors.text.primary }]}
                 value={email}
+                onChangeText={setEmail}
                 placeholder="ornek@email.com"
                 placeholderTextColor={colors.text.tertiary}
                 keyboardType="email-address"
-                editable={false}
                 autoCapitalize="none"
               />
             </View>
           </View>
 
+          {/* Phone */}
           <View style={styles.section}>
             <Text style={[styles.label, { color: colors.text.primary }]}>Telefon</Text>
             <View style={[styles.inputContainer, { backgroundColor: colors.cardBackground }]}>
@@ -214,6 +211,7 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
             </View>
           </View>
 
+          {/* Findeks Score */}
           <View style={styles.section}>
             <Text style={[styles.label, { color: colors.text.primary }]}>Findeks Puanı</Text>
             <View style={[styles.inputContainer, { backgroundColor: colors.cardBackground }]}>
@@ -229,6 +227,7 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
             </View>
           </View>
 
+          {/* Salary */}
           <View style={styles.section}>
             <Text style={[styles.label, { color: colors.text.primary }]}>Maaş</Text>
             <View style={[styles.inputContainer, { backgroundColor: colors.cardBackground }]}>
@@ -245,6 +244,7 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
             </View>
           </View>
 
+          {/* Additional Income */}
           <View style={styles.section}>
             <Text style={[styles.label, { color: colors.text.primary }]}>Ek Gelir</Text>
             <View style={[styles.inputContainer, { backgroundColor: colors.cardBackground }]}>
@@ -263,6 +263,7 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
         </View>
       </ScrollView>
 
+      {/* Save Button */}
       {hasChanges && (
         <View style={[styles.saveButtonContainer, { backgroundColor: colors.background, paddingBottom: insets.bottom + 16 }]}>
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
@@ -279,6 +280,7 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
         </View>
       )}
 
+      {/* Custom Alert */}
       {AlertComponent}
     </View>
   );

@@ -15,7 +15,7 @@ import * as Print from 'expo-print';
 import * as DocumentPicker from 'expo-document-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Moon, Sun, User, Bell, Download, Upload, Info, Trash2, DollarSign, Settings as SettingsIcon, ChevronRight, LogOut, Key, BookOpen, Smartphone } from 'lucide-react-native';
+import { Moon, Sun, User, Bell, Download, Upload, Info, Trash2, DollarSign, Settings as SettingsIcon, ChevronRight, Key, BookOpen, Smartphone, ShieldCheck } from 'lucide-react-native';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { useProfile } from '../context/ProfileContext';
@@ -24,20 +24,20 @@ import CurrencyModal from '../../components/CurrencyModal';
 import { ThemeSelectionCard } from '../components/ThemeSelectionCard';
 import { AboutScreen } from './AboutScreen';
 import { gradients } from '../theme/colors';
-import { useAuth } from '../hooks/useAuth';
 import { useNavigation } from '@react-navigation/native';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { useCustomAlert } from '../hooks/useCustomAlert';
 import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
-
 import { useOnboardingStore } from '../store/useOnboardingStore';
+import { useSecurityStore } from '../store/useSecurityStore';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 export const SettingsScreen = () => {
   const { colors, isDarkMode, amoledEnabled, setAmoledEnabled } = useTheme();
+  const { isBiometricsEnabled, setBiometricsEnabled } = useSecurityStore();
   const { resetOnboarding } = useOnboardingStore();
   const { currency, currencySymbol } = useCurrency();
   const { profile } = useProfile();
-  const { isGuest, user, logout } = useAuth();
   const { showAlert, AlertComponent } = useCustomAlert();
   const { toggleDebugPremium } = useSubscription();
   const [tapCount, setTapCount] = useState(0);
@@ -67,6 +67,33 @@ export const SettingsScreen = () => {
     { id: '7', title: 'Hakkında', icon: Info },
   ];
 
+  const handleToggleBiometrics = async (value: boolean) => {
+    const hasHardware = await LocalAuthentication.hasHardwareAsync();
+    const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+
+    if (!hasHardware) {
+      showAlert('Hata', 'Cihazınızda biyometrik doğrulama donanımı bulunmuyor.', [{ text: 'Tamam' }], 'error');
+      return;
+    }
+
+    if (!isEnrolled) {
+      showAlert('Hata', 'Cihazınızda kayıtlı FaceID veya parmak izi bulunamadı. Lütfen sistem ayarlarından ekleyin.', [{ text: 'Tamam' }], 'error');
+      return;
+    }
+
+    // Hem açarken hem kapatırken doğrulama iste
+    const actionText = value ? 'aktifleştirmek' : 'kapatmak';
+    const result = await LocalAuthentication.authenticateAsync({
+      promptMessage: `Biyometrik kilidi ${actionText} için doğrulama yapın`,
+    });
+
+    if (result.success) {
+      setBiometricsEnabled(value);
+      showAlert('Başarılı', `Biyometrik kilit ${value ? 'aktifleştirildi' : 'devre dışı bırakıldı'}.`, [{ text: 'Tamam' }], 'success');
+    }
+    // Başarısız olursa switch zaten value değişmediği için eski halinde kalacak
+  };
+
   const handleVersionTap = () => {
     const newCount = tapCount + 1;
     setTapCount(newCount);
@@ -74,28 +101,6 @@ export const SettingsScreen = () => {
       toggleDebugPremium();
       setTapCount(0);
     }
-  };
-
-  const handleLogout = () => {
-    showAlert(
-      'Çıkış Yap',
-      'Oturumu kapatmak istediğinizden emin misiniz?',
-      [
-        { text: 'İptal', style: 'cancel' },
-        {
-          text: 'Çıkış Yap',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await logout();
-            } catch (error) {
-              showAlert('Hata', 'Çıkış yapılırken bir hata oluştu.', [], 'error');
-            }
-          }
-        }
-      ],
-      'warning'
-    );
   };
 
   const handleDeleteAllData = () => {
@@ -111,9 +116,6 @@ export const SettingsScreen = () => {
             try {
               clearAllData();
               await resetOnboarding();
-              if (isGuest) {
-                await logout();
-              }
               showAlert('Başarılı', 'Uygulama başarıyla sıfırlandı.', [], 'success');
             } catch (error) {
               console.error('Reset error:', error);
@@ -124,10 +126,6 @@ export const SettingsScreen = () => {
       ],
       'error'
     );
-  };
-
-  const handleResetOnboarding = () => {
-    navigation.navigate('OnboardingModal' as never);
   };
 
   const handleImportData = async () => {
@@ -539,7 +537,7 @@ export const SettingsScreen = () => {
                 Ayarlar
               </Text>
             </View>
-            <View style={[styles.headerIcon, { backgroundColor: 'rgba(147, 51, 234, 0.15)' }]}>
+            <View style={styles.headerIcon}>
               <SettingsIcon size={28} color={colors.purple.light} strokeWidth={2} />
             </View>
           </View>
@@ -553,9 +551,7 @@ export const SettingsScreen = () => {
             end={{ x: 1, y: 1 }}
           >
             <View style={styles.avatar}>
-              {user?.user_metadata?.picture ? (
-                <Image source={{ uri: user.user_metadata.picture }} style={styles.avatarImage} />
-              ) : profile.profileImage ? (
+              {profile.profileImage ? (
                 <Image source={{ uri: profile.profileImage }} style={styles.avatarImage} />
               ) : (
                 <User size={36} color="#FFFFFF" strokeWidth={2} />
@@ -563,14 +559,10 @@ export const SettingsScreen = () => {
             </View>
             <View style={styles.profileInfo}>
               <Text style={styles.profileName}>
-                {isGuest
-                  ? 'Misafir Kullanıcı'
-                  : user?.user_metadata?.full_name || user?.user_metadata?.name || profile.name || 'Kullanıcı'}
+                {profile.name || 'Finansal Yolculuğun'}
               </Text>
               <Text style={styles.profileEmail}>
-                {isGuest
-                  ? 'Misafir modunda'
-                  : user?.email || profile.email || 'E-posta ekleyin'}
+                {profile.email || 'Verilerin sadece bu cihazda güvende'}
               </Text>
             </View>
           </LinearGradient>
@@ -652,7 +644,7 @@ export const SettingsScreen = () => {
                 } else if (option.title === 'Verileri İçe Aktar') {
                   handleImportData();
                 } else if (option.title === 'Onboarding\'i Tekrar Göster') {
-                  handleResetOnboarding();
+                  resetOnboarding();
                 }
               }}
             >
@@ -666,18 +658,26 @@ export const SettingsScreen = () => {
             </TouchableOpacity>
           ))}
 
-          <TouchableOpacity
-            style={[styles.option, { backgroundColor: colors.cardBackground }]}
-            onPress={handleLogout}
-          >
+          {/* Privacy & Security Section */}
+          <View style={[styles.option, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.optionLeft}>
-              <View style={[styles.iconCircle, { backgroundColor: 'rgba(255, 71, 87, 0.15)' }]}>
-                <LogOut size={20} color={colors.error} strokeWidth={2.5} />
+              <View style={[styles.iconCircle, { backgroundColor: 'rgba(34, 197, 94, 0.15)' }]}>
+                <ShieldCheck size={20} color={colors.success} strokeWidth={2.5} />
               </View>
-              <Text style={[styles.optionTitle, { color: colors.error }]}>Oturumu Kapat</Text>
+              <View style={{ flex: 1, marginRight: 8 }}>
+                <Text style={[styles.optionTitle, { color: colors.text.primary }]}>Biyometrik Kilit</Text>
+                <Text style={[styles.optionSubtitle, { color: colors.text.tertiary }]}>
+                  Uygulama açılışında FaceID/Parmak İzi iste
+                </Text>
+              </View>
             </View>
-            <ChevronRight size={20} color={colors.text.secondary} strokeWidth={2} />
-          </TouchableOpacity>
+            <Switch 
+              value={isBiometricsEnabled} 
+              onValueChange={handleToggleBiometrics}
+              trackColor={{ false: colors.border.secondary, true: colors.success }}
+              thumbColor={colors.text.primary}
+            />
+          </View>
         </View>
 
         <View style={styles.section}>
@@ -700,7 +700,7 @@ export const SettingsScreen = () => {
             <Text style={[styles.footerText, { color: colors.text.secondary }]}>Financial AI v1.0.0</Text>
           </TouchableOpacity>
           <Text style={[styles.footerSubtext, { color: colors.text.tertiary }]}>
-            {isGuest ? 'Misafir modunda kullanıyorsunuz' : 'Kişisel finans yönetim aracınız'}
+            Kişisel finans yönetim aracınız
           </Text>
         </View>
       </ScrollView>
@@ -748,7 +748,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(147, 51, 234, 0.15)',
   },
   profileCardContainer: {
     marginBottom: 32,
@@ -824,7 +823,7 @@ const styles = StyleSheet.create({
   iconCircle: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: 14, // Consistent with headerIcon radius
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,

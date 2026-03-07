@@ -114,25 +114,11 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
   };
 
   const handleSkip = () => {
-    handleComplete();
+    if (onComplete) onComplete();
   };
 
-  const handleComplete = async () => {
-    try {
-      await AsyncStorage.setItem('@onboarding_completed', 'true');
-      if (onComplete) {
-        onComplete();
-      } else if (navigation.canGoBack()) {
-        navigation.goBack();
-      }
-    } catch (error) {
-      console.error('Error saving onboarding status:', error);
-      if (onComplete) {
-        onComplete();
-      } else if (navigation.canGoBack()) {
-        navigation.goBack();
-      }
-    }
+  const handleComplete = () => {
+    if (onComplete) onComplete();
   };
 
   const animateTransition = (callback: () => void) => {

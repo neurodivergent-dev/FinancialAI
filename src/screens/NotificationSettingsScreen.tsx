@@ -105,9 +105,11 @@ export const NotificationSettingsScreen = ({ navigation }: any) => {
           body: 'Harika! Bildirimler düzgün çalışıyor. Financial AI ile finansal hedeflerinize ulaşın!',
           sound: true,
           data: { type: 'test' },
+          priority: Notifications.AndroidNotificationPriority.MAX, // Maksimum öncelik
         },
         trigger: {
           seconds: 2,
+          channelId: 'default', // Android kanalı
         },
       });
 

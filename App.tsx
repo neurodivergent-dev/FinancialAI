@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet, Platform, AppState } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
@@ -14,16 +14,34 @@ import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/
 import { navigationRef } from './src/navigation/RootNavigation';
 import { SubscriptionProvider } from './src/context/SubscriptionContext';
 import * as NavigationBar from 'expo-navigation-bar';
+import { useSecurityStore } from './src/store/useSecurityStore';
+import { LockScreen } from './src/components/Security/LockScreen';
 
 const AppContent = () => {
   const { theme, colors, isDarkMode } = useTheme();
+  const { isBiometricsEnabled, isLocked, setLocked } = useSecurityStore();
+
+  // Biyometrik Kilit Mantığı: Uygulama her açıldığında kilitle
+  useEffect(() => {
+    if (isBiometricsEnabled) {
+      setLocked(true);
+    }
+
+    // Uygulama arka plana gidip geri geldiğinde tekrar kilitle
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (isBiometricsEnabled && nextAppState === 'active') {
+        setLocked(true);
+      }
+    });
+
+    return () => subscription.remove();
+  }, [isBiometricsEnabled]);
 
   // Sync System Navigation Bar Buttons (Android) with App Theme
   useEffect(() => {
     if (Platform.OS === 'android') {
       const syncSystemBars = async () => {
         try {
-          // In edge-to-edge mode, we only need to set the button style (light/dark)
           await NavigationBar.setButtonStyleAsync(isDarkMode ? 'light' : 'dark');
         } catch (e) {
           console.log('NavigationBar error:', e);
@@ -49,9 +67,15 @@ const AppContent = () => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDarkMode ? 'light' : 'dark'} />
-      <NavigationContainer ref={navigationRef} theme={navigationTheme}>
-        <AuthenticatedNavigator />
-      </NavigationContainer>
+      
+      {/* Eğer kilitliyse LockScreen göster, değilse navigasyona devam et */}
+      {isLocked ? (
+        <LockScreen />
+      ) : (
+        <NavigationContainer ref={navigationRef} theme={navigationTheme}>
+          <AuthenticatedNavigator />
+        </NavigationContainer>
+      )}
     </View>
   );
 };
