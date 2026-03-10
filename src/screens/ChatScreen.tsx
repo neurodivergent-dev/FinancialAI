@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -7,12 +6,12 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
-  KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Keyboard,
 } from 'react-native';
-import { Send, Bot, Trash2, AlertCircle, WifiOff, Key, Sparkles } from 'lucide-react-native';
+import Animated, { useAnimatedStyle, useAnimatedRef, useSharedValue } from 'react-native-reanimated';
+import { useReanimatedKeyboardAnimation, useKeyboardHandler } from 'react-native-keyboard-controller';
+import { Send, Bot, Trash2, Sparkles } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Markdown from 'react-native-markdown-display';
@@ -27,12 +26,57 @@ export const ChatScreen = () => {
   const { colors } = useTheme();
   const { currencySymbol } = useCurrency();
   const { getActiveApiKey } = useApiKey();
-  const { profile } = useProfile(); // Profil verilerini al
+  const { profile } = useProfile();
   const insets = useSafeAreaInsets();
-  const scrollViewRef = useRef<ScrollView>(null);
+  
+  const scrollViewRef = useAnimatedRef<Animated.ScrollView>();
   const aiChatServiceRef = useRef<AIChatService | null>(null);
 
-  // Markdown stilleri
+  const {
+    getTotalAssets,
+    getTotalLiabilities,
+    getNetWorth,
+    getSafeToSpend,
+    receivables,
+    installments,
+  } = useFinanceStore();
+
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [inputText, setInputText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [streamingMessage, setStreamingMessage] = useState('');
+
+  const { height: keyboardHeight } = useReanimatedKeyboardAnimation();
+  const isKeyboardOpen = useSharedValue(false);
+
+  // Klavye olaylarını dinle
+  // Eğer klavye kapanırsa, explicit olarak padding'i 0 yapmak için bir state tutuyoruz.
+  useKeyboardHandler({
+    onStart: (e: any) => {
+      'worklet';
+      isKeyboardOpen.value = e.height > 0;
+    },
+    onEnd: (e: any) => {
+      'worklet';
+      isKeyboardOpen.value = e.height > 0;
+    },
+  }, []);
+
+  // Animasyon stili: Klavyenin çıktığı kadar içeriğe alttan boşluk(padding) ekler.
+  // Absolute bir değer olduğu için OS düzeyindeki hayalet boşlukları ezer.
+  // Ek olarak: Android 15 için "kapanma" state'ini isKeyboardOpen ile kontrol ediyoruz.
+  const animatedKeyboardPadding = useAnimatedStyle(() => {
+    // Klavye kapalıysa kesin olarak 0 vererek hayalet boşluğu engelle
+    if (!isKeyboardOpen.value) {
+      return { paddingBottom: 0 };
+    }
+    
+    // Açıkken saf yüksekliği uygula
+    return {
+      paddingBottom: Math.abs(keyboardHeight.value),
+    };
+  }, []);
+
   const markdownStyles = {
     body: { color: colors.text.primary, fontSize: 15, lineHeight: 22 },
     paragraph: { marginTop: 0, marginBottom: 8 },
@@ -79,22 +123,6 @@ export const ChatScreen = () => {
     link: { color: colors.purple.light, textDecorationLine: 'underline' },
   };
 
-  const {
-    getTotalAssets,
-    getTotalLiabilities,
-    getNetWorth,
-    getSafeToSpend,
-    receivables,
-    installments,
-  } = useFinanceStore();
-
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [inputText, setInputText] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [streamingMessage, setStreamingMessage] = useState('');
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-  // Initialize AI service with current API key
   useEffect(() => {
     const activeKey = getActiveApiKey();
     if (!aiChatServiceRef.current) {
@@ -104,51 +132,20 @@ export const ChatScreen = () => {
     }
   }, [getActiveApiKey]);
 
-  // Auto-scroll when streaming message updates
   useEffect(() => {
     if (streamingMessage) {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
+      scrollViewRef.current?.scrollToEnd({ animated: false });
     }
   }, [streamingMessage]);
 
   useEffect(() => {
-    // İlk karşılama mesajı
     const welcomeMsg: ChatMessage = {
       id: '0',
       role: 'assistant',
-      content: `## Merhaba! 👋
-
-Ben senin **AI finansal danışmanınım**. Finansal durumunu analiz edip sorularına yanıt verebilirim.
-
-**Örnek Sorular:**
-• "iPhone alsam sorun olur mu?"
-• "Tatile ne kadar harcayabilirim?"
-• "Acil durum fonu nasıl oluştururum?"
-
-Ne öğrenmek istersin?`,
+      content: `## Merhaba! 👋\n\nBen senin **AI finansal danışmanınım**. Finansal durumunu analiz edip sorularına yanıt verebilirim.\n\n**Örnek Sorular:**\n• "iPhone alsam sorun olur mu?"\n• "Tatile ne kadar harcayabilirim?"\n• "Acil durum fonu nasıl oluştururum?"\n\nNe öğrenmek istersin?`,
       timestamp: Date.now(),
     };
     setMessages([welcomeMsg]);
-
-    // Klavye listener'ları
-    const keyboardWillShow = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-      (e) => {
-        setKeyboardHeight(e.endCoordinates.height);
-      }
-    );
-
-    const keyboardWillHide = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
-      () => {
-        setKeyboardHeight(0);
-      }
-    );
-
-    return () => {
-      keyboardWillShow.remove();
-      keyboardWillHide.remove();
-    };
   }, []);
 
   const buildContext = (): FinancialContext => {
@@ -206,11 +203,11 @@ Ne öğrenmek istersin?`,
       setMessages((prev) => [...prev, assistantMessage]);
       setStreamingMessage('');
     } catch (error: any) {
-      const errorMessage = parseErrorMessage(error);
+      const errorStr = error.message || 'Bilinmeyen hata';
       const aiErrorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: errorMessage,
+        content: `## ⚠️ Bir Hata Oluştu\n\n${errorStr}`,
         timestamp: Date.now(),
       };
       setMessages((prev) => [...prev, aiErrorMessage]);
@@ -222,55 +219,21 @@ Ne öğrenmek istersin?`,
     }
   };
 
-  const parseErrorMessage = (error: any): string => {
-    const errorStr = error.message || 'Bilinmeyen hata';
-
-    // Error type ve mesajı ayır
-    if (errorStr.includes('|')) {
-      const [type, message] = errorStr.split('|');
-
-      switch (type) {
-        case 'RATE_LIMIT':
-          return `## ⏱️ Çok Hızlısın!\n\n${message}\n\n**İpucu:** Birkaç saniye bekledikten sonra tekrar dene.`;
-
-        case 'QUOTA_EXCEEDED':
-          return `## 📊 Kota Doldu\n\n${message}\n\n**Çözüm:**\n• Birkaç dakika bekleyin\n• Veya yeni bir API anahtarı alın\n• [Google AI Studio](https://makersuite.google.com/app/apikey)`;
-
-        case 'SERVICE_UNAVAILABLE':
-          return `## 🔧 Servis Meşgul\n\n${message}\n\n**Not:** Bu geçici bir durum, lütfen kısa bir süre sonra tekrar deneyin.`;
-
-        case 'INVALID_API_KEY':
-          return `## 🔑 API Anahtarı Hatası\n\n${message}\n\n**Çözüm:**\n• Ayarlar → API Anahtarları bölümünden kontrol edin\n• Yeni bir anahtar oluşturun: [Google AI Studio](https://makersuite.google.com/app/apikey)`;
-
-        case 'API_ERROR':
-          return `## ⚠️ Bir Sorun Oluştu\n\n${message}\n\n**Öneriler:**\n• Mesajınızı kısaltıp tekrar deneyin\n• İnternet bağlantınızı kontrol edin`;
-
-        default:
-          return `## ⚠️ Bir Hata Oluştu\n\n${message}`;
-      }
-    }
-
-    // Fallback genel hata mesajı
-    return `## ⚠️ Bir Hata Oluştu\n\nÜzgünüm, bir sorun yaşadım: ${errorStr}\n\n**İpucu:** Tekrar denemek ister misin?`;
-  };
-
   const handleClearChat = () => {
     aiChatServiceRef.current?.clearHistory();
-    setMessages([
-      {
-        id: '0',
-        role: 'assistant',
-        content: `## Chat Temizlendi! ✨
-
-Yeni bir konuşma başlatalım. **Ne öğrenmek istersin?**`,
-        timestamp: Date.now(),
-      },
-    ]);
+    setMessages([{
+      id: '0',
+      role: 'assistant',
+      content: `## Chat Temizlendi! ✨\n\nYeni bir konuşma başlatalım. **Ne öğrenmek istersin?**`,
+      timestamp: Date.now(),
+    }]);
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header with Dashboard Style Gradient */}
+    // 2. Ana çerçeveye Animated Padding katmanı ekliyoruz.
+    <Animated.View style={[styles.container, { backgroundColor: colors.background }, animatedKeyboardPadding]}>
+      
+      {/* 3. Header */}
       <View style={styles.modernHeader}>
         <LinearGradient
           colors={['#FF0080', '#7928CA', '#0070F3', '#00DFD8']}
@@ -299,11 +262,7 @@ Yeni bir konuşma başlatalım. **Ne öğrenmek istersin?**`,
                 <Text style={styles.headerSubtitle}>Gemini & Groq Destekli</Text>
               </View>
             </View>
-            <TouchableOpacity 
-              onPress={handleClearChat} 
-              style={styles.clearButton}
-              activeOpacity={0.7}
-            >
+            <TouchableOpacity onPress={handleClearChat} style={styles.clearButton} activeOpacity={0.7}>
               <View style={styles.clearButtonInner}>
                 <Trash2 size={20} color="#FFFFFF" strokeWidth={2} />
               </View>
@@ -312,78 +271,52 @@ Yeni bir konuşma başlatalım. **Ne öğrenmek istersin?**`,
         </LinearGradient>
       </View>
 
-      {/* Messages */}
-      <ScrollView
-        ref={scrollViewRef}
-        style={styles.messagesContainer}
-        contentContainerStyle={[styles.messagesContent, { paddingBottom: 140 }]} 
-        showsVerticalScrollIndicator={false}
-        onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
-      >
-        {messages.map((message) => (
-          <View
-            key={message.id}
-            style={[
-              styles.messageBubble,
-              message.role === 'user' ? styles.userBubble : styles.assistantBubble,
-              message.role === 'user'
-                ? { backgroundColor: colors.purple.primary }
-                : { backgroundColor: colors.cardBackground },
-            ]}
-          >
-            {message.role === 'user' ? (
-              <Text
-                style={[styles.messageText, { color: '#FFFFFF' }]}
-              >
-                {message.content}
-              </Text>
-            ) : (
-              <Markdown style={markdownStyles}>
-                {message.content}
-              </Markdown>
-            )}
-            <Text
-              style={[ 
-                styles.messageTime,
-                message.role === 'user'
-                  ? { color: 'rgba(255, 255, 255, 0.7)' }
-                  : { color: colors.text.tertiary },
+      {/* 4. Messages Body */}
+      <View style={[styles.messagesContainer, { flex: 1 }]}>
+        <Animated.ScrollView
+          ref={scrollViewRef}
+          contentContainerStyle={[styles.messagesContent, { paddingBottom: 20 }]} 
+          showsVerticalScrollIndicator={false}
+          onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+          keyboardDismissMode="interactive"
+          keyboardShouldPersistTaps="handled"
+        >
+          {messages.map((message) => (
+            <View
+              key={message.id}
+              style={[
+                styles.messageBubble,
+                message.role === 'user' ? styles.userBubble : styles.assistantBubble,
+                message.role === 'user' ? { backgroundColor: colors.purple.primary } : { backgroundColor: colors.cardBackground },
               ]}
             >
-              {new Date(message.timestamp).toLocaleTimeString('tr-TR', {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </Text>
-          </View>
-        ))}
+              {message.role === 'user' ? (
+                <Text style={[styles.messageText, { color: '#FFFFFF' }]}>{message.content}</Text>
+              ) : (
+                <Markdown style={markdownStyles as any}>{message.content}</Markdown>
+              )}
+              <Text style={[styles.messageTime, message.role === 'user' ? { color: 'rgba(255, 255, 255, 0.7)' } : { color: colors.text.tertiary }]}>
+                {new Date(message.timestamp).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+              </Text>
+            </View>
+          ))}
+          
+          {streamingMessage && (
+            <View style={[styles.messageBubble, styles.assistantBubble, { backgroundColor: colors.cardBackground }]}>
+              <Markdown style={markdownStyles as any}>{streamingMessage}</Markdown>
+            </View>
+          )}
 
-        {/* Streaming mesaj */}
-        {streamingMessage && (
-          <View style={[styles.messageBubble, styles.assistantBubble, { backgroundColor: colors.cardBackground }]}>
-            <Markdown style={markdownStyles}>
-              {streamingMessage}
-            </Markdown>
-          </View>
-        )}
+          {isLoading && !streamingMessage && (
+            <View style={[styles.messageBubble, styles.assistantBubble, { backgroundColor: colors.cardBackground }]}>
+              <ActivityIndicator size="small" color={colors.purple.primary} />
+            </View>
+          )}
+        </Animated.ScrollView>
+      </View>
 
-        {/* Loading */}
-        {isLoading && !streamingMessage && (
-          <View style={[styles.messageBubble, styles.assistantBubble, { backgroundColor: colors.cardBackground }]}>
-            <ActivityIndicator size="small" color={colors.purple.primary} />
-          </View>
-        )}
-      </ScrollView>
-
-      {/* Input */}
-      <View style={[
-        styles.inputContainer,
-        {
-          backgroundColor: colors.cardBackground,
-          paddingBottom: keyboardHeight > 0 ? 8 : insets.bottom + 4,
-          ...(keyboardHeight > 0 && { bottom: keyboardHeight + 50 })
-        }
-      ]}>
+      {/* 5. Input Alanı */}
+      <View style={[styles.inputContainer, { backgroundColor: colors.cardBackground, paddingBottom: 12 }]}>
         <TextInput
           style={[styles.input, { color: colors.text.primary, backgroundColor: colors.background }]} 
           placeholder="Mesajını yaz..."
@@ -396,23 +329,19 @@ Yeni bir konuşma başlatalım. **Ne öğrenmek istersin?**`,
         />
         <TouchableOpacity
           onPress={handleSend}
-          style={[
-            styles.sendButton,
-            { backgroundColor: inputText.trim() && !isLoading ? colors.purple.primary : colors.text.tertiary + '40' },
-          ]}
+          style={[styles.sendButton, { backgroundColor: inputText.trim() && !isLoading ? colors.purple.primary : colors.text.tertiary + '40' }]}
           disabled={!inputText.trim() || isLoading}
         >
           <Send size={20} color="#FFFFFF" strokeWidth={2.5} />
         </TouchableOpacity>
       </View>
-    </View>
+
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   modernHeader: {
     overflow: 'hidden',
     borderBottomLeftRadius: 32,
@@ -430,170 +359,51 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
   },
-  decorativePattern: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
+  decorativePattern: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   patternCircle1: {
-    position: 'absolute',
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    top: -80,
-    right: -60,
+    position: 'absolute', width: 200, height: 200, borderRadius: 100,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)', top: -80, right: -60,
   },
   patternCircle2: {
-    position: 'absolute',
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    bottom: -50,
-    left: -40,
+    position: 'absolute', width: 150, height: 150, borderRadius: 75,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)', bottom: -50, left: -40,
   },
   patternCircle3: {
-    position: 'absolute',
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    top: 50,
-    left: '40%',
+    position: 'absolute', width: 100, height: 100, borderRadius: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)', top: 50, left: '40%',
   },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    zIndex: 10,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  botIconContainer: {
-    position: 'relative',
-  },
+  headerContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', zIndex: 10 },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  botIconContainer: { position: 'relative' },
   botIconInner: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
+    width: 48, height: 48, borderRadius: 16, backgroundColor: '#FFFFFF',
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2, shadowRadius: 8,
   },
   onlineBadge: {
-    position: 'absolute',
-    bottom: -2,
-    right: -2,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: '#22C55E',
-    borderWidth: 2.5,
-    borderColor: '#FFFFFF',
+    position: 'absolute', bottom: -2, right: -2, width: 14, height: 14,
+    borderRadius: 7, backgroundColor: '#22C55E', borderWidth: 2.5, borderColor: '#FFFFFF',
   },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    letterSpacing: -0.5,
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.85)',
-    fontWeight: '700',
-    marginTop: 1,
-    letterSpacing: 0.2,
-  },
-  clearButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  headerTitle: { fontSize: 18, fontWeight: '900', color: '#FFFFFF', letterSpacing: -0.5 },
+  headerSubtitle: { fontSize: 12, color: 'rgba(255, 255, 255, 0.85)', fontWeight: '700', marginTop: 1, letterSpacing: 0.2 },
+  clearButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   clearButtonInner: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.3)',
   },
-  messagesContainer: {
-    flex: 1,
-  },
-  messagesContent: {
-    padding: 20,
-    paddingBottom: 10,
-  },
-  messageBubble: {
-    maxWidth: '85%',
-    padding: 14,
-    borderRadius: 16,
-    marginBottom: 12,
-  },
-  userBubble: {
-    alignSelf: 'flex-end',
-    borderBottomRightRadius: 4,
-  },
-  assistantBubble: {
-    alignSelf: 'flex-start',
-    borderBottomLeftRadius: 4,
-  },
-  messageText: {
-    fontSize: 15,
-    lineHeight: 22,
-    marginBottom: 4,
-  },
-  messageTime: {
-    fontSize: 11,
-    alignSelf: 'flex-end',
-  },
+  messagesContainer: { flex: 1 },
+  messagesContent: { padding: 20, paddingBottom: 10 },
+  messageBubble: { maxWidth: '85%', padding: 14, borderRadius: 16, marginBottom: 12 },
+  userBubble: { alignSelf: 'flex-end', borderBottomRightRadius: 4 },
+  assistantBubble: { alignSelf: 'flex-start', borderBottomLeftRadius: 4 },
+  messageText: { fontSize: 15, lineHeight: 22, marginBottom: 4 },
+  messageTime: { fontSize: 11, alignSelf: 'flex-end' },
   inputContainer: {
-    position: 'absolute',
-    bottom: '9%',
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    gap: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 4,
+    flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 12, paddingTop: 12, gap: 12,
+    shadowColor: '#000', shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 4,
   },
-  input: {
-    flex: 1,
-    fontSize: 15,
-    maxHeight: 100,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-  },
-  sendButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  input: { flex: 1, fontSize: 15, maxHeight: 100, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 20 },
+  sendButton: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
 });

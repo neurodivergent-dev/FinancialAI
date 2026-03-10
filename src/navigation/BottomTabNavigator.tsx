@@ -61,19 +61,19 @@ export const BottomTabNavigator = () => {
       screenOptions={{
         tabBarShowLabel: false,
         tabBarStyle: {
-          position: 'absolute',
           backgroundColor: colors.cardBackground,
           borderTopWidth: 0,
+          borderTopColor: 'transparent',
           height: Platform.OS === 'ios' ? 60 + insets.bottom : 50 + insets.bottom,
           paddingBottom: insets.bottom,
-          left: 0,
-          right: 0,
-          bottom: 0,
           elevation: 0,
           shadowOpacity: 0,
         },
         tabBarActiveTintColor: '#FFFFFF',
         tabBarInactiveTintColor: colors.text.tertiary,
+        tabBarItemStyle: {
+          backgroundColor: 'transparent',
+        },
         headerShown: false,
       }}
     >
@@ -117,6 +117,7 @@ export const BottomTabNavigator = () => {
         component={ChatScreen}
         options={{
           tabBarIcon: ({ focused }) => <TabIcon Icon={MessageCircle} focused={focused} activeColor="#FFFFFF" inactiveColor={colors.text.tertiary} />,
+          tabBarHideOnKeyboard: true,
         }}
       />
       <Tab.Screen
@@ -138,6 +139,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
+    // Android'de borderRadius olan View'lar explicit renk olmadan Material gri yüzey rengi alır
+    // Bu "gri kart" etkisini ortadan kaldırıyor
+    backgroundColor: 'transparent',
   },
   iconContainerFocused: {
     transform: [{ scale: 1.1 }],

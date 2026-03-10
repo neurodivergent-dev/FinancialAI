@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { View, StyleSheet, Platform, AppState } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -57,16 +58,20 @@ const AppContent = () => {
       ...(isDarkMode ? DarkTheme.colors : DefaultTheme.colors),
       primary: colors.purple.primary,
       background: colors.background,
-      card: colors.cardBackground,
+      card: colors.background,
       text: colors.text.primary,
-      border: colors.border.secondary,
+      border: 'transparent',
       notification: colors.purple.light,
     },
   };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+      <StatusBar 
+        style={isDarkMode ? 'light' : 'dark'} 
+        translucent={Platform.OS === 'ios'} 
+        backgroundColor={Platform.OS === 'android' ? colors.background : undefined}
+      />
       
       {/* Eğer kilitliyse LockScreen göster, değilse navigasyona devam et */}
       {isLocked ? (
@@ -91,7 +96,9 @@ export default function App() {
                 <ApiKeyProvider>
                   <AuthProvider>
                     <SubscriptionProvider>
-                      <AppContent />
+                      <KeyboardProvider statusBarTranslucent={false}>
+                        <AppContent />
+                      </KeyboardProvider>
                     </SubscriptionProvider>
                   </AuthProvider>
                 </ApiKeyProvider>

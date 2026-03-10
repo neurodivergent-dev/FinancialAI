@@ -26,7 +26,7 @@
         "backgroundColor": "#ffffff"
       },
       "predictiveBackGestureEnabled": false,
-      "softwareKeyboardLayoutMode": "pan",
+      "softwareKeyboardLayoutMode": "resize",
       "package": "com.melihcandemir.financialai",
       "permissions": [
         "android.permission.INTERNET",
