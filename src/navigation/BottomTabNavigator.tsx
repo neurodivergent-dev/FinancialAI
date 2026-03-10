@@ -64,7 +64,8 @@ export const BottomTabNavigator = () => {
           backgroundColor: colors.cardBackground,
           borderTopWidth: 0,
           borderTopColor: 'transparent',
-          height: Platform.OS === 'ios' ? 60 + insets.bottom : 50 + insets.bottom,
+          height: Platform.OS === 'ios' ? 70 + insets.bottom : 60 + insets.bottom,
+          paddingTop: 8,
           paddingBottom: insets.bottom,
           elevation: 0,
           shadowOpacity: 0,
@@ -72,7 +73,11 @@ export const BottomTabNavigator = () => {
         tabBarActiveTintColor: '#FFFFFF',
         tabBarInactiveTintColor: colors.text.tertiary,
         tabBarItemStyle: {
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'flex-end',
           backgroundColor: 'transparent',
+          paddingBottom: 12,
         },
         headerShown: false,
       }}
@@ -133,17 +138,15 @@ export const BottomTabNavigator = () => {
 
 const styles = StyleSheet.create({
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
+    width: 44,
+    height: 44,
+    borderRadius: 13,
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
-    // Android'de borderRadius olan View'lar explicit renk olmadan Material gri yüzey rengi alır
-    // Bu "gri kart" etkisini ortadan kaldırıyor
     backgroundColor: 'transparent',
   },
   iconContainerFocused: {
-    transform: [{ scale: 1.1 }],
+    transform: [{ scale: 1.05 }],
   },
 });
