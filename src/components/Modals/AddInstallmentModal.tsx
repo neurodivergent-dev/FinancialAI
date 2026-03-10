@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { X, Calendar, TrendingDown, Clock, DollarSign } from 'lucide-react-native';
+import { X, Calendar, TrendingDown, Clock, DollarSign, Check } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { gradients } from '../../theme/colors';
@@ -87,13 +87,26 @@ export const AddInstallmentModal: React.FC<AddInstallmentModalProps> = ({ visibl
                 </View>
                 <Text style={styles.modalTitle}>Yeni Taksit Ekle</Text>
               </View>
-              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <X size={24} color="#FFFFFF" strokeWidth={2.5} />
-              </TouchableOpacity>
+              <View style={styles.headerActions}>
+                <TouchableOpacity
+                  onPress={handleAdd}
+                  style={[styles.headerActionButton, { backgroundColor: 'rgba(255,255,255,0.25)' }]}
+                  disabled={!installmentAmount.trim() || !endDate.trim() || !remainingMonths.trim()}
+                >
+                  <Check size={22} color="#FFFFFF" strokeWidth={3} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                  <X size={24} color="#FFFFFF" strokeWidth={2.5} />
+                </TouchableOpacity>
+              </View>
             </LinearGradient>
           </View>
 
-          <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            style={styles.form}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
+          >
             {/* Name */}
             <View style={styles.section}>
               <Text style={[styles.label, { color: colors.text.primary }]}>İsim (Opsiyonel)</Text>
@@ -172,24 +185,6 @@ export const AddInstallmentModal: React.FC<AddInstallmentModalProps> = ({ visibl
               </View>
             </View>
           </ScrollView>
-
-          {/* Add Button */}
-          <View style={[styles.buttonContainer, { paddingBottom: insets.bottom + 20 }]}>
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={handleAdd}
-              disabled={!installmentAmount.trim() || !endDate.trim() || !remainingMonths.trim()}
-            >
-              <LinearGradient
-                colors={!installmentAmount.trim() || !endDate.trim() || !remainingMonths.trim() ? ['#666', '#666'] : ['#EC4899', '#A855F7']}
-                style={styles.addButtonGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <Text style={styles.addButtonText}>Taksit Ekle</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -220,6 +215,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerActionButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerContent: {
     flexDirection: 'row',
@@ -294,24 +301,6 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
 
-  // Button Styles
-  buttonContainer: {
-    padding: 24,
-    paddingBottom: 32,
-  },
-  addButton: {
-    borderRadius: 20,
-    overflow: 'hidden',
-    shadowColor: '#EC4899',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 12,
-  },
-  addButtonGradient: {
-    paddingVertical: 18,
-    alignItems: 'center',
-  },
   addButtonText: {
     fontSize: 18,
     fontWeight: '800',

@@ -95,13 +95,26 @@ export const AddLiabilityModal: React.FC<AddLiabilityModalProps> = ({ visible, o
                 </View>
                 <Text style={styles.modalTitle}>Yeni Borç Ekle</Text>
               </View>
-              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <X size={24} color="#FFFFFF" strokeWidth={2.5} />
-              </TouchableOpacity>
+              <View style={styles.headerActions}>
+                <TouchableOpacity
+                  onPress={handleAdd}
+                  style={[styles.headerActionButton, { backgroundColor: 'rgba(255,255,255,0.25)' }]}
+                  disabled={!name.trim() || !currentDebt.trim()}
+                >
+                  <Check size={22} color="#FFFFFF" strokeWidth={3} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                  <X size={24} color="#FFFFFF" strokeWidth={2.5} />
+                </TouchableOpacity>
+              </View>
             </LinearGradient>
           </View>
 
-          <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            style={styles.form}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
+          >
             {/* Liability Type */}
             <View style={styles.section}>
               <Text style={[styles.label, { color: colors.text.primary }]}>Borç Tipi</Text>
@@ -255,24 +268,6 @@ export const AddLiabilityModal: React.FC<AddLiabilityModalProps> = ({ visible, o
               </View>
             </View>
           </ScrollView>
-
-          {/* Add Button */}
-          <View style={[styles.buttonContainer, { paddingBottom: insets.bottom + 20 }]}>
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={handleAdd}
-              disabled={!name.trim() || !currentDebt.trim()}
-            >
-              <LinearGradient
-                colors={!name.trim() || !currentDebt.trim() ? ['#666', '#666'] : ['#ff4757', '#ff6348']}
-                style={styles.addButtonGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <Text style={styles.addButtonText}>Borç Ekle</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -303,6 +298,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerActionButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerContent: {
     flexDirection: 'row',
@@ -401,24 +408,6 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
 
-  // Button Styles
-  buttonContainer: {
-    padding: 24,
-    paddingBottom: 32,
-  },
-  addButton: {
-    borderRadius: 20,
-    overflow: 'hidden',
-    shadowColor: '#ff4757',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 12,
-  },
-  addButtonGradient: {
-    paddingVertical: 18,
-    alignItems: 'center',
-  },
   addButtonText: {
     fontSize: 18,
     fontWeight: '800',
