@@ -222,7 +222,7 @@ export const InstallmentsScreen = () => {
 
       {/* FAB Button */}
       <TouchableOpacity
-        style={[styles.fab, { bottom: insets.bottom + 65 }]}
+        style={[styles.fab, { bottom: 16 }]}
         onPress={() => setAddModalVisible(true)}
       >
         <LinearGradient
