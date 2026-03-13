@@ -18,6 +18,8 @@
   "financialMetrics": "Financial Metrics",
   "receivables": "Receivables",
   "installments": "Installments",
+  "totalReceivables": "Total Receivables",
+  "totalInstallments": "Total Installment Load",
   "financialRatios": "Financial Ratios",
   "debtToAssetRatio": "Debt/Asset Ratio",
   "liquidityRatio": "Liquidity Ratio",

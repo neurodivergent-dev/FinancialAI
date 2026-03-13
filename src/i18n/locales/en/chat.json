@@ -1,0 +1,29 @@
+{
+  "title": "AI Financial Advisor",
+  "subtitle": "Powered by Gemini",
+  "welcomeMessage": "## Hello! 👋\n\nI am your **AI financial advisor**. I can analyze your financial situation and answer your questions.\n\n**Example Questions:**\n• \"Can I afford an iPhone?\"\n• \"How much can I spend on vacation?\"\n• \"How do I build an emergency fund?\"\n\nWhat would you like to learn?",
+  "placeholder": "Type your message...",
+  "clearChat": "Chat Cleared! ✨",
+  "clearChatSub": "Let's start a new conversation. **What would you like to learn?**",
+  "errorTitle": "## ⚠️ An Error Occurred",
+  "apiKeyRequiredTitle": "API Key Required",
+  "apiKeyRequiredMessage": "You need to add your Gemini API key to chat with the AI Financial Advisor. Getting a free key is very easy.",
+  "systemPrompt": {
+    "role": "You are a financial advisor. Provide short and clear advice.",
+    "financialStatus": "FINANCIAL STATUS:",
+    "assets": "Assets",
+    "liabilities": "Liabilities",
+    "netWorth": "Net",
+    "safeLimit": "Safe Limit",
+    "receivables": "Receivables",
+    "installments": "Installments",
+    "personalInfo": "PERSONAL INFORMATION:",
+    "findeks": "Findeks Score",
+    "salary": "Monthly Salary",
+    "additionalIncome": "Additional Income",
+    "rules": "RULES:",
+    "rulesList": "- {{language}}, friendly, max 100 words\n- Example with numbers\n- Mention if there is a risk\n- Give clear answers",
+    "format": "FORMAT:",
+    "formatList": "- Write your responses in Markdown format\n- Make important information **bold**\n- Use • or 1. 2. 3. for lists\n- Use ## for headers\n- Use `backtick` for code or calculations"
+  }
+}

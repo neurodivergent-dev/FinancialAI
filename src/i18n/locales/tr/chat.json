@@ -1,0 +1,29 @@
+{
+  "title": "AI Finansal Danışman",
+  "subtitle": "Gemini Destekli",
+  "welcomeMessage": "## Merhaba! 👋\n\nBen senin **AI finansal danışmanınım**. Finansal durumunu analiz edip sorularına yanıt verebilirim.\n\n**Örnek Sorular:**\n• \"iPhone alsam sorun olur mu?\"\n• \"Tatile ne kadar harcayabilirim?\"\n• \"Acil durum fonu nasıl oluştururum?\"\n\nNe öğrenmek istersin?",
+  "placeholder": "Mesajını yaz...",
+  "clearChat": "Chat Temizlendi! ✨",
+  "clearChatSub": "Yeni bir konuşma başlatalım. **Ne öğrenmek istersin?**",
+  "errorTitle": "## ⚠️ Bir Hata Oluştu",
+  "apiKeyRequiredTitle": "API Anahtarı Gerekli",
+  "apiKeyRequiredMessage": "AI Finansal Danışman ile sohbet etmek için kendi Gemini API anahtarınızı eklemelisiniz. Ücretsiz anahtar almak çok kolaydır.",
+  "systemPrompt": {
+    "role": "Sen finansal danışmansın. Kısa ve net tavsiyelerde bulun.",
+    "financialStatus": "FİNANSAL DURUM:",
+    "assets": "Varlık",
+    "liabilities": "Borç",
+    "netWorth": "Net",
+    "safeLimit": "Güvenli Limit",
+    "receivables": "Alacak",
+    "installments": "Taksit",
+    "personalInfo": "KİŞİSEL BİLGİLER:",
+    "findeks": "Findeks Puanı",
+    "salary": "Aylık Maaş",
+    "additionalIncome": "Ek Gelir",
+    "rules": "KURALLAR:",
+    "rulesList": "- {{language}}, samimi, max 100 kelime\n- Rakamlarla örnekle\n- Risk varsa söyle\n- Net cevap ver",
+    "format": "FORMAT:",
+    "formatList": "- Yanıtlarını Markdown formatında yaz\n- Önemli bilgileri **kalın** yap\n- Listeler için • veya 1. 2. 3. kullan\n- Başlıklar için ## kullan\n- Kod veya hesaplamalar için `backtick` kullan"
+  }
+}

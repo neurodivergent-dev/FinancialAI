@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -25,6 +26,7 @@ import { AIChatService, ChatMessage, FinancialContext } from '../services/aiChat
 import { useCustomAlert } from '../hooks/useCustomAlert';
 
 export const ChatScreen = () => {
+  const { t, i18n } = useTranslation();
   const { colors } = useTheme();
   const { currencySymbol } = useCurrency();
   const { getActiveApiKey } = useApiKey();
@@ -146,11 +148,11 @@ export const ChatScreen = () => {
     const welcomeMsg: ChatMessage = {
       id: '0',
       role: 'assistant',
-      content: `## Merhaba! 👋\n\nBen senin **AI finansal danışmanınım**. Finansal durumunu analiz edip sorularına yanıt verebilirim.\n\n**Örnek Sorular:**\n• "iPhone alsam sorun olur mu?"\n• "Tatile ne kadar harcayabilirim?"\n• "Acil durum fonu nasıl oluştururum?"\n\nNe öğrenmek istersin?`,
+      content: t('chat.welcomeMessage'),
       timestamp: Date.now(),
     };
     setMessages([welcomeMsg]);
-  }, []);
+  }, [i18n.language]);
 
   const buildContext = (): FinancialContext => {
     const totalReceivables = receivables.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
@@ -170,6 +172,7 @@ export const ChatScreen = () => {
       findeksScore: profile.findeksScore,
       salary: profile.salary,
       additionalIncome: profile.additionalIncome,
+      language: i18n.language === 'tr' ? 'Türkçe' : 'English',
     };
   };
 
@@ -211,12 +214,12 @@ export const ChatScreen = () => {
       
       if (errorStr.includes('CONFIG_ERROR')) {
         showAlert(
-          'API Anahtarı Gerekli',
-          'AI Finansal Danışman ile sohbet etmek için kendi Gemini API anahtarınızı eklemelisiniz. Ücretsiz anahtar almak çok kolaydır.',
+          t('chat.apiKeyRequiredTitle'),
+          t('chat.apiKeyRequiredMessage'),
           [
-            { text: 'İptal', style: 'cancel' },
+            { text: t('common.cancel'), style: 'cancel' },
             { 
-              text: 'Ayarlara Git', 
+              text: t('settings.apiKeySettings.goToSettings', { defaultValue: t('dashboard.alerts.goToSettings') }), 
               onPress: () => navigation.navigate('ApiKeySettings') 
             }
           ],
@@ -226,7 +229,7 @@ export const ChatScreen = () => {
         const aiErrorMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          content: `## ⚠️ Bir Hata Oluştu\n\n${errorStr}`,
+          content: `${t('chat.errorTitle')}\n\n${errorStr}`,
           timestamp: Date.now(),
         };
         setMessages((prev) => [...prev, aiErrorMessage]);
@@ -244,7 +247,7 @@ export const ChatScreen = () => {
     setMessages([{
       id: '0',
       role: 'assistant',
-      content: `## Chat Temizlendi! ✨\n\nYeni bir konuşma başlatalım. **Ne öğrenmek istersin?**`,
+      content: `## ${t('chat.clearChat')}\n\n${t('chat.clearChatSub')}`,
       timestamp: Date.now(),
     }]);
   };
@@ -276,10 +279,10 @@ export const ChatScreen = () => {
               </View>
               <View>
                 <View style={styles.titleRow}>
-                  <Text style={styles.headerTitle}>AI Finansal Danışman</Text>
+                  <Text style={styles.headerTitle}>{t('chat.title')}</Text>
                   <Sparkles size={14} color="rgba(255, 255, 255, 0.8)" strokeWidth={2.5} />
                 </View>
-                <Text style={styles.headerSubtitle}>Gemini Destekli</Text>
+                <Text style={styles.headerSubtitle}>{t('chat.subtitle')}</Text>
               </View>
             </View>
             <TouchableOpacity onPress={handleClearChat} style={styles.clearButton} activeOpacity={0.7}>
@@ -316,7 +319,7 @@ export const ChatScreen = () => {
                 <Markdown style={markdownStyles as any}>{message.content}</Markdown>
               )}
               <Text style={[styles.messageTime, message.role === 'user' ? { color: 'rgba(255, 255, 255, 0.7)' } : { color: colors.text.tertiary }]}>
-                {new Date(message.timestamp).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                {new Date(message.timestamp).toLocaleTimeString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
               </Text>
             </View>
           ))}
@@ -339,7 +342,7 @@ export const ChatScreen = () => {
       <View style={[styles.inputContainer, { backgroundColor: colors.cardBackground, paddingBottom: 12 }]}>
         <TextInput
           style={[styles.input, { color: colors.text.primary, backgroundColor: colors.background }]} 
-          placeholder="Mesajını yaz..."
+          placeholder={t('chat.placeholder')}
           placeholderTextColor={colors.text.tertiary}
           value={inputText}
           onChangeText={setInputText}

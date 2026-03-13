@@ -35,34 +35,52 @@ export class AIChatService {
   }
 
   private buildSystemPrompt(context: FinancialContext): string {
+    const isTr = context.language === 'Türkçe';
+    
+    const labels = {
+      personalInfo: isTr ? 'KİŞİSEL BİLGİLER:' : 'PERSONAL INFORMATION:',
+      findeks: isTr ? 'Findeks Puanı:' : 'Findeks Score:',
+      salary: isTr ? 'Aylık Maaş:' : 'Monthly Salary:',
+      additionalIncome: isTr ? 'Ek Gelir:' : 'Additional Income:',
+      role: isTr ? 'Sen finansal danışmansın. Kısa ve net tavsiyelerde bulun.' : 'You are a financial advisor. Provide short and clear advice.',
+      status: isTr ? 'FİNANSAL DURUM:' : 'FINANCIAL STATUS:',
+      assets: isTr ? 'Varlık' : 'Assets',
+      liabilities: isTr ? 'Borç' : 'Liabilities',
+      netWorth: isTr ? 'Net' : 'Net',
+      safeLimit: isTr ? 'Güvenli Limit' : 'Safe Limit',
+      receivables: isTr ? 'Alacak' : 'Receivables',
+      installments: isTr ? 'Taksit' : 'Installments',
+      rules: isTr ? 'KURALLAR:' : 'RULES:',
+      rulesList: isTr 
+        ? `- Türkçe, samimi, max 100 kelime\n- Rakamlarla örnekle\n- Risk varsa söyle\n- Net cevap ver`
+        : `- English, friendly, max 100 words\n- Example with numbers\n- Mention if there is a risk\n- Give clear answers`,
+      format: isTr ? 'FORMAT:' : 'FORMAT:',
+      formatList: isTr
+        ? `- Yanıtlarını Markdown formatında yaz\n- Önemli bilgileri **kalın** yap\n- Listeler için • veya 1. 2. 3. kullan\n- Başlıklar için ## kullan\n- Kod veya hesaplamalar için \`backtick\` kullan`
+        : `- Write your responses in Markdown format\n- Make important information **bold**\n- Use • or 1. 2. 3. for lists\n- Use ## for headers\n- Use \`backtick\` for code or calculations`
+    };
+
     const personalInfo =
       context.findeksScore || context.salary || context.additionalIncome
         ? `
-KİŞİSEL BİLGİLER:
-${context.findeksScore ? `Findeks Puanı: ${context.findeksScore}` : ''}
-${context.salary ? `Aylık Maaş: ${context.currencySymbol}${context.salary.toFixed(0)}` : ''}
-${context.additionalIncome ? `Ek Gelir: ${context.currencySymbol}${context.additionalIncome.toFixed(0)}` : ''}
+${labels.personalInfo}
+${context.findeksScore ? `${labels.findeks} ${context.findeksScore}` : ''}
+${context.salary ? `${labels.salary} ${context.currencySymbol}${context.salary.toFixed(0)}` : ''}
+${context.additionalIncome ? `${labels.additionalIncome} ${context.currencySymbol}${context.additionalIncome.toFixed(0)}` : ''}
 `
         : '';
 
-    return `Sen finansal danışmansın. Kısa ve net tavsiyelerde bulun.
+    return `${labels.role}
 
-FİNANSAL DURUM:
-Varlık: ${context.currencySymbol}${context.totalAssets.toFixed(0)} | Borç: ${context.currencySymbol}${context.totalLiabilities.toFixed(0)} | Net: ${context.currencySymbol}${context.netWorth.toFixed(0)}
-Güvenli Limit: ${context.currencySymbol}${context.safeToSpend.toFixed(0)} | Alacak: ${context.currencySymbol}${context.totalReceivables.toFixed(0)} | Taksit: ${context.currencySymbol}${context.totalInstallments.toFixed(0)}
+${labels.status}
+${labels.assets}: ${context.currencySymbol}${context.totalAssets.toFixed(0)} | ${labels.liabilities}: ${context.currencySymbol}${context.totalLiabilities.toFixed(0)} | ${labels.netWorth}: ${context.currencySymbol}${context.netWorth.toFixed(0)}
+${labels.safeLimit}: ${context.currencySymbol}${context.safeToSpend.toFixed(0)} | ${labels.receivables}: ${context.currencySymbol}${context.totalReceivables.toFixed(0)} | ${labels.installments}: ${context.currencySymbol}${context.totalInstallments.toFixed(0)}
 ${personalInfo}
-KURALLAR:
-- Türkçe, samimi, max 100 kelime
-- Rakamlarla örnekle
-- Risk varsa söyle
-- Net cevap ver
+${labels.rules}
+${labels.rulesList}
 
-FORMAT:
-- Yanıtlarını Markdown formatında yaz
-- Önemli bilgileri **kalın** yap
-- Listeler için • veya 1. 2. 3. kullan
-- Başlıklar için ## kullan
-- Kod veya hesaplamalar için \`backtick\` kullan`;
+${labels.format}
+${labels.formatList}`;
   }
 
   async sendMessage(

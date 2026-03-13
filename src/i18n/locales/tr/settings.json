@@ -69,7 +69,7 @@
     "footer": "Financial AI ile oluşturuldu",
     "aiReportTitle": "AI CFO - Finansal Sağlık Raporu",
     "healthScore": "Finansal Sağlık Skoru",
-    "scoreStatus": "{{status}} Durum",
+    "scoreStatus": "Durum: {{status}}",
     "categoryScores": "Kategori Skorları",
     "aiAnalysisSummary": "AI Analiz Özeti",
     "detectedRisks": "Tespit Edilen Riskler",
@@ -98,8 +98,8 @@
   "scores": {
     "excellent": "Mükemmel",
     "good": "İyi",
-    "average": "Orta",
-    "warning": "Dikkat"
+    "average": "Makul",
+    "warning": "Zayıf"
   },
   "apiKeySettings": {
     "title": "API Key Ayarları",

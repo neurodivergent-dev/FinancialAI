@@ -1,15 +1,15 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import {
   Modal,
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  ScrollView,
+  Pressable,
 } from 'react-native';
-import { X, Check } from 'lucide-react-native';
+import { X, Check, DollarSign } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 interface Currency {
   code: string;
@@ -29,6 +29,7 @@ const CURRENCIES: Currency[] = [
   { code: 'USD', name: 'Amerikan Doları', symbol: '$' },
   { code: 'EUR', name: 'Euro', symbol: '€' },
   { code: 'GBP', name: 'İngiliz Sterlini', symbol: '£' },
+  { code: 'JPY', name: 'Japon Yeni', symbol: '¥' },
 ];
 
 export const CurrencySelectionModal: React.FC<CurrencySelectionModalProps> = ({
@@ -37,8 +38,8 @@ export const CurrencySelectionModal: React.FC<CurrencySelectionModalProps> = ({
   currentCurrency,
   onSelect,
 }) => {
+  const { colors, isDarkMode } = useTheme();
   const { t } = useTranslation();
-  const { colors } = useTheme();
 
   const handleSelect = (currencyCode: string) => {
     onSelect(currencyCode);
@@ -48,53 +49,79 @@ export const CurrencySelectionModal: React.FC<CurrencySelectionModalProps> = ({
   return (
     <Modal
       visible={visible}
-      animationType="slide"
+      animationType="fade"
       transparent
       onRequestClose={onClose}
     >
-      <View style={styles.modalOverlay}>
-        <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
+      <Pressable style={styles.modalOverlay} onPress={onClose}>
+        <View style={[styles.modalContent, { backgroundColor: isDarkMode ? '#1A1A1A' : '#FFFFFF' }]}>
           <View style={styles.modalHeader}>
-            <Text style={[styles.modalTitle, { color: colors.text.primary }]}>{t('common.selectCurrency')}</Text>
+            <View style={styles.titleContainer}>
+              <View style={[styles.iconCircle, { backgroundColor: 'rgba(147, 51, 234, 0.15)' }]}>
+                <DollarSign size={20} color={colors.purple.light} strokeWidth={2.5} />
+              </View>
+              <Text style={[styles.modalTitle, { color: colors.text.primary }]}>
+                {t('settings.currency')}
+              </Text>
+            </View>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <X size={24} color={colors.text.secondary} />
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.currencyList}>
-            {CURRENCIES.map((currency) => (
-              <TouchableOpacity
-                key={currency.code}
-                style={[
-                  styles.currencyItem,
-                  {
-                    backgroundColor: colors.cardBackground,
-                    borderColor: currentCurrency === currency.code ? colors.purple.primary : colors.border.secondary,
-                  },
-                ]}
-                onPress={() => handleSelect(currency.code)}
-              >
-                <View style={styles.currencyInfo}>
-                  <Text style={[styles.currencySymbol, { color: colors.text.primary }]}>
-                    {currency.symbol}
-                  </Text>
-                  <View style={styles.currencyDetails}>
-                    <Text style={[styles.currencyCode, { color: colors.text.primary }]}>
-                      {currency.code}
-                    </Text>
-                    <Text style={[styles.currencyName, { color: colors.text.secondary }]}>
-                      {t(`common.currencies.${currency.code}`)}
-                    </Text>
+          <Text style={[styles.modalSubtitle, { color: colors.text.tertiary }]}>
+            {t('common.selectCurrency')}
+          </Text>
+
+          <View style={styles.currencyList}>
+            {CURRENCIES.map((curr) => {
+              const isSelected = currentCurrency === curr.code;
+              return (
+                <TouchableOpacity
+                  key={curr.code}
+                  style={[
+                    styles.currencyItem,
+                    {
+                      backgroundColor: isSelected 
+                        ? (isDarkMode ? 'rgba(147, 51, 234, 0.15)' : 'rgba(147, 51, 234, 0.08)')
+                        : (isDarkMode ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)'),
+                      borderColor: isSelected ? colors.purple.primary : 'transparent',
+                    },
+                  ]}
+                  onPress={() => handleSelect(curr.code)}
+                >
+                  <View style={styles.currencyInfo}>
+                    <View style={[
+                      styles.currBadge, 
+                      { backgroundColor: isSelected ? colors.purple.primary : (isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)') }
+                    ]}>
+                      <Text style={[
+                        styles.currBadgeText, 
+                        { color: isSelected ? '#FFFFFF' : colors.text.secondary }
+                      ]}>
+                        {curr.symbol}
+                      </Text>
+                    </View>
+                    <View style={styles.currencyNames}>
+                      <Text style={[styles.currencyCode, { color: colors.text.primary }]}>
+                        {curr.code}
+                      </Text>
+                      <Text style={[styles.currencyName, { color: colors.text.tertiary }]}>
+                        {t(`common.currencies.${curr.code}`)}
+                      </Text>
+                    </View>
                   </View>
-                </View>
-                {currentCurrency === currency.code && (
-                  <Check size={24} color={colors.purple.primary} strokeWidth={3} />
-                )}
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+                  {isSelected && (
+                    <View style={[styles.checkCircle, { backgroundColor: colors.purple.primary }]}>
+                      <Check size={16} color="#FFFFFF" strokeWidth={3} />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
-      </View>
+      </Pressable>
     </Modal>
   );
 };
@@ -102,62 +129,95 @@ export const CurrencySelectionModal: React.FC<CurrencySelectionModalProps> = ({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
   },
   modalContent: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingTop: 20,
-    paddingBottom: 40,
-    maxHeight: '70%',
+    width: '100%',
+    borderRadius: 32,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 20,
+    marginBottom: 8,
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   modalTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    marginBottom: 24,
+    marginLeft: 52,
   },
   closeButton: {
     padding: 4,
   },
   currencyList: {
-    paddingHorizontal: 20,
+    gap: 12,
   },
   currencyItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 16,
-    borderRadius: 12,
-    marginBottom: 10,
+    borderRadius: 20,
     borderWidth: 2,
   },
   currencyInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 16,
   },
-  currencySymbol: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginRight: 16,
-    width: 40,
-    textAlign: 'center',
+  currBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  currencyDetails: {
-    flex: 1,
+  currBadgeText: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  currencyNames: {
+    gap: 2,
   },
   currencyCode: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 2,
+    fontSize: 17,
+    fontWeight: '700',
   },
   currencyName: {
-    fontSize: 14,
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  checkCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

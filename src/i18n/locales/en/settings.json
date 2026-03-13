@@ -69,7 +69,7 @@
     "footer": "Created with Financial AI",
     "aiReportTitle": "AI CFO - Financial Health Report",
     "healthScore": "Financial Health Score",
-    "scoreStatus": "{{status}} Status",
+    "scoreStatus": "Status: {{status}}",
     "categoryScores": "Category Scores",
     "aiAnalysisSummary": "AI Analysis Summary",
     "detectedRisks": "Detected Risks",

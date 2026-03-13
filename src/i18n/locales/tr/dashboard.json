@@ -18,6 +18,8 @@
   "financialMetrics": "Finansal Metrikler",
   "receivables": "Alacaklar",
   "installments": "Taksitler",
+  "totalReceivables": "Toplam Alacaklar",
+  "totalInstallments": "Toplam Taksit Yükü",
   "financialRatios": "Finansal Oranlar",
   "debtToAssetRatio": "Borç/Varlık Oranı",
   "liquidityRatio": "Likidite Oranı",

@@ -21,7 +21,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { useProfile } from '../context/ProfileContext';
 import { useSubscription } from '../context/SubscriptionContext';
-import CurrencyModal from '../../components/CurrencyModal';
+import { CurrencySelectionModal } from '../components/Modals/CurrencySelectionModal';
 import { ThemeSelectionCard } from '../components/ThemeSelectionCard';
 import { AboutScreen } from './AboutScreen';
 import { gradients } from '../theme/colors';
@@ -39,7 +39,7 @@ export const SettingsScreen = () => {
   const { colors, isDarkMode, amoledEnabled, setAmoledEnabled } = useTheme();
   const { isBiometricsEnabled, setBiometricsEnabled } = useSecurityStore();
   const { resetOnboarding } = useOnboardingStore();
-  const { currency, currencySymbol } = useCurrency();
+  const { currency, currencySymbol, setCurrency } = useCurrency();
   const { profile } = useProfile();
   const { showAlert, AlertComponent } = useCustomAlert();
   const { toggleDebugPremium } = useSubscription();
@@ -751,9 +751,11 @@ export const SettingsScreen = () => {
         </View>
       </ScrollView>
 
-      <CurrencyModal
+      <CurrencySelectionModal
         visible={currencyModalVisible}
         onClose={() => setCurrencyModalVisible(false)}
+        currentCurrency={currency}
+        onSelect={setCurrency}
       />
 
       <LanguageSelectionModal

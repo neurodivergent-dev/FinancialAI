@@ -9,6 +9,7 @@ import enDashboard from './locales/en/dashboard.json';
 import enSettings from './locales/en/settings.json';
 import enFinance from './locales/en/finance.json';
 import enOnboarding from './locales/en/onboarding.json';
+import enChat from './locales/en/chat.json';
 
 // Turkish translations
 import trCommon from './locales/tr/common.json';
@@ -16,6 +17,7 @@ import trDashboard from './locales/tr/dashboard.json';
 import trSettings from './locales/tr/settings.json';
 import trFinance from './locales/tr/finance.json';
 import trOnboarding from './locales/tr/onboarding.json';
+import trChat from './locales/tr/chat.json';
 
 const resources = {
   en: {
@@ -25,6 +27,7 @@ const resources = {
       settings: enSettings,
       finance: enFinance,
       onboarding: enOnboarding,
+      chat: enChat,
     },
   },
   tr: {
@@ -34,6 +37,7 @@ const resources = {
       settings: trSettings,
       finance: trFinance,
       onboarding: trOnboarding,
+      chat: trChat,
     },
   },
 };
