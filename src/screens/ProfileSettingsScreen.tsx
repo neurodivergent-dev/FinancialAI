@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -18,6 +19,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useCurrency } from '../context/CurrencyContext';
 
 export const ProfileSettingsScreen = ({ navigation }: any) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { profile, updateProfile } = useProfile();
@@ -48,7 +50,7 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      showAlert('İzin Gerekli', 'Fotoğraf seçmek için galeri erişim izni gereklidir.', [{ text: 'Tamam' }], 'warning');
+      showAlert(t('settings.profileSettings.permissionRequired'), t('settings.profileSettings.galleryPermission'), [{ text: t('common.save') }], 'warning');
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -65,7 +67,7 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
   const handleTakePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      showAlert('İzin Gerekli', 'Fotoğraf çekmek için kamera erişim izni gereklidir.', [{ text: 'Tamam' }], 'warning');
+      showAlert(t('settings.profileSettings.permissionRequired'), t('settings.profileSettings.cameraPermission'), [{ text: t('common.save') }], 'warning');
       return;
     }
     const result = await ImagePicker.launchCameraAsync({
@@ -80,12 +82,12 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
 
   const handleImageOptions = () => {
     showAlert(
-      'Profil Fotoğrafı',
-      'Nasıl bir fotoğraf eklemek istersiniz?',
+      t('settings.profileSettings.imageOptions'),
+      t('settings.profileSettings.imageDesc'),
       [
-        { text: 'İptal', style: 'cancel' },
-        { text: 'Galeri', onPress: handlePickImage },
-        { text: 'Kamera', onPress: handleTakePhoto },
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('settings.profileSettings.gallery'), onPress: handlePickImage },
+        { text: t('settings.profileSettings.camera'), onPress: handleTakePhoto },
       ],
       'info'
     );
@@ -102,10 +104,10 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
         salary: salary ? Number(salary) : undefined,
         additionalIncome: additionalIncome ? Number(additionalIncome) : undefined,
       });
-      showAlert('Başarılı', 'Profil bilgileriniz güncellendi.', [{ text: 'Tamam' }], 'success');
+      showAlert(t('common.success'), t('settings.profileSettings.updateSuccess'), [{ text: t('common.save') }], 'success');
       setHasChanges(false);
     } catch (error) {
-      showAlert('Hata', 'Profil güncellenirken bir hata oluştu.', [{ text: 'Tamam' }], 'error');
+      showAlert(t('common.error'), t('settings.profileSettings.updateError'), [{ text: t('common.save') }], 'error');
     }
   };
 
@@ -131,8 +133,8 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
               </View>
             </TouchableOpacity>
             <View style={styles.headerTextContainer}>
-              <Text style={styles.subtitle}>Kullanıcı</Text>
-              <Text style={styles.screenTitle}>Profil Ayarları</Text>
+              <Text style={styles.subtitle}>{t('settings.profileSettings.userLabel')}</Text>
+              <Text style={styles.screenTitle}>{t('settings.profileSettings.title')}</Text>
             </View>
             <View style={styles.headerIcon}>
               <User size={22} color="#FFFFFF" strokeWidth={2} />
@@ -157,7 +159,7 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
             </View>
           </TouchableOpacity>
           <Text style={[styles.imageHint, { color: colors.text.tertiary }]}>
-            Profil fotoğrafınızı değiştirmek için dokunun
+            {t('settings.profileSettings.imageHint')}
           </Text>
         </View>
 
@@ -165,29 +167,29 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
         <View style={styles.form}>
           {/* Name */}
           <View style={styles.section}>
-            <Text style={[styles.label, { color: colors.text.primary }]}>İsim</Text>
+            <Text style={[styles.label, { color: colors.text.primary }]}>{t('settings.profileSettings.name')}</Text>
             <View style={[styles.inputContainer, { backgroundColor: colors.cardBackground }]}>
               <User size={20} color={colors.text.tertiary} strokeWidth={2} />
               <TextInput
                 style={[styles.input, { color: colors.text.primary }]}
                 value={name}
                 onChangeText={setName}
-                placeholder="Adınız ve soyadınız"
+                placeholder={t('settings.profileSettings.namePlaceholder')}
                 placeholderTextColor={colors.text.tertiary}
               />
             </View>
           </View>
 
-          {/* Email - Artık Düzenlenebilir */}
+          {/* Email - Now Editable */}
           <View style={styles.section}>
-            <Text style={[styles.label, { color: colors.text.primary }]}>E-posta</Text>
+            <Text style={[styles.label, { color: colors.text.primary }]}>{t('settings.profileSettings.email')}</Text>
             <View style={[styles.inputContainer, { backgroundColor: colors.cardBackground }]}>
               <Mail size={20} color={colors.text.tertiary} strokeWidth={2} />
               <TextInput
                 style={[styles.input, { color: colors.text.primary }]}
                 value={email}
                 onChangeText={setEmail}
-                placeholder="ornek@email.com"
+                placeholder={t('settings.profileSettings.emailPlaceholder')}
                 placeholderTextColor={colors.text.tertiary}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -197,14 +199,14 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
 
           {/* Phone */}
           <View style={styles.section}>
-            <Text style={[styles.label, { color: colors.text.primary }]}>Telefon</Text>
+            <Text style={[styles.label, { color: colors.text.primary }]}>{t('settings.profileSettings.phone')}</Text>
             <View style={[styles.inputContainer, { backgroundColor: colors.cardBackground }]}>
               <Phone size={20} color={colors.text.tertiary} strokeWidth={2} />
               <TextInput
                 style={[styles.input, { color: colors.text.primary }]}
                 value={phone}
                 onChangeText={setPhone}
-                placeholder="+90 555 123 45 67"
+                placeholder={t('settings.profileSettings.phonePlaceholder')}
                 placeholderTextColor={colors.text.tertiary}
                 keyboardType="phone-pad"
               />
@@ -213,14 +215,14 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
 
           {/* Findeks Score */}
           <View style={styles.section}>
-            <Text style={[styles.label, { color: colors.text.primary }]}>Findeks Puanı</Text>
+            <Text style={[styles.label, { color: colors.text.primary }]}>{t('settings.profileSettings.findeks')}</Text>
             <View style={[styles.inputContainer, { backgroundColor: colors.cardBackground }]}>
               <Scale size={20} color={colors.text.tertiary} strokeWidth={2} />
               <TextInput
                 style={[styles.input, { color: colors.text.primary }]}
                 value={findeksScore}
                 onChangeText={setFindeksScore}
-                placeholder="Findeks kredi notunuz"
+                placeholder={t('settings.profileSettings.findeksPlaceholder')}
                 placeholderTextColor={colors.text.tertiary}
                 keyboardType="number-pad"
               />
@@ -229,7 +231,7 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
 
           {/* Salary */}
           <View style={styles.section}>
-            <Text style={[styles.label, { color: colors.text.primary }]}>Maaş</Text>
+            <Text style={[styles.label, { color: colors.text.primary }]}>{t('settings.profileSettings.salary')}</Text>
             <View style={[styles.inputContainer, { backgroundColor: colors.cardBackground }]}>
               <Banknote size={20} color={colors.text.tertiary} strokeWidth={2} />
               <Text style={[styles.currencySymbolText, { color: colors.text.primary }]}>{currencySymbol}</Text>
@@ -237,7 +239,7 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
                 style={[styles.input, { color: colors.text.primary }]}
                 value={salary}
                 onChangeText={setSalary}
-                placeholder="Aylık net maaşınız"
+                placeholder={t('settings.profileSettings.salaryPlaceholder')}
                 placeholderTextColor={colors.text.tertiary}
                 keyboardType="number-pad"
               />
@@ -246,7 +248,7 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
 
           {/* Additional Income */}
           <View style={styles.section}>
-            <Text style={[styles.label, { color: colors.text.primary }]}>Ek Gelir</Text>
+            <Text style={[styles.label, { color: colors.text.primary }]}>{t('settings.profileSettings.additionalIncome')}</Text>
             <View style={[styles.inputContainer, { backgroundColor: colors.cardBackground }]}>
               <TrendingUp size={20} color={colors.text.tertiary} strokeWidth={2} />
               <Text style={[styles.currencySymbolText, { color: colors.text.primary }]}>{currencySymbol}</Text>
@@ -254,7 +256,7 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
                 style={[styles.input, { color: colors.text.primary }]}
                 value={additionalIncome}
                 onChangeText={setAdditionalIncome}
-                placeholder="Aylık ek gelirleriniz"
+                placeholder={t('settings.profileSettings.additionalIncomePlaceholder')}
                 placeholderTextColor={colors.text.tertiary}
                 keyboardType="number-pad"
               />
@@ -274,7 +276,7 @@ export const ProfileSettingsScreen = ({ navigation }: any) => {
               end={{ x: 1, y: 1 }}
             >
               <Save size={20} color="#FFFFFF" strokeWidth={2.5} />
-              <Text style={styles.saveButtonText}>Kaydet</Text>
+              <Text style={styles.saveButtonText}>{t('common.save')}</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>

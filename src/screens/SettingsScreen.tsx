@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -15,7 +16,7 @@ import * as Print from 'expo-print';
 import * as DocumentPicker from 'expo-document-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Moon, Sun, User, Bell, Download, Upload, Info, Trash2, DollarSign, Settings as SettingsIcon, ChevronRight, Key, BookOpen, Smartphone, ShieldCheck } from 'lucide-react-native';
+import { Moon, Sun, User, Bell, Download, Upload, Info, Trash2, DollarSign, Settings as SettingsIcon, ChevronRight, Key, BookOpen, Smartphone, ShieldCheck, Languages, FileText } from 'lucide-react-native';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { useProfile } from '../context/ProfileContext';
@@ -31,8 +32,10 @@ import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context'
 import { useOnboardingStore } from '../store/useOnboardingStore';
 import { useSecurityStore } from '../store/useSecurityStore';
 import * as LocalAuthentication from 'expo-local-authentication';
+import { LanguageSelectionModal } from '../components/Modals/LanguageSelectionModal';
 
 export const SettingsScreen = () => {
+  const { t, i18n } = useTranslation();
   const { colors, isDarkMode, amoledEnabled, setAmoledEnabled } = useTheme();
   const { isBiometricsEnabled, setBiometricsEnabled } = useSecurityStore();
   const { resetOnboarding } = useOnboardingStore();
@@ -53,45 +56,54 @@ export const SettingsScreen = () => {
     addInstallment
   } = useFinanceStore();
   const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
+  const [languageModalVisible, setLanguageModalVisible] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
 
   const settingsOptions = [
-    { id: '1', title: 'Profil Ayarları', icon: User },
-    { id: '2', title: 'API Key Ayarları', icon: Key },
-    { id: '3', title: 'Bildirimler', icon: Bell },
-    { id: '4', title: 'Onboarding\'i Tekrar Göster', icon: BookOpen },
-    { id: '5', title: 'Verileri Dışa Aktar', icon: Download },
-    { id: '6', title: 'Verileri İçe Aktar', icon: Upload },
-    { id: '7', title: 'Hakkında', icon: Info },
+    { id: '1', title: t('settings.profile'), icon: User },
+    { id: '2', title: t('settings.apiKey'), icon: Key },
+    { id: '3', title: t('settings.notifications'), icon: Bell },
+    { id: '4', title: t('settings.onboarding'), icon: BookOpen },
+    { id: '5', title: t('settings.export'), icon: Download },
+    { id: '6', title: t('settings.import'), icon: Upload },
+    { id: '7', title: t('settings.about'), icon: Info },
+    { id: '8', title: t('settings.privacyPolicy.title'), icon: ShieldCheck },
+    { id: '9', title: t('settings.termsOfService.title'), icon: FileText },
   ];
+
+  const changeLanguage = async (lng: string) => {
+    await i18n.changeLanguage(lng);
+    await AsyncStorage.setItem('@app_language', lng);
+  };
 
   const handleToggleBiometrics = async (value: boolean) => {
     const hasHardware = await LocalAuthentication.hasHardwareAsync();
     const isEnrolled = await LocalAuthentication.isEnrolledAsync();
 
     if (!hasHardware) {
-      showAlert('Hata', 'Cihazınızda biyometrik doğrulama donanımı bulunmuyor.', [{ text: 'Tamam' }], 'error');
+      showAlert(t('common.error'), t('settings.security.noHardware'), [{ text: t('common.completed') }], 'error');
       return;
     }
 
     if (!isEnrolled) {
-      showAlert('Hata', 'Cihazınızda kayıtlı FaceID veya parmak izi bulunamadı. Lütfen sistem ayarlarından ekleyin.', [{ text: 'Tamam' }], 'error');
+      showAlert(t('common.error'), t('settings.security.notEnrolled'), [{ text: t('common.completed') }], 'error');
       return;
     }
 
-    // Hem açarken hem kapatırken doğrulama iste
-    const actionText = value ? 'aktifleştirmek' : 'kapatmak';
+    // Request verification both when opening and closing
+    const actionText = value ? t('settings.security.actionActivate') : t('settings.security.actionDeactivate');
     const result = await LocalAuthentication.authenticateAsync({
-      promptMessage: `Biyometrik kilidi ${actionText} için doğrulama yapın`,
+      promptMessage: t('settings.security.authPrompt', { action: actionText }),
     });
 
     if (result.success) {
       setBiometricsEnabled(value);
-      showAlert('Başarılı', `Biyometrik kilit ${value ? 'aktifleştirildi' : 'devre dışı bırakıldı'}.`, [{ text: 'Tamam' }], 'success');
+      const statusText = value ? t('settings.security.enabled') : t('settings.security.disabled');
+      showAlert(t('common.success'), t('settings.security.statusSuccess', { status: statusText }), [{ text: t('common.completed') }], 'success');
     }
-    // Başarısız olursa switch zaten value değişmediği için eski halinde kalacak
+    // If it fails, the switch will remain in its old state as the value hasn't changed
   };
 
   const handleVersionTap = () => {
@@ -105,21 +117,21 @@ export const SettingsScreen = () => {
 
   const handleDeleteAllData = () => {
     showAlert(
-      'Tüm Verileri Sil',
-      'Bu işlem geri alınamaz! Tüm varlıklarınız, borçlarınız, alacaklarınız ve taksitleriniz kalıcı olarak silinecek. Uygulama sıfırlanacak ve yeniden başlatılacaktır.',
+      t('settings.dataManagement.resetTitle'),
+      t('settings.dataManagement.resetMessage'),
       [
-        { text: 'İptal', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Sıfırla',
+          text: t('settings.dataManagement.resetButton'),
           style: 'destructive',
           onPress: async () => {
             try {
               clearAllData();
               await resetOnboarding();
-              showAlert('Başarılı', 'Uygulama başarıyla sıfırlandı.', [], 'success');
+              showAlert(t('common.success'), t('settings.dataManagement.resetSuccess'), [], 'success');
             } catch (error) {
               console.error('Reset error:', error);
-              showAlert('Hata', 'Uygulama sıfırlanırken bir hata oluştu.', [], 'error');
+              showAlert(t('common.error'), t('settings.dataManagement.resetError'), [], 'error');
             }
           }
         }
@@ -143,17 +155,19 @@ export const SettingsScreen = () => {
       const importedData = JSON.parse(fileContent);
 
       if (!importedData.data) {
-        showAlert('Hata', 'Geçersiz dosya formatı. Lütfen Financial AI tarafından dışa aktarılan bir dosya seçin.', [], 'error');
+        showAlert(t('common.error'), t('settings.dataManagement.importFormatError'), [], 'error');
         return;
       }
 
+      const exportDate = importedData.exportDate ? new Date(importedData.exportDate).toLocaleDateString(i18n.language === 'tr' ? 'tr-TR' : 'en-US') : '---';
+
       showAlert(
-        'Verileri İçe Aktar',
-        `Bu dosya ${importedData.exportDate ? new Date(importedData.exportDate).toLocaleDateString('tr-TR') : 'bilinmeyen bir tarihte'} dışa aktarılmış.\n\nMevcut tüm verileriniz silinecek ve dosyadaki verilerle değiştirilecek. Devam etmek istiyor musunuz?`,
+        t('settings.dataManagement.importTitle'),
+        t('settings.dataManagement.importDesc', { date: exportDate }),
         [
-          { text: 'İptal', style: 'cancel' },
+          { text: t('common.cancel'), style: 'cancel' },
           {
-            text: 'İçe Aktar',
+            text: t('settings.import'),
             style: 'default',
             onPress: () => {
               try {
@@ -207,10 +221,10 @@ export const SettingsScreen = () => {
                   });
                 }
 
-                showAlert('Başarılı', 'Veriler başarıyla içe aktarıldı!', [], 'success');
+                showAlert(t('common.success'), t('settings.dataManagement.importSuccess'), [], 'success');
               } catch (error) {
                 console.error('Import error:', error);
-                showAlert('Hata', 'Veriler içe aktarılırken bir hata oluştu.', [], 'error');
+                showAlert(t('common.error'), t('settings.dataManagement.resetError'), [], 'error');
               }
             }
           }
@@ -219,7 +233,7 @@ export const SettingsScreen = () => {
       );
     } catch (error) {
       console.error('Import error:', error);
-      showAlert('Hata', 'Dosya seçilirken bir hata oluştu.', [], 'error');
+      showAlert(t('common.error'), t('settings.dataManagement.resetError'), [], 'error');
     }
   };
 
@@ -251,15 +265,15 @@ export const SettingsScreen = () => {
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(fileUri, {
           mimeType: 'application/json',
-          dialogTitle: 'Finansal Verilerinizi Dışa Aktarın (JSON)',
+          dialogTitle: t('settings.dataManagement.exportJsonTitle'),
           UTI: 'public.json',
         });
       } else {
-        showAlert('Başarılı', `Veriler şu konuma kaydedildi: ${fileUri}`, [], 'success');
+        showAlert(t('common.success'), t('settings.dataManagement.exportSuccess', { path: fileUri }), [], 'success');
       }
     } catch (error) {
       console.error('Export JSON error:', error);
-      showAlert('Hata', 'JSON dosyası oluşturulurken bir hata oluştu.', [], 'error');
+      showAlert(t('common.error'), t('settings.dataManagement.exportError'), [], 'error');
     }
   };
 
@@ -269,7 +283,7 @@ export const SettingsScreen = () => {
       const totalLiabilities = liabilities.reduce((total, item) => total + (Number(item.currentDebt) || 0), 0);
       const totalReceivables = receivables.reduce((total, item) => total + (Number(item.amount) || 0), 0);
       const netWorth = totalAssets + totalReceivables - totalLiabilities;
-      const exportDate = new Date().toLocaleDateString('tr-TR', {
+      const exportDate = new Date().toLocaleDateString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
@@ -345,128 +359,128 @@ export const SettingsScreen = () => {
           </style>
         </head>
         <body>
-          <h1>📊 Financial AI - Finansal Rapor</h1>
-          <p><strong>Rapor Tarihi:</strong> ${exportDate}</p>
-          <p><strong>Para Birimi:</strong> ${currency} (${currencySymbol})</p>
+          <h1>📊 Financial AI - ${t('settings.pdfReport.title')}</h1>
+          <p><strong>${t('settings.pdfReport.date')}:</strong> ${exportDate}</p>
+          <p><strong>${t('settings.pdfReport.currency')}:</strong> ${currency} (${currencySymbol})</p>
 
           ${profile.name || profile.email || profile.phone || profile.findeksScore || profile.salary || profile.additionalIncome ? `
           <div class="summary">
-            <h2>👤 Profil Bilgileri</h2>
+            <h2>👤 ${t('settings.profile')}</h2>
             ${profile.name ? `
             <div class="summary-item">
-              <span>Ad Soyad:</span>
+              <span>${t('settings.profileSettings.name')}:</span>
               <span style="font-weight: bold;">${profile.name}</span>
             </div>
             ` : ''}
             ${profile.email ? `
             <div class="summary-item">
-              <span>E-posta:</span>
+              <span>${t('settings.profileSettings.email')}:</span>
               <span>${profile.email}</span>
             </div>
             ` : ''}
             ${profile.phone ? `
             <div class="summary-item">
-              <span>Telefon:</span>
+              <span>${t('settings.profileSettings.phone')}:</span>
               <span>${profile.phone}</span>
             </div>
             ` : ''}
             ${profile.findeksScore ? `
             <div class="summary-item">
-              <span>Findeks Kredi Notu:</span>
+              <span>${t('settings.profileSettings.findeks')}:</span>
               <span style="font-weight: bold; color: #9333EA;">${profile.findeksScore}</span>
             </div>
             ` : ''}
             ${profile.salary ? `
             <div class="summary-item">
-              <span>Aylık Net Maaş:</span>
-              <span class="green">${currencySymbol}${Number(profile.salary).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>${t('settings.profileSettings.salary')}:</span>
+              <span class="green">${currencySymbol}${Number(profile.salary).toLocaleString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             ` : ''}
             ${profile.additionalIncome ? `
             <div class="summary-item">
-              <span>Aylık Ek Gelir:</span>
-              <span class="green">${currencySymbol}${Number(profile.additionalIncome).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>${t('settings.profileSettings.additionalIncome')}:</span>
+              <span class="green">${currencySymbol}${Number(profile.additionalIncome).toLocaleString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             ` : ''}
             ${profile.salary && profile.additionalIncome ? `
             <div class="summary-item">
-              <span>Toplam Aylık Gelir:</span>
-              <span style="font-weight: bold; color: #9333EA;">${currencySymbol}${(Number(profile.salary) + Number(profile.additionalIncome)).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>${t('dashboard.totalIncome')}:</span>
+              <span style="font-weight: bold; color: #9333EA;">${currencySymbol}${(Number(profile.salary) + Number(profile.additionalIncome)).toLocaleString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             ` : ''}
           </div>
           ` : ''}
-
+ 
           <div class="summary">
-            <h2>💼 Özet</h2>
+            <h2>💼 ${t('settings.pdfReport.summary')}</h2>
             <div class="summary-item">
-              <span>Toplam Varlıklar:</span>
-              <span class="green">${currencySymbol}${totalAssets.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>${t('dashboard.totalAssets')}:</span>
+              <span class="green">${currencySymbol}${totalAssets.toLocaleString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             <div class="summary-item">
-              <span>Toplam Borçlar:</span>
-              <span class="red">${currencySymbol}${totalLiabilities.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>${t('dashboard.totalLiabilities')}:</span>
+              <span class="red">${currencySymbol}${totalLiabilities.toLocaleString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             <div class="summary-item">
-              <span>Toplam Alacaklar:</span>
-              <span class="green">${currencySymbol}${totalReceivables.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>${t('dashboard.totalReceivables')}:</span>
+              <span class="green">${currencySymbol}${totalReceivables.toLocaleString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             <div class="summary-item">
-              <span>Net Değer:</span>
-              <span class="${netWorth >= 0 ? 'green' : 'red'}">${currencySymbol}${netWorth.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>${t('settings.pdfReport.netWorth')}:</span>
+              <span class="${netWorth >= 0 ? 'green' : 'red'}">${currencySymbol}${netWorth.toLocaleString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
           </div>
 
           ${assets.length > 0 ? `
-          <h2>💰 Varlıklar</h2>
+          <h2>💰 ${t('finance.assets.title')}</h2>
           <table>
             <tr>
-              <th>İsim</th>
-              <th>Tip</th>
-              <th>Değer</th>
+              <th>${t('finance.assets.nameLabel')}</th>
+              <th>${t('finance.assets.typeLabel')}</th>
+              <th>${t('finance.assets.amountLabel')}</th>
             </tr>
             ${assets.map(asset => `
               <tr>
                 <td>${asset.name}</td>
-                <td>${asset.type === 'liquid' ? 'Likit' : asset.type === 'term' ? 'Vadeli' : asset.type === 'gold_currency' ? 'Altın/Döviz' : 'Fonlar'}</td>
-                <td>${currencySymbol}${Number(asset.value).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td>${t(`finance.assets.types.${asset.type}`)}</td>
+                <td>${currencySymbol}${Number(asset.value).toLocaleString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
               </tr>
             `).join('')}
           </table>
           ` : ''}
 
           ${liabilities.length > 0 ? `
-          <h2>💳 Borçlar</h2>
+          <h2>💳 ${t('finance.liabilities.title')}</h2>
           <table>
             <tr>
-              <th>İsim</th>
-              <th>Tip</th>
-              <th>Güncel Borç</th>
-              ${liabilities.some(l => l.totalLimit) ? '<th>Limit</th>' : ''}
+              <th>${t('finance.liabilities.nameLabel')}</th>
+              <th>${t('finance.liabilities.typeLabel')}</th>
+              <th>${t('finance.liabilities.amountLabel')}</th>
+              ${liabilities.some(l => l.totalLimit) ? `<th>${t('finance.liabilities.limitLabel')}</th>` : ''}
             </tr>
             ${liabilities.map(liability => `
               <tr>
                 <td>${liability.name}</td>
-                <td>${liability.type === 'credit_card' ? 'Kredi Kartı' : 'Şahıs Borcu'}</td>
-                <td>${currencySymbol}${Number(liability.currentDebt).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                ${liabilities.some(l => l.totalLimit) ? `<td>${liability.totalLimit ? currencySymbol + Number(liability.totalLimit).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}</td>` : ''}
+                <td>${t(`finance.liabilities.types.${liability.type}`)}</td>
+                <td>${currencySymbol}${Number(liability.currentDebt).toLocaleString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                ${liabilities.some(l => l.totalLimit) ? `<td>${liability.totalLimit ? currencySymbol + Number(liability.totalLimit).toLocaleString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}</td>` : ''}
               </tr>
             `).join('')}
           </table>
           ` : ''}
 
           ${receivables.length > 0 ? `
-          <h2>💵 Alacaklar</h2>
+          <h2>💵 ${t('finance.receivables.title')}</h2>
           <table>
             <tr>
-              <th>Borçlu</th>
-              <th>Tutar</th>
-              <th>Vade Tarihi</th>
+              <th>${t('finance.receivables.nameLabel')}</th>
+              <th>${t('finance.receivables.amountLabel')}</th>
+              <th>${t('finance.receivables.dueDateLabel')}</th>
             </tr>
             ${receivables.map(receivable => `
               <tr>
                 <td>${receivable.debtor}</td>
-                <td>${currencySymbol}${Number(receivable.amount).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td>${currencySymbol}${Number(receivable.amount).toLocaleString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 <td>${receivable.dueDate}</td>
               </tr>
             `).join('')}
@@ -474,19 +488,19 @@ export const SettingsScreen = () => {
           ` : ''}
 
           ${installments.length > 0 ? `
-          <h2>📅 Taksitler</h2>
+          <h2>📅 ${t('finance.installments.title')}</h2>
           <table>
             <tr>
-              <th>İsim</th>
-              <th>Aylık Tutar</th>
-              <th>Kalan Ay</th>
-              <th>Bitiş Tarihi</th>
+              <th>${t('finance.installments.nameLabel')}</th>
+              <th>${t('finance.installments.amountLabel')}</th>
+              <th>${t('finance.installments.remainingLabel')}</th>
+              <th>${t('finance.installments.endDateLabel')}</th>
             </tr>
             ${installments.map(installment => `
               <tr>
                 <td>${installment.name || '-'}</td>
-                <td>${currencySymbol}${Number(installment.installmentAmount).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td>${installment.remainingMonths} ay</td>
+                <td>${currencySymbol}${Number(installment.installmentAmount).toLocaleString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td>${installment.remainingMonths} ${t('finance.installments.month')}</td>
                 <td>${installment.endDate}</td>
               </tr>
             `).join('')}
@@ -494,8 +508,8 @@ export const SettingsScreen = () => {
           ` : ''}
 
           <div class="footer">
-            <p>🤖 Financial AI v1.0.0 ile oluşturuldu</p>
-            <p>Bu rapor ${exportDate} tarihinde dışa aktarılmıştır.</p>
+            <p>🤖 Financial AI v1.0.0 - ${t('settings.pdfReport.footer')}</p>
+            <p>${t('settings.pdfReport.date')}: ${exportDate}</p>
           </div>
         </body>
         </html>
@@ -506,15 +520,15 @@ export const SettingsScreen = () => {
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(uri, {
           mimeType: 'application/pdf',
-          dialogTitle: 'Finansal Raporunuzu Paylaşın',
+          dialogTitle: t('settings.dataManagement.exportPdfTitle'),
           UTI: 'com.adobe.pdf',
         });
       } else {
-        showAlert('Başarılı', `PDF şu konuma kaydedildi: ${uri}`, [], 'success');
+        showAlert(t('common.success'), t('settings.dataManagement.exportSuccess', { path: uri }), [], 'success');
       }
     } catch (error) {
       console.error('Export error:', error);
-      showAlert('Hata', 'PDF oluşturulurken bir hata oluştu.', [], 'error');
+      showAlert(t('common.error'), t('settings.dataManagement.exportError'), [], 'error');
     }
   };
 
@@ -531,13 +545,13 @@ export const SettingsScreen = () => {
           <View style={styles.headerTop}>
             <View>
               <Text style={[styles.subtitle, { color: colors.text.tertiary }]}>
-                Uygulama
+                {t('settings.categoryApp')}
               </Text>
               <Text style={[styles.title, { color: colors.text.primary }]}>
-                Ayarlar
+                {t('settings.title')}
               </Text>
             </View>
-            <View style={styles.headerIcon}>
+            <View style={[styles.headerIcon, { backgroundColor: 'rgba(147, 51, 234, 0.15)' }]}>
               <SettingsIcon size={28} color={colors.purple.light} strokeWidth={2} />
             </View>
           </View>
@@ -559,10 +573,10 @@ export const SettingsScreen = () => {
             </View>
             <View style={styles.profileInfo}>
               <Text style={styles.profileName}>
-                {profile.name || 'Finansal Yolculuğun'}
+                {profile.name || t('dashboard.financialJourney')}
               </Text>
               <Text style={styles.profileEmail}>
-                {profile.email || 'Verilerin sadece bu cihazda güvende'}
+                {profile.email || t('dashboard.dataSecureHint')}
               </Text>
             </View>
           </LinearGradient>
@@ -570,7 +584,7 @@ export const SettingsScreen = () => {
 
         {/* Appearance Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Görünüm</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>{t('settings.appearance.title')}</Text>
           <ThemeSelectionCard />
           
           {isDarkMode && (
@@ -580,9 +594,9 @@ export const SettingsScreen = () => {
                   <Moon size={20} color={colors.purple.light} strokeWidth={2.5} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.optionTitle, { color: colors.text.primary }]}>AMOLED Modu</Text>
+                  <Text style={[styles.optionTitle, { color: colors.text.primary }]}>{t('settings.appearance.amoledMode')}</Text>
                   <Text style={[styles.optionSubtitle, { color: colors.text.tertiary }]}>
-                    Tam siyah arka plan ile pil tasarrufu yapın
+                    {t('settings.appearance.amoledSub')}
                   </Text>
                 </View>
               </View>
@@ -597,7 +611,7 @@ export const SettingsScreen = () => {
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Genel</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>{t('settings.general')}</Text>
 
           <TouchableOpacity
             style={[styles.option, { backgroundColor: colors.cardBackground }]}
@@ -608,9 +622,27 @@ export const SettingsScreen = () => {
                 <DollarSign size={20} color={colors.purple.light} strokeWidth={2.5} />
               </View>
               <View>
-                <Text style={[styles.optionTitle, { color: colors.text.primary }]}>Para Birimi</Text>
+                <Text style={[styles.optionTitle, { color: colors.text.primary }]}>{t('settings.currency')}</Text>
                 <Text style={[styles.optionSubtitle, { color: colors.text.tertiary }]}>
                   {currency} ({currencySymbol})
+                </Text>
+              </View>
+            </View>
+            <ChevronRight size={20} color={colors.text.secondary} strokeWidth={2} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.option, { backgroundColor: colors.cardBackground }]}
+            onPress={() => setLanguageModalVisible(true)}
+          >
+            <View style={styles.optionLeft}>
+              <View style={[styles.iconCircle, { backgroundColor: 'rgba(147, 51, 234, 0.15)' }]}>
+                <Languages size={20} color={colors.purple.light} strokeWidth={2.5} />
+              </View>
+              <View>
+                <Text style={[styles.optionTitle, { color: colors.text.primary }]}>{t('settings.language')}</Text>
+                <Text style={[styles.optionSubtitle, { color: colors.text.tertiary }]}>
+                  {i18n.language === 'tr' ? 'Türkçe' : 'English'}
                 </Text>
               </View>
             </View>
@@ -622,29 +654,43 @@ export const SettingsScreen = () => {
               key={option.id}
               style={[styles.option, { backgroundColor: colors.cardBackground }]}
               onPress={() => {
-                if (option.title === 'Profil Ayarları') {
-                  navigation.navigate('ProfileSettings' as never);
-                } else if (option.title === 'API Key Ayarları') {
-                  navigation.navigate('ApiKeySettings' as never);
-                } else if (option.title === 'Bildirimler') {
-                  navigation.navigate('NotificationSettings' as never);
-                } else if (option.title === 'Hakkında') {
-                  setShowAbout(true);
-                } else if (option.title === 'Verileri Dışa Aktar') {
-                  showAlert(
-                    'Dışa Aktar',
-                    'Hangi formatta dışa aktarmak istersiniz?',
-                    [
-                      { text: 'İptal', style: 'cancel' },
-                      { text: 'PDF Rapor', onPress: handleExportDataPDF },
-                      { text: 'JSON (Yedek)', onPress: handleExportDataJSON },
-                    ],
-                    'info'
-                  );
-                } else if (option.title === 'Verileri İçe Aktar') {
-                  handleImportData();
-                } else if (option.title === 'Onboarding\'i Tekrar Göster') {
-                  resetOnboarding();
+                switch (option.id) {
+                  case '1':
+                    navigation.navigate('ProfileSettings');
+                    break;
+                  case '2':
+                    navigation.navigate('ApiKeySettings');
+                    break;
+                  case '3':
+                    navigation.navigate('NotificationSettings');
+                    break;
+                  case '4':
+                    resetOnboarding();
+                    break;
+                  case '5':
+                    showAlert(
+                      t('settings.export'),
+                      t('settings.exportFormat'),
+                      [
+                        { text: t('common.cancel'), style: 'cancel' },
+                        { text: t('dashboard.pdfReport'), onPress: handleExportDataPDF },
+                        { text: t('dashboard.jsonBackup'), onPress: handleExportDataJSON },
+                      ],
+                      'info'
+                    );
+                    break;
+                  case '6':
+                    handleImportData();
+                    break;
+                  case '7':
+                    setShowAbout(true);
+                    break;
+                  case '8':
+                    navigation.navigate('PrivacyPolicy' as never);
+                    break;
+                  case '9':
+                    navigation.navigate('TermsOfService' as never);
+                    break;
                 }
               }}
             >
@@ -665,9 +711,9 @@ export const SettingsScreen = () => {
                 <ShieldCheck size={20} color={colors.success} strokeWidth={2.5} />
               </View>
               <View style={{ flex: 1, marginRight: 8 }}>
-                <Text style={[styles.optionTitle, { color: colors.text.primary }]}>Biyometrik Kilit</Text>
+                <Text style={[styles.optionTitle, { color: colors.text.primary }]}>{t('settings.security.biometricTitle')}</Text>
                 <Text style={[styles.optionSubtitle, { color: colors.text.tertiary }]}>
-                  Uygulama açılışında FaceID/Parmak İzi iste
+                  {t('settings.security.biometricSub')}
                 </Text>
               </View>
             </View>
@@ -681,7 +727,7 @@ export const SettingsScreen = () => {
         </View>
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Tehlikeli Alan</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>{t('settings.dangerZone')}</Text>
           <TouchableOpacity
             style={[styles.dangerOption, { backgroundColor: colors.cardBackground }]}
             onPress={handleDeleteAllData}
@@ -690,7 +736,7 @@ export const SettingsScreen = () => {
               <View style={[styles.iconCircle, { backgroundColor: 'rgba(255, 71, 87, 0.15)' }]}>
                 <Trash2 size={20} color={colors.error} strokeWidth={2.5} />
               </View>
-              <Text style={[styles.dangerText, { color: colors.error }]}>Tüm Verileri Sil</Text>
+              <Text style={[styles.dangerText, { color: colors.error }]}>{t('settings.deleteAllData')}</Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -700,7 +746,7 @@ export const SettingsScreen = () => {
             <Text style={[styles.footerText, { color: colors.text.secondary }]}>Financial AI v1.0.0</Text>
           </TouchableOpacity>
           <Text style={[styles.footerSubtext, { color: colors.text.tertiary }]}>
-            Kişisel finans yönetim aracınız
+            {t('settings.footerSubtitle')}
           </Text>
         </View>
       </ScrollView>
@@ -708,6 +754,13 @@ export const SettingsScreen = () => {
       <CurrencyModal
         visible={currencyModalVisible}
         onClose={() => setCurrencyModalVisible(false)}
+      />
+
+      <LanguageSelectionModal
+        visible={languageModalVisible}
+        onClose={() => setLanguageModalVisible(false)}
+        currentLanguage={i18n.language}
+        onSelect={changeLanguage}
       />
 
       {AlertComponent}

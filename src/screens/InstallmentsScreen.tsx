@@ -1,51 +1,68 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   TouchableOpacity,
   Modal,
 } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MoreVertical, Edit, Trash2, Calendar, TrendingDown, Plus, Clock } from 'lucide-react-native';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { StrategicInstallment } from '../types';
 import { gradients } from '../theme/colors';
 import { AddInstallmentModal } from '../components/Modals/AddInstallmentModal';
 import { EditInstallmentModal } from '../components/Modals/EditInstallmentModal';
 import { formatCurrency } from '../utils/formatters';
+import { useCustomAlert } from '../hooks/useCustomAlert';
 
 export const InstallmentsScreen = () => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const { currencySymbol } = useCurrency(); // Get currency symbol from context
   const insets = useSafeAreaInsets();
   const { installments, addInstallment, updateInstallment, removeInstallment } = useFinanceStore();
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [selectedInstallment, setSelectedInstallment] = useState(null);
+  const [selectedInstallment, setSelectedInstallment] = useState<StrategicInstallment | null>(null);
   const [optionsModalVisible, setOptionsModalVisible] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItem, setSelectedItem] = useState<StrategicInstallment | null>(null);
+  const { showAlert, AlertComponent } = useCustomAlert();
 
   const totalMonthlyPayment = installments.reduce(
     (total, item) => total + item.installmentAmount,
     0
   );
 
-  const handleEditInstallment = (installment) => {
+  const handleEditInstallment = (installment: StrategicInstallment) => {
     setSelectedInstallment(installment);
     setEditModalVisible(true);
     setOptionsModalVisible(false);
   };
 
-  const handleDeleteInstallment = (id) => {
-    removeInstallment(id);
+  const handleDeleteInstallment = (id: string) => {
     setOptionsModalVisible(false);
+    showAlert(
+      t('common.deleteConfirmTitle'),
+      t('common.deleteConfirmMessage'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        { 
+          text: t('common.delete'), 
+          style: 'destructive',
+          onPress: () => removeInstallment(id)
+        }
+      ],
+      'warning'
+    );
   };
 
-  const handleInstallmentPress = (installment) => {
+  const handleInstallmentPress = (installment: StrategicInstallment) => {
     setSelectedItem(installment);
     setOptionsModalVisible(true);
   };
@@ -57,10 +74,10 @@ export const InstallmentsScreen = () => {
         <View style={styles.headerTop}>
           <View>
             <Text style={[styles.subtitle, { color: colors.text.tertiary }]}>
-              Aylık Toplam
+              {t('finance.installments.monthlyPayment')}
             </Text>
             <Text style={[styles.title, { color: colors.text.primary }]}>
-              Taksitler
+              {t('finance.installments.title')}
             </Text>
           </View>
           <View style={[styles.headerIcon, { backgroundColor: 'rgba(236, 72, 153, 0.15)' }]}>
@@ -76,7 +93,7 @@ export const InstallmentsScreen = () => {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
-            {/* Işık Hüzmeleri */}
+            {/* Light Beams */}
             <View style={styles.lightBeam1} />
             <View style={styles.lightBeam2} />
             <View style={styles.lightBeam3} />
@@ -90,7 +107,7 @@ export const InstallmentsScreen = () => {
                 <TrendingDown size={24} color="rgba(255, 255, 255, 0.95)" strokeWidth={2.5} />
               </View>
               <View style={styles.heroTextArea}>
-                <Text style={styles.heroLabel}>Aylık Ödeme</Text>
+                <Text style={styles.heroLabel}>{t('finance.installments.subtitle')}</Text>
                 <Text style={styles.heroValue}>
                   {formatCurrency(totalMonthlyPayment, currencySymbol)}
                 </Text>
@@ -100,11 +117,12 @@ export const InstallmentsScreen = () => {
         </View>
       </View>
 
-      <FlatList
+      <FlashList<StrategicInstallment>
         data={installments}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item: StrategicInstallment) => item.id}
         contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
+        estimatedItemSize={160}
+        renderItem={({ item }: { item: StrategicInstallment }) => (
           <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.cardHeader}>
               <View style={styles.cardLeft}>
@@ -118,7 +136,7 @@ export const InstallmentsScreen = () => {
                   <View style={styles.monthsTag}>
                     <Clock size={12} color={colors.accent.pink} strokeWidth={2.5} />
                     <Text style={[styles.monthsText, { color: colors.accent.pink }]}>
-                      {item.remainingMonths} Ay Kaldı
+                      {item.remainingMonths} {t('finance.installments.month')} {t('finance.installments.remaining')}
                     </Text>
                   </View>
                 </View>
@@ -134,13 +152,13 @@ export const InstallmentsScreen = () => {
             <View style={styles.cardBottom}>
               <View style={styles.infoRow}>
                 <View style={styles.infoItem}>
-                  <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>Aylık Tutar</Text>
+                  <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>{t('finance.installments.subtitle')}</Text>
                   <Text style={[styles.infoValue, { color: colors.accent.pink }]}>
                     {formatCurrency(item.installmentAmount, currencySymbol)}
                   </Text>
                 </View>
                 <View style={styles.infoItem}>
-                  <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>Bitiş Tarihi</Text>
+                  <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>{t('common.endDate')}</Text>
                   <Text style={[styles.infoValue, { color: colors.text.primary }]}>{item.endDate}</Text>
                 </View>
               </View>
@@ -163,7 +181,7 @@ export const InstallmentsScreen = () => {
                   />
                 </View>
                 <Text style={[styles.progressText, { color: colors.text.tertiary }]}>
-                  {Math.min(100, Math.round(((12 - item.remainingMonths) / 12) * 100))}% Tamamlandı
+                  %{Math.min(100, Math.round(((12 - item.remainingMonths) / 12) * 100))} {t('common.completed')}
                 </Text>
               </View>
 
@@ -179,10 +197,10 @@ export const InstallmentsScreen = () => {
               <Calendar size={48} color={colors.accent.pink} strokeWidth={1.5} />
             </View>
             <Text style={[styles.emptyText, { color: colors.text.primary }]}>
-              Henüz taksit eklenmemiş
+              {t('finance.installments.noData')}
             </Text>
             <Text style={[styles.emptySubtext, { color: colors.text.tertiary }]}>
-              Taksitli ödemelerinizi eklemek için + butonuna tıklayın
+              {t('finance.installments.noDataSub')}
             </Text>
           </View>
         }
@@ -203,18 +221,18 @@ export const InstallmentsScreen = () => {
           <View style={[styles.optionsModal, { backgroundColor: colors.cardBackground }]}>
             <TouchableOpacity
               style={[styles.optionButton, { borderBottomColor: colors.border.secondary }]}
-              onPress={() => handleEditInstallment(selectedItem)}
+              onPress={() => selectedItem && handleEditInstallment(selectedItem)}
             >
               <Edit size={22} color={colors.text.primary} strokeWidth={2} />
-              <Text style={[styles.optionText, { color: colors.text.primary }]}>Düzenle</Text>
+              <Text style={[styles.optionText, { color: colors.text.primary }]}>{t('common.edit')}</Text>
             </TouchableOpacity>
-
+ 
             <TouchableOpacity
               style={[styles.optionButton, styles.deleteOption]}
-              onPress={() => handleDeleteInstallment(selectedItem.id)}
+              onPress={() => selectedItem && handleDeleteInstallment(selectedItem.id)}
             >
               <Trash2 size={22} color={colors.error} strokeWidth={2} />
-              <Text style={[styles.optionText, { color: colors.error }]}>Sil</Text>
+              <Text style={[styles.optionText, { color: colors.error }]}>{t('common.delete')}</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -250,6 +268,7 @@ export const InstallmentsScreen = () => {
           setSelectedInstallment(null);
         }}
       />
+      {AlertComponent}
     </View>
   );
 };
@@ -303,7 +322,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
   },
-  // Işık Hüzmeleri
+  // Light Rays
   lightBeam1: {
     position: 'absolute',
     width: 200,
@@ -372,11 +391,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
   },
   heroTextArea: {
     flex: 1,

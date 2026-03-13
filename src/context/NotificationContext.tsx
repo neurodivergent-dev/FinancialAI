@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import * as Notifications from 'expo-notifications';
+import i18n from '../i18n';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
@@ -41,6 +42,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -57,8 +60,8 @@ if (Platform.OS === 'android') {
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<NotificationSettings>(defaultSettings);
   const [hasPermission, setHasPermission] = useState(false);
-  const notificationListener = useRef<any>();
-  const responseListener = useRef<any>();
+  const notificationListener = useRef<any>(null);
+  const responseListener = useRef<any>(null);
 
   useEffect(() => {
     loadSettings();
@@ -157,7 +160,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           sound: true,
           priority: Notifications.AndroidNotificationPriority.HIGH,
         },
-        trigger: date,
+        trigger: {
+          date: date,
+          channelId: 'default',
+        } as any,
       });
     } catch (error) {
       console.error('Error scheduling payment reminder:', error);
@@ -177,8 +183,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: '💰 Günlük Finansal Kontrol',
-          body: 'Bugünün harcamalarını kontrol etmeyi unutma!',
+          title: i18n.t('settings.notificationSettings.dailyReminderTitle'),
+          body: i18n.t('settings.notificationSettings.dailyReminderBody'),
           sound: true,
           priority: Notifications.AndroidNotificationPriority.DEFAULT,
         },
@@ -186,6 +192,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           hour: hours,
           minute: minutes,
           repeats: true,
+          channelId: 'default',
         },
       });
 

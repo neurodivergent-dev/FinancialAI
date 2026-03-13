@@ -1,13 +1,6 @@
 export const AI_CONFIG = {
-  groq: {
-    apiKey: process.env.EXPO_PUBLIC_GROQ_API_KEY || 'YOUR_GROQ_API_KEY_HERE',
-    endpoint: 'https://api.groq.com/openai/v1/chat/completions',
-    model: 'moonshotai/kimi-k2-instruct-0905', // En iyi Türkçe model
-    fallbackModels: [],
-    maxTokens: 8000,
-  },
   gemini: {
-    apiKey: process.env.EXPO_PUBLIC_GEMINI_API_KEY || 'YOUR_GEMINI_API_KEY_HERE',
+    apiKey: process.env.EXPO_PUBLIC_GEMINI_API_KEY || '',
     endpoint: 'https://generativelanguage.googleapis.com/v1beta',
     model: 'gemini-2.5-flash',
     fallbackModels: ['gemini-1.5-flash-8b', 'gemini-2.0-flash', 'gemini-2.0-flash-001'],

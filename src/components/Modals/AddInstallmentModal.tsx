@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Modal,
   View,
@@ -12,7 +13,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { X, Calendar, TrendingDown, Clock, DollarSign, Check } from 'lucide-react-native';
+import { X, Calendar, TrendingUp, Clock, DollarSign, Check } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { gradients } from '../../theme/colors';
@@ -30,6 +31,7 @@ interface AddInstallmentModalProps {
 }
 
 export const AddInstallmentModal: React.FC<AddInstallmentModalProps> = ({ visible, onClose, onAdd }) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const { currencySymbol } = useCurrency();
   const insets = useSafeAreaInsets();
@@ -83,9 +85,9 @@ export const AddInstallmentModal: React.FC<AddInstallmentModalProps> = ({ visibl
             >
               <View style={styles.headerContent}>
                 <View style={styles.headerIcon}>
-                  <TrendingDown size={28} color="#FFFFFF" strokeWidth={2.5} />
+                  <TrendingUp size={28} color="#FFFFFF" strokeWidth={2.5} />
                 </View>
-                <Text style={styles.modalTitle}>Yeni Taksit Ekle</Text>
+                <Text style={styles.modalTitle} numberOfLines={2} adjustsFontSizeToFit>{t('finance.installments.addTitle')}</Text>
               </View>
               <View style={styles.headerActions}>
                 <TouchableOpacity
@@ -109,14 +111,14 @@ export const AddInstallmentModal: React.FC<AddInstallmentModalProps> = ({ visibl
           >
             {/* Name */}
             <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>İsim (Opsiyonel)</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.installments.nameLabel')}</Text>
               <View style={[styles.inputContainer, { backgroundColor: colors.background }]}>
                 <DollarSign size={20} color={colors.text.tertiary} strokeWidth={2} />
                 <TextInput
                   style={[styles.input, { color: colors.text.primary }]}
                   value={name}
                   onChangeText={setName}
-                  placeholder="Örn: Telefon Taksiti"
+                  placeholder={t('finance.installments.namePlaceholder')}
                   placeholderTextColor={colors.text.tertiary}
                 />
               </View>
@@ -124,14 +126,14 @@ export const AddInstallmentModal: React.FC<AddInstallmentModalProps> = ({ visibl
 
             {/* Installment Amount */}
             <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>Aylık Taksit Tutarı</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.installments.amountLabel')}</Text>
               <View style={[styles.inputContainer, { backgroundColor: colors.background }]}>
                 <Text style={[styles.currencyPrefix, { color: colors.text.tertiary }]}>{currencySymbol}</Text>
                 <TextInput
                   style={[styles.input, { color: colors.text.primary }]}
                   value={installmentAmount}
                   onChangeText={setInstallmentAmount}
-                  placeholder="0.00"
+                  placeholder={t('finance.liabilities.amountPlaceholder')}
                   placeholderTextColor={colors.text.tertiary}
                   keyboardType="decimal-pad"
                 />
@@ -140,14 +142,14 @@ export const AddInstallmentModal: React.FC<AddInstallmentModalProps> = ({ visibl
 
             {/* Remaining Months */}
             <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>Kalan Ay</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.installments.remainingLabel')}</Text>
               <View style={[styles.inputContainer, { backgroundColor: colors.background }]}>
                 <Clock size={20} color={colors.text.tertiary} strokeWidth={2} />
                 <TextInput
                   style={[styles.input, { color: colors.text.primary }]}
                   value={remainingMonths}
                   onChangeText={setRemainingMonths}
-                  placeholder="Örn: 12"
+                  placeholder={t('finance.installments.remainingPlaceholder')}
                   placeholderTextColor={colors.text.tertiary}
                   keyboardType="number-pad"
                 />
@@ -156,14 +158,14 @@ export const AddInstallmentModal: React.FC<AddInstallmentModalProps> = ({ visibl
 
             {/* End Date */}
             <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>Bitiş Tarihi</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.installments.endDateLabel')}</Text>
               <View style={[styles.inputContainer, { backgroundColor: colors.background }]}>
                 <Calendar size={20} color={colors.text.tertiary} strokeWidth={2} />
                 <TextInput
                   style={[styles.input, { color: colors.text.primary }]}
                   value={endDate}
                   onChangeText={setEndDate}
-                  placeholder="Örn: 15/12/2025"
+                  placeholder={t('finance.installments.endDatePlaceholder')}
                   placeholderTextColor={colors.text.tertiary}
                 />
               </View>
@@ -171,13 +173,13 @@ export const AddInstallmentModal: React.FC<AddInstallmentModalProps> = ({ visibl
 
             {/* Details */}
             <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>Detaylar (Opsiyonel)</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.installments.detailsLabel')}</Text>
               <View style={[styles.inputContainer, styles.textAreaContainer, { backgroundColor: colors.background }]}>
                 <TextInput
                   style={[styles.input, styles.textArea, { color: colors.text.primary }]}
                   value={details}
                   onChangeText={setDetails}
-                  placeholder="Ek bilgiler..."
+                  placeholder={t('finance.installments.detailsPlaceholder')}
                   placeholderTextColor={colors.text.tertiary}
                   multiline
                   numberOfLines={3}
@@ -247,6 +249,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: -0.5,
+    flexShrink: 1,
   },
   closeButton: {
     width: 40,

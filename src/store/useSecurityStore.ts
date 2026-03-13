@@ -20,7 +20,7 @@ export const useSecurityStore = create<SecurityState>()(
     {
       name: 'security-storage',
       storage: createJSONStorage(() => AsyncStorage),
-      // Sadece isBiometricsEnabled'ı kaydet, isLocked her açılışta resetlensin
+      // Only save isBiometricsEnabled, isLocked should be reset on every launch
       partialize: (state) => ({ isBiometricsEnabled: state.isBiometricsEnabled }),
     }
   )

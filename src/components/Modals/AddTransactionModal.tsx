@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -24,6 +25,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
   onClose,
   onAdd
 }) => {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
@@ -31,13 +33,13 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 
   const handleSubmit = () => {
     if (!name.trim() || !amount.trim()) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert(t('common.error'), t('finance.transactions.validationError'));
       return;
     }
 
     const numericAmount = parseFloat(amount);
     if (isNaN(numericAmount) || numericAmount <= 0) {
-      Alert.alert('Error', 'Please enter a valid amount');
+      Alert.alert(t('common.error'), t('finance.transactions.amountError'));
       return;
     }
 
@@ -62,7 +64,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add Transaction</Text>
+              <Text style={styles.modalTitle} numberOfLines={2} adjustsFontSizeToFit>{t('finance.transactions.addTitle')}</Text>
               <TouchableOpacity onPress={onClose}>
                 <Text style={{ color: '#fff', fontSize: 24, fontWeight: 'bold' }}>×</Text>
               </TouchableOpacity>
@@ -70,7 +72,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 
             <TextInput
               style={styles.input}
-              placeholder="Transaction name"
+              placeholder={t('finance.transactions.namePlaceholder')}
               placeholderTextColor="#888"
               value={name}
               onChangeText={setName}
@@ -78,7 +80,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 
             <TextInput
               style={styles.input}
-              placeholder="Amount"
+              placeholder={t('finance.transactions.amountPlaceholder')}
               placeholderTextColor="#888"
               keyboardType="numeric"
               value={amount}
@@ -102,7 +104,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                     type === 'asset' ? styles.activeToggleText : { color: '#00ff9d' }
                   ]}
                 >
-                  Asset
+                  {t('finance.transactions.assetLabel')}
                 </Text>
               </TouchableOpacity>
 
@@ -122,13 +124,13 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                     type === 'liability' ? styles.activeToggleText : { color: '#ff4757' }
                   ]}
                 >
-                  Liability
+                  {t('finance.transactions.liabilityLabel')}
                 </Text>
               </TouchableOpacity>
             </View>
 
             <TouchableOpacity style={[styles.addButton, { marginBottom: insets.bottom + 10 }]} onPress={handleSubmit}>
-              <Text style={styles.addButtonText}>Add Transaction</Text>
+              <Text style={styles.addButtonText}>{t('finance.transactions.submitButton')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -168,9 +170,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   modalTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
+    flexShrink: 1,
   },
   input: {
     backgroundColor: '#1a1a1a',

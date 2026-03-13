@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -32,43 +33,43 @@ interface OnboardingSlide {
   icon: any;
   title: string;
   description: string;
-  gradient: string[];
+  gradient: any;
 }
 
 const slides: OnboardingSlide[] = [
   {
     id: 1,
     icon: Wallet,
-    title: 'Finansal Özgürlüğe Hoş Geldiniz',
-    description: 'Tüm varlıklarınızı, borçlarınızı ve alacaklarınızı tek bir yerden yönetin. Akıllı finansal asistanınız ile tanışın.',
+    title: 'onboarding.slide1Title',
+    description: 'onboarding.slide1Description',
     gradient: gradients.purple,
   },
   {
     id: 2,
     icon: TrendingUp,
-    title: 'Gelişmiş Finansal Takip',
-    description: 'Net değerinizi, güvenli harcama limitinizi ve finansal sağlığınızı anlık olarak görün. Grafiklerle durumunuzu analiz edin.',
+    title: 'onboarding.slide2Title',
+    description: 'onboarding.slide2Description',
     gradient: ['#10B981', '#059669', '#047857'],
   },
   {
     id: 3,
     icon: Brain,
-    title: 'AI Destekli CFO Analizi',
-    description: 'Gemini AI ile kişiselleştirilmiş finansal öneriler alın. Riskleri tespit edin, stratejiler geliştirin.',
+    title: 'onboarding.slide3Title',
+    description: 'onboarding.slide3Description',
     gradient: ['#F59E0B', '#F97316', '#EA580C'],
   },
   {
     id: 4,
     icon: Target,
-    title: 'Akıllı Hedef Yönetimi',
-    description: 'Finansal hedeflerinizi belirleyin, ilerleyişinizi takip edin. Her küçük adımda başarınızı kutlayın.',
+    title: 'onboarding.slide4Title',
+    description: 'onboarding.slide4Description',
     gradient: ['#06B6D4', '#0891B2', '#0E7490'],
   },
   {
     id: 5,
     icon: Shield,
-    title: 'Güvenli ve Gizli',
-    description: 'Verileriniz cihazınızda güvenle saklanır. İstediğiniz zaman yedekleyin, geri yükleyin.',
+    title: 'onboarding.slide5Title',
+    description: 'onboarding.slide5Description',
     gradient: ['#8B5CF6', '#7C3AED', '#6D28D9'],
   },
 ];
@@ -78,6 +79,7 @@ interface OnboardingScreenProps {
 }
 
 export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const navigation = useNavigation();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -167,7 +169,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
         <Text style={[styles.logo, { color: colors.purple.primary }]}>Financial AI</Text>
         {currentIndex < slides.length - 1 && (
           <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
-            <Text style={[styles.skipText, { color: colors.text.secondary }]}>Atla</Text>
+            <Text style={[styles.skipText, { color: colors.text.secondary }]}>{t('onboarding.skip')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -211,12 +213,12 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
 
               {/* Title */}
               <Text style={[styles.title, { color: colors.text.primary }]}>
-                {slide.title}
+                {t(slide.title)}
               </Text>
 
               {/* Description */}
               <Text style={[styles.description, { color: colors.text.secondary }]}>
-                {slide.description}
+                {t(slide.description)}
               </Text>
             </Animated.View>
           </View>
@@ -266,10 +268,10 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
             end={{ x: 1, y: 1 }}
           >
             {currentIndex === slides.length - 1 ? (
-              <Text style={styles.nextButtonText}>Başla</Text>
+              <Text style={styles.nextButtonText}>{t('onboarding.start')}</Text>
             ) : (
               <>
-                <Text style={styles.nextButtonText}>Devam</Text>
+                <Text style={styles.nextButtonText}>{t('onboarding.next')}</Text>
                 <ChevronRight size={24} color="#FFFFFF" strokeWidth={2.5} />
               </>
             )}
@@ -358,7 +360,6 @@ const styles = StyleSheet.create({
   dot: {
     height: 8,
     borderRadius: 4,
-    transition: 'all 0.3s ease',
   },
   navigation: {
     flexDirection: 'row',

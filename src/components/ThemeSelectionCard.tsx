@@ -1,20 +1,21 @@
-import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Sun, Moon, Smartphone } from 'lucide-react-native';
 import { useTheme } from '../context/ThemeContext';
 
 export const ThemeSelectionCard = () => {
+  const { t } = useTranslation();
   const { themeMode, setThemeMode, colors, isDarkMode } = useTheme();
 
   const themeOptions = [
-    { mode: 'light', label: 'Açık', icon: Sun },
-    { mode: 'dark', label: 'Koyu', icon: Moon },
-    { mode: 'system', label: 'Sistem', icon: Smartphone },
+    { mode: 'light', label: t('settings.themeSelection.light'), icon: Sun },
+    { mode: 'dark', label: t('settings.themeSelection.dark'), icon: Moon },
+    { mode: 'system', label: t('settings.themeSelection.system'), icon: Smartphone },
   ] as const;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.cardBackground }]}>
-      <Text style={[styles.title, { color: colors.text.primary }]}>Tema Tercihi</Text>
+      <Text style={[styles.title, { color: colors.text.primary }]}>{t('settings.themeSelection.title')}</Text>
       <View style={styles.optionsContainer}>
         {themeOptions.map((option) => {
           const isActive = themeMode === option.mode;

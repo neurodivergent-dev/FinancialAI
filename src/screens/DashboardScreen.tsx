@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
@@ -26,9 +27,11 @@ import { geminiService } from "../services/geminiService";
 import { CFOReportModal } from "../components/CFOReport/CFOReportModal";
 import { FinancialCharts } from "../components/Charts/FinancialCharts";
 import { formatCurrency, formatNumber, formatPercentage, formatCurrencySmart } from "../utils/formatters";
+import { useCustomAlert } from "../hooks/useCustomAlert";
 
 export const DashboardScreen = () => {
   const navigation = useNavigation();
+  const { t, i18n } = useTranslation();
   const { isPremium } = useSubscription();
   const [refreshing, setRefreshing] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
@@ -43,8 +46,9 @@ export const DashboardScreen = () => {
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
   const { colors } = useTheme();
   const { currencySymbol } = useCurrency();
-  const { getActiveApiKey } = useApiKey();
+  const { getActiveApiKey, isAiEnabled } = useApiKey();
   const { profile } = useProfile();
+  const { showAlert, AlertComponent } = useCustomAlert();
 
   // Tilt animation
   const tiltAnim = useRef(new Animated.Value(0)).current;
@@ -73,10 +77,15 @@ export const DashboardScreen = () => {
     [installments]
   );
 
-  // Son CFO analizini yükle
+  // Load last CFO analysis
   useEffect(() => {
     loadLastCFOAnalysis();
   }, []);
+
+  // Track API Key change and update service
+  useEffect(() => {
+    geminiService.updateApiKey(getActiveApiKey());
+  }, [getActiveApiKey]);
 
   const loadLastCFOAnalysis = async () => {
     try {
@@ -86,7 +95,7 @@ export const DashboardScreen = () => {
         setAiResult(parsed);
       }
     } catch (error) {
-      console.log('CFO analizi yüklenemedi:', error);
+      console.log('CFO analysis could not be loaded:', error);
     }
   };
 
@@ -94,7 +103,7 @@ export const DashboardScreen = () => {
     try {
       await AsyncStorage.setItem('@last_cfo_analysis', JSON.stringify(analysis));
     } catch (error) {
-      console.log('CFO analizi kaydedilemedi:', error);
+      console.log('CFO analysis could not be saved:', error);
     }
   };
 
@@ -103,195 +112,180 @@ export const DashboardScreen = () => {
     setTimeout(() => setRefreshing(false), 1000);
   };
 
-  // Tüm finansal önerileri hesapla
+  // Calculate all financial tips
   const getAllFinancialTips = () => {
     const debtRatio = totalAssets > 0 ? (totalLiabilities / totalAssets) * 100 : 0;
     const tips = [];
 
-    // Borç oranı yüksekse
+    // If debt ratio is high
     if (debtRatio > 50) {
       tips.push({
         icon: AlertCircle,
         color: '#F59E0B',
         gradient: ['#F59E0B', '#F97316'],
-        title: 'Borç Oranınız Yüksek',
-        description: `Toplam borçlarınız varlıklarınızın %${debtRatio.toFixed(0)}'ini oluşturuyor. Öncelikle borç azaltmaya odaklanın.`,
+        title: t('dashboard.tips.highDebtTitle'),
+        description: t('dashboard.tips.highDebtDescription', { debtRatio: debtRatio.toFixed(0) }),
       });
     }
 
-    // Güvenli harcama yüksekse
+    // If safe to spend is high
     if (safeToSpend > totalAssets * 0.3 && totalAssets > 0) {
       tips.push({
         icon: Target,
         color: '#10B981',
         gradient: ['#10B981', '#059669'],
-        title: 'Yatırım Zamanı',
-        description: `${formatCurrencySmart(safeToSpend, currencySymbol)} güvenli harcama limitiniz var. Bir kısmını yatırıma yönlendirebilirsiniz.`,
+        title: t('dashboard.tips.investmentTimeTitle'),
+        description: t('dashboard.tips.investmentTimeDescription', { safeToSpend: formatCurrencySmart(safeToSpend, currencySymbol) }),
       });
     }
 
-    // Alacaklar fazlaysa
+    // If receivables are high
     if (totalReceivables > totalAssets * 0.2 && totalReceivables > 0) {
       tips.push({
         icon: TrendingUp,
         color: '#06B6D4',
         gradient: ['#06B6D4', '#0891B2'],
-        title: 'Alacak Takibi',
-        description: `${formatCurrencySmart(totalReceivables, currencySymbol)} alacağınız var. Tahsilatlarınızı takip etmeyi unutmayın.`,
+        title: t('dashboard.tips.receivableFollowupTitle'),
+        description: t('dashboard.tips.receivableFollowupDescription', { totalReceivables: formatCurrencySmart(totalReceivables, currencySymbol) }),
       });
     }
 
-    // Net değer pozitif ve iyi durumda
+    // Net worth is positive and in good condition
     if (netWorth > 0 && debtRatio < 30) {
       tips.push({
         icon: Lightbulb,
         color: '#8B5CF6',
         gradient: gradients.purple,
-        title: 'Harika Gidiyorsunuz!',
-        description: `Net değeriniz ${formatCurrencySmart(netWorth, currencySymbol)}. Finansal hedeflerinize düzenli tasarrufla devam edin.`,
+        title: t('dashboard.tips.greatJobTitle'),
+        description: t('dashboard.tips.greatJobDescription', { netWorth: formatCurrencySmart(netWorth, currencySymbol) }),
       });
     }
 
-    // Taksit yükü yüksekse
+    // If installment load is high
     if (totalInstallments > safeToSpend * 0.5 && totalInstallments > 0) {
       tips.push({
         icon: AlertCircle,
         color: '#EF4444',
         gradient: ['#EF4444', '#DC2626'],
-        title: 'Taksit Yükü Ağır',
-        description: `Aylık ${formatCurrencySmart(totalInstallments, currencySymbol)} taksitiniz var. Yeni borçlanmadan kaçının.`,
+        title: t('dashboard.tips.installmentLoadTitle'),
+        description: t('dashboard.tips.installmentLoadDescription', { totalInstallments: formatCurrencySmart(totalInstallments, currencySymbol) }),
       });
     }
 
-    // Ek genel öneriler (her zaman göster)
+    // Additional general tips (always show)
     tips.push({
       icon: Lightbulb,
       color: '#8B5CF6',
       gradient: gradients.purple,
-      title: 'Acil Durum Fonu',
-      description: '3-6 aylık giderinizi karşılayacak bir acil durum fonu oluşturmayı hedefleyin. Beklenmedik durumlar için hazırlıklı olun.',
+      title: t('dashboard.tips.emergencyFundTitle'),        description: t('dashboard.tips.emergencyFundDescription'),
     });
 
     tips.push({
       icon: Target,
       color: '#10B981',
       gradient: ['#10B981', '#059669'],
-      title: 'Bütçe Planlama',
-      description: '50/30/20 kuralını deneyin: Gelirinizin %50 ihtiyaçlara, %30 isteklere, %20 tasarrufa ayırın.',
+      title: t('dashboard.tips.budgetPlanningTitle'),        description: t('dashboard.tips.budgetPlanningDescription'),
     });
 
     tips.push({
       icon: TrendingUp,
       color: '#06B6D4',
       gradient: ['#06B6D4', '#0891B2'],
-      title: 'Uzun Vadeli Düşünün',
-      description: 'Emeklilik planlamasına erken başlamak, bileşik faizin gücünden maksimum yararlanmanızı sağlar.',
+      title: t('dashboard.tips.longTermThinkingTitle'),        description: t('dashboard.tips.longTermThinkingDescription'),
     });
 
     tips.push({
       icon: Lightbulb,
       color: '#F59E0B',
       gradient: ['#F59E0B', '#F97316'],
-      title: 'Küçük Tasarruflar Büyük Sonuçlar',
-      description: 'Günde sadece 50₺ tasarruf etseniz, yılda 18.250₺ biriktirebilirsiniz. Her küçük adım önemli!',
+      title: t('dashboard.tips.smallSavingsBigResultsTitle'),        description: t('dashboard.tips.smallSavingsBigResultsDescription'),
     });
 
     tips.push({
       icon: Target,
       color: '#8B5CF6',
       gradient: gradients.purple,
-      title: 'Otomatik Tasarruf',
-      description: 'Maaş gününüzde otomatik olarak bir miktar paranızı tasarruf hesabına aktarın. Görmediğiniz parayı harcamazsınız.',
+      title: t('dashboard.tips.automaticSavingsTitle'),        description: t('dashboard.tips.automaticSavingsDescription'),
     });
 
     tips.push({
       icon: AlertCircle,
       color: '#EF4444',
       gradient: ['#EF4444', '#DC2626'],
-      title: 'Kredi Kartı Faizi Tuzağı',
-      description: 'Kredi kartı borcunuzu minimum ödemeyle kapatmayın. Faiz oranları %40\'a kadar çıkabilir!',
+      title: t('dashboard.tips.creditCardInterestTrapTitle'),        description: t('dashboard.tips.creditCardInterestTrapDescription'),
     });
 
     tips.push({
       icon: TrendingUp,
       color: '#10B981',
       gradient: ['#10B981', '#059669'],
-      title: 'Çeşitlendirme Önemlidir',
-      description: 'Tüm yumurtalarınızı bir sepete koymayın. Yatırımlarınızı farklı alanlara dağıtarak riski azaltın.',
+      title: t('dashboard.tips.diversificationIsImportantTitle'),        description: t('dashboard.tips.diversificationIsImportantDescription'),
     });
 
     tips.push({
       icon: Lightbulb,
       color: '#06B6D4',
       gradient: ['#06B6D4', '#0891B2'],
-      title: 'Enflasyon Etkisi',
-      description: 'Paranızı sadece banka hesabında tutmak, enflasyon nedeniyle değer kaybetmesine neden olur. Yatırım yapın!',
+      title: t('dashboard.tips.inflationEffectTitle'),        description: t('dashboard.tips.inflationEffectDescription'),
     });
 
     tips.push({
       icon: Target,
       color: '#F59E0B',
       gradient: ['#F59E0B', '#F97316'],
-      title: '24 Saat Kuralı',
-      description: 'Büyük alışverişlerden önce 24 saat bekleyin. Bu, dürtüsel harcamaları %70 oranında azaltır.',
+      title: t('dashboard.tips.hourRuleTitle'),        description: t('dashboard.tips.hourRuleDescription'),
     });
 
     tips.push({
       icon: Lightbulb,
       color: '#8B5CF6',
       gradient: gradients.purple,
-      title: 'Sigorta İhmali',
-      description: 'Sağlık, hayat ve kasko sigortalarınızı ihmal etmeyin. Küçük primler, büyük felaketlere karşı korur.',
+      title: t('dashboard.tips.insuranceNeglectTitle'),        description: t('dashboard.tips.insuranceNeglectDescription'),
     });
 
     tips.push({
       icon: TrendingUp,
       color: '#10B981',
       gradient: ['#10B981', '#059669'],
-      title: 'Pasif Gelir Yaratın',
-      description: 'Kira geliri, temettü hisseleri veya online içerik gibi pasif gelir kaynakları oluşturmayı hedefleyin.',
+      title: t('dashboard.tips.createPassiveIncomeTitle'),        description: t('dashboard.tips.createPassiveIncomeDescription'),
     });
 
     tips.push({
       icon: Target,
       color: '#06B6D4',
       gradient: ['#06B6D4', '#0891B2'],
-      title: 'Finansal Eğitim',
-      description: 'Ayda en az bir finansal kitap okuyun veya podcast dinleyin. Bilgi, en değerli yatırımdır.',
+      title: t('dashboard.tips.financialEducationTitle'),        description: t('dashboard.tips.financialEducationDescription'),
     });
 
     tips.push({
       icon: Lightbulb,
       color: '#EF4444',
       gradient: ['#EF4444', '#DC2626'],
-      title: 'Abonelik Kontrol',
-      description: 'Kullanmadığınız abonelikleri iptal edin. Ortalama kişi ayda 200₺+ gereksiz abonelik için ödüyor.',
+      title: t('dashboard.tips.subscriptionControlTitle'),        description: t('dashboard.tips.subscriptionControlDescription'),
     });
 
     tips.push({
       icon: Target,
       color: '#10B981',
       gradient: ['#10B981', '#059669'],
-      title: 'Hedefinizi Belirleyin',
-      description: 'Kısa, orta ve uzun vadeli finansal hedefler belirleyin. Net hedefler, motivasyonu artırır.',
+      title: t('dashboard.tips.setYourGoalsTitle'),        description: t('dashboard.tips.setYourGoalsDescription'),
     });
 
     tips.push({
       icon: TrendingUp,
       color: '#8B5CF6',
       gradient: gradients.purple,
-      title: 'Zam Kuralı',
-      description: 'Maaşınız arttığında, artışın en az yarısını tasarrufa yönlendirin. Yaşam standardınızı her zaman artırmayın.',
+      title: t('dashboard.tips.salaryIncreaseRuleTitle'),        description: t('dashboard.tips.salaryIncreaseRuleDescription'),
     });
 
-    // En az bir öneri olmalı
+    // At least one tip should exist
     if (tips.length === 0) {
       tips.push({
         icon: Lightbulb,
         color: '#8B5CF6',
         gradient: gradients.purple,
-        title: 'Finansal Planınızı Güçlendirin',
-        description: 'Düzenli tasarruf yaparak ve harcamalarınızı takip ederek mali durumunuzu iyileştirebilirsiniz.',
+        title: t('dashboard.tips.strengthenFinancialPlanTitle'),
+        description: t('dashboard.tips.strengthenFinancialPlanDescription'),
       });
     }
 
@@ -306,22 +300,28 @@ export const DashboardScreen = () => {
     totalReceivables,
     totalInstallments,
     currencySymbol,
+    i18n.language,
   ]);
 
-  const currentTip = allTips[currentTipIndex];
+  const currentTip = allTips[currentTipIndex] || allTips[0];
 
-  // Her 10 saniyede bir sonraki öneriye geç
+  // Switch to next tip every 10 seconds
   useEffect(() => {
-    if (allTips.length <= 1) return; // Tek öneri varsa döndürme
+    if (allTips.length <= 1) return; // Do not cycle if there's only one tip
+
+    // Reset index if it's out of bounds
+    if (currentTipIndex >= allTips.length) {
+      setCurrentTipIndex(0);
+    }
 
     const interval = setInterval(() => {
       setCurrentTipIndex((prevIndex) => (prevIndex + 1) % allTips.length);
     }, 10000); // 10 saniye
 
     return () => clearInterval(interval);
-  }, [allTips.length]);
+  }, [allTips.length, currentTipIndex]);
 
-  // Manuel olarak sonraki öneriye geç
+  // Manually switch to next tip
   const handleTipPress = () => {
     if (allTips.length > 1) {
       setCurrentTipIndex((prevIndex) => (prevIndex + 1) % allTips.length);
@@ -349,10 +349,24 @@ export const DashboardScreen = () => {
   });
 
   const parseCfoReport = (rawText: string) => {
-    // Markdown başlıklarını da destekleyecek şekilde daha esnek pattern
-    const summaryMatch = rawText.match(/\*?\*?Yönetici Özeti:?\*?\*?\s*([\s\S]*?)(?=\*?\*?Finansal Sağlık Notu|\*?\*?Detaylı Analiz|\*?\*?Stratejik Öneriler|$)/i);
-    const risksMatch = rawText.match(/\*?\*?Potansiyel Riskler:?\*?\*?\s*([\s\S]*?)(?=\*?\*?Stratejik Öneriler|\*?\*?Sonuç ve Genel|$)/i);
-    const actionsMatch = rawText.match(/\*?\*?Stratejik Öneriler:?\*?\*?\s*([\s\S]*?)(?=\*?\*?Potensiyel Riskler|\*?\*?Sonuç ve Genel|$)/i);
+    const isTr = i18n.language === 'tr';
+    
+    // Flexible pattern to support Markdown headers
+    const summaryRegex = isTr 
+      ? /\*?\*?Yönetici Özeti:?\*?\*?\s*([\s\S]*?)(?=\*?\*?Finansal Sağlık Notu|\*?\*?Detaylı Analiz|\*?\*?Stratejik Öneriler|$)/i
+      : /\*?\*?Executive Summary:?\*?\*?\s*([\s\S]*?)(?=\*?\*?Financial Health Grade|\*?\*?Detailed Analysis|\*?\*?Strategic Recommendations|$)/i;
+      
+    const risksRegex = isTr
+      ? /\*?\*?Potansiyel Riskler:?\*?\*?\s*([\s\S]*?)(?=\*?\*?Stratejik Öneriler|\*?\*?Sonuç ve Genel|$)/i
+      : /\*?\*?Potential Risks:?\*?\*?\s*([\s\S]*?)(?=\*?\*?Strategic Recommendations|\*?\*?Conclusion and General|$)/i;
+      
+    const actionsRegex = isTr
+      ? /\*?\*?Stratejik Öneriler:?\*?\*?\s*([\s\S]*?)(?=\*?\*?Potensiyel Riskler|\*?\*?Sonuç ve Genel|$)/i
+      : /\*?\*?Strategic Recommendations:?\*?\*?\s*([\s\S]*?)(?=\*?\*?Potential Risks|\*?\*?Conclusion and General|$)/i;
+
+    const summaryMatch = rawText.match(summaryRegex);
+    const risksMatch = rawText.match(risksRegex);
+    const actionsMatch = rawText.match(actionsRegex);
 
     const parseList = (text: string | undefined) => {
       if (!text) return [];
@@ -365,61 +379,61 @@ export const DashboardScreen = () => {
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
 
-        // Boş satırları atla
+        // Skip empty lines
         if (!line) continue;
 
-        // Ana başlıkları atla (**Kısa Vade:**, **Orta Vade:** gibi)
+        // Skip main headers (like **Short Term:**, **Medium Term:**)
         if (line.match(/^\*\*.+?:?\*\*$/)) {
           continue;
         }
 
-        // Yeni madde başlangıcı mı kontrol et (1. veya * veya - ile başlıyor mu?)
+        // Check if it's a new item start (starts with 1., * or -)
         const isNewItem = line.match(/^[\*\-\•]\s+/) || line.match(/^\d+\.\s+/);
 
         if (isNewItem) {
-          // Önceki maddeyi kaydet
+          // Save previous item
           if (inItem && currentItem.trim()) {
             items.push(currentItem.trim());
           }
 
-          // Yeni maddeyi başlat - madde işareti/numarayı kaldır
+          // Start new item - remove bullet/number
           currentItem = line.replace(/^[\*\-\•]\s+/, '').replace(/^\d+\.\s+/, '');
           inItem = true;
         } else if (inItem) {
-          // Devam eden satır - mevcut maddeye ekle
+          // Continuing line - add to current item
           currentItem += ' ' + line;
         }
       }
 
-      // Son maddeyi kaydet
+      // Save last item
       if (inItem && currentItem.trim()) {
         items.push(currentItem.trim());
       }
 
-      // İçerikleri temizle ve filtrele
+      // Clean and filter contents
       return items
         .map(item => {
-          // Başındaki ve sonundaki gereksiz karakterleri temizle
+          // Clean leading and trailing unnecessary characters
           let cleaned = item.trim();
 
-          // Kalın yazı işaretlerini temizle (başlangıç kısmında varsa)
-          // Eğer zaten : varsa sadece ** kaldır, yoksa : ekle
+          // Clean bold markings (if at the beginning)
+          // If already has :, just remove **, otherwise add :
           if (cleaned.match(/^\*\*([^*]+)\*\*:\s*/)) {
             cleaned = cleaned.replace(/^\*\*([^*]+)\*\*:\s*/, '$1: ');
           } else {
             cleaned = cleaned.replace(/^\*\*([^*]+)\*\*\s*/, '$1: ');
           }
 
-          // Tüm :: durumlarını : ile değiştir (nereden gelirse gelsin)
+          // Replace all :: cases with : (from wherever it comes)
           cleaned = cleaned.replace(/::/g, ':');
 
           return cleaned;
         })
         .filter(item => {
-          // En az 10 karakter olmalı (çok kısa anlamsız parçaları filtrele)
+          // Should be at least 10 characters (filter very short meaningless parts)
           if (item.length < 10) return false;
 
-          // Sadece noktalama işareti veya sayı içermemeli
+          // Should not only contain punctuation or numbers
           if (item.match(/^[\d\s\.,;:\-\–—]+$/)) return false;
 
           return true;
@@ -454,6 +468,7 @@ export const DashboardScreen = () => {
         findeksScore: profile.findeksScore,
         salary: profile.salary,
         additionalIncome: profile.additionalIncome,
+        language: i18n.language,
       };
 
       const response = await geminiService.generateCfoReport(reportContext);
@@ -464,21 +479,37 @@ export const DashboardScreen = () => {
         await saveCFOAnalysis(analysis); // Analizi kaydet
         setShowReport(true);
       } else {
-        throw new Error(response.error || "AI analizi başarısız oldu.");
+        throw new Error(response.error || t('dashboard.errors.generalError'));
       }
 
     } catch (error: any) {
-      const errorMsg = error?.message || "AI analizi başarısız.";
+      const errorMsg = error?.message || t('dashboard.errors.generalError');
+
+      if (errorMsg.includes('CONFIG_ERROR')) {
+        showAlert(
+          t('dashboard.alerts.apiKeyRequiredTitle'),
+          t('dashboard.alerts.apiKeyRequiredMessage'),
+          [
+            { text: t('dashboard.alerts.cancel'), style: 'cancel' },
+            { 
+              text: t('dashboard.alerts.goToSettings'), 
+              onPress: () => navigation.navigate('ApiKeySettings') 
+            }
+          ],
+          'warning'
+        );
+        return;
+      }
 
       // Kullanıcı dostu hata mesajları
       if (errorMsg.includes('quota') || errorMsg.includes('RESOURCE_EXHAUSTED')) {
-        setAiError('📊 API kotanız doldu. Lütfen daha sonra tekrar deneyin.');
+        setAiError(t('dashboard.errors.quota'));
       } else if (errorMsg.includes('429')) {
-        setAiError('⏱️ Çok fazla istek. Birkaç saniye bekleyip tekrar deneyin.');
+        setAiError(t('dashboard.errors.throttle'));
       } else if (errorMsg.includes('503') || errorMsg.includes('overloaded')) {
-        setAiError('🔧 Servis meşgul. Lütfen kısa bir süre sonra tekrar deneyin.');
+        setAiError(t('dashboard.errors.serviceBusy'));
       } else if (errorMsg.includes('API_KEY') || errorMsg.includes('Invalid')) {
-        setAiError('🔑 API anahtarı geçersiz. Ayarlardan kontrol edin.');
+        setAiError(t('dashboard.errors.invalidKey'));
       } else {
         setAiError(errorMsg);
       }
@@ -518,18 +549,18 @@ export const DashboardScreen = () => {
                   <Text style={styles.greeting}>
                     {(() => {
                       const hour = new Date().getHours();
-                      if (hour >= 6 && hour < 12) return '🌅 Günaydın';
-                      if (hour >= 12 && hour < 18) return '☀️ İyi Günler';
-                      if (hour >= 18 && hour < 24) return '🌙 İyi Akşamlar';
-                      return '🌙 İyi Geceler';
+                      if (hour >= 6 && hour < 12) return t('dashboard.greeting.morning');
+                      if (hour >= 12 && hour < 18) return t('dashboard.greeting.afternoon');
+                      if (hour >= 18 && hour < 24) return t('dashboard.greeting.evening');
+                      return t('dashboard.greeting.night');
                     })()}
                   </Text>
                   <Text style={styles.title}>
-                    {profile.name || 'Finansal Özet'}
+                    {t('dashboard.summaryTitle')}
                   </Text>
                   <View style={styles.dateContainer}>
                     <Text style={styles.dateText}>
-                      {new Date().toLocaleDateString('tr-TR', {
+                      {new Date().toLocaleDateString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', {
                         weekday: 'long',
                         year: 'numeric',
                         month: 'long',
@@ -579,10 +610,10 @@ export const DashboardScreen = () => {
                   <View style={styles.heroIconContainer}>
                     <Wallet size={24} color="rgba(255, 255, 255, 0.95)" strokeWidth={2.5} />
                   </View>
-                  <Text style={styles.heroLabel}>Harcayabileceğiniz</Text>
+                  <Text style={styles.heroLabel}>{t('dashboard.safeToSpend')}</Text>
                 </View>
                 <Text style={styles.heroValue}>{formatCurrencySmart(safeToSpend, currencySymbol)}</Text>
-                <Text style={styles.heroSubtext}>Güvenli harcama limitiniz</Text>
+                <Text style={styles.heroSubtext}>{t('dashboard.safeToSpendSub')}</Text>
               </View>
               <View style={styles.decorativeCircle1} />
               <View style={styles.decorativeCircle2} />
@@ -591,14 +622,14 @@ export const DashboardScreen = () => {
           </Animated.View>
         </Pressable>
 
-        {/* Finansal Öneri Banner */}
+        {/* Financial Tip Banner */}
         <TouchableOpacity
           style={styles.tipBannerContainer}
           onPress={handleTipPress}
           activeOpacity={0.85}
         >
           <LinearGradient
-            colors={currentTip.gradient}
+            colors={currentTip.gradient as any}
             style={styles.tipBanner}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -614,32 +645,32 @@ export const DashboardScreen = () => {
         </TouchableOpacity>
 
         <View style={styles.overviewSection}>
-          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Finansal Durum</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>{t('dashboard.financialStatus')}</Text>
           <View style={styles.gridContainer}>
             <View style={styles.gridRow}>
               <View style={[styles.miniCard, { backgroundColor: colors.cardBackground }]}>
                 <View style={[styles.miniCardIcon, { backgroundColor: "rgba(0, 255, 157, 0.15)" }]}>
                   <TrendingUp size={20} color={colors.success} strokeWidth={2.5} />
                 </View>
-                <Text style={[styles.miniCardLabel, { color: colors.text.secondary }]}>Toplam Varlıklar</Text>
+                <Text style={[styles.miniCardLabel, { color: colors.text.secondary }]}>{t('dashboard.totalAssets')}</Text>
                 <Text style={[styles.miniCardValue, { color: colors.success }]}>{formatCurrencySmart(totalAssets, currencySymbol)}</Text>
               </View>
-
+ 
               <View style={[styles.miniCard, { backgroundColor: colors.cardBackground }]}>
                 <View style={[styles.miniCardIcon, { backgroundColor: "rgba(255, 71, 87, 0.15)" }]}>
                   <TrendingDown size={20} color={colors.error} strokeWidth={2.5} />
                 </View>
-                <Text style={[styles.miniCardLabel, { color: colors.text.secondary }]}>Toplam Borçlar</Text>
+                <Text style={[styles.miniCardLabel, { color: colors.text.secondary }]}>{t('dashboard.totalLiabilities')}</Text>
                 <Text style={[styles.miniCardValue, { color: colors.error }]}>{formatCurrencySmart(totalLiabilities, currencySymbol)}</Text>
               </View>
             </View>
-
+ 
             <View style={[styles.netWorthCard, { backgroundColor: colors.cardBackground }]}>
               <View style={styles.netWorthHeader}>
                 <View style={[styles.miniCardIcon, { backgroundColor: "rgba(147, 51, 234, 0.15)" }]}>
                   <PieChart size={20} color={colors.purple.light} strokeWidth={2.5} />
                 </View>
-                <Text style={[styles.miniCardLabel, { color: colors.text.secondary }]}>Net Değeriniz</Text>
+                <Text style={[styles.miniCardLabel, { color: colors.text.secondary }]}>{t('dashboard.netWorth')}</Text>
               </View>
               <Text style={[styles.netWorthValue, { color: netWorth >= 0 ? colors.success : colors.error }]}>
                 {formatCurrencySmart(netWorth, currencySymbol)}
@@ -649,15 +680,15 @@ export const DashboardScreen = () => {
         </View>
 
         <View style={styles.analyticsSection}>
-          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Finansal Analiz</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>{t('dashboard.financialAnalysis')}</Text>
 
           <View style={styles.analyticsGrid}>
             <View style={[styles.analyticsCard, { backgroundColor: colors.cardBackground }]}>
               <View style={styles.analyticsHeader}>
-                <Text style={[styles.analyticsLabel, { color: colors.text.secondary }]}>Varlık/Borç Oranı</Text>
+                <Text style={[styles.analyticsLabel, { color: colors.text.secondary }]}>{t('dashboard.assetLiabilityRatio')}</Text>
                 <View style={styles.analyticsBadge}>
                   <Text style={[styles.analyticsBadgeText, { color: colors.purple.light }]}>
-                    {totalLiabilities > 0 ? "Oran" : "İdeal"}
+                    {totalLiabilities > 0 ? "Ratio" : "Ideal"}
                   </Text>
                 </View>
               </View>
@@ -679,9 +710,9 @@ export const DashboardScreen = () => {
 
             <View style={[styles.analyticsCard, { backgroundColor: colors.cardBackground }]}>
               <View style={styles.analyticsHeader}>
-                <Text style={[styles.analyticsLabel, { color: colors.text.secondary }]}>Borçlanma Oranı</Text>
+                <Text style={[styles.analyticsLabel, { color: colors.text.secondary }]}>{t('dashboard.debtRatio')}</Text>
                 <View style={styles.analyticsBadge}>
-                  <Text style={[styles.analyticsBadgeText, { color: colors.accent.cyan }]}>Yüzde</Text>
+                  <Text style={[styles.analyticsBadgeText, { color: colors.accent.cyan }]}>{t('dashboard.percentage')}</Text>
                 </View>
               </View>
               <Text style={[styles.analyticsValue, { color: colors.accent.cyan }]}>
@@ -702,11 +733,11 @@ export const DashboardScreen = () => {
           </View>
         </View>
 
-        {/* Grafikler Bölümü */}
+        {/* Charts Section */}
         <View style={styles.chartsSection}>
           <View style={styles.chartsSectionHeader}>
             <BarChart3 size={24} color={colors.purple.light} strokeWidth={2.5} />
-            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Grafiksel Analiz</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>{t('dashboard.graphicalAnalysis')}</Text>
           </View>
           <FinancialCharts
             totalAssets={totalAssets}
@@ -718,104 +749,89 @@ export const DashboardScreen = () => {
         </View>
 
         {/* AI Analiz */}
-        <View style={styles.analyticsSection}>
-          <View style={[styles.aiCard, { backgroundColor: colors.cardBackground }]}>
-            <View style={styles.aiHeader}>
-              <View style={[styles.aiIcon, { backgroundColor: "rgba(147, 51, 234, 0.12)" }]}>
-                <Sparkles size={18} color={colors.purple.light} strokeWidth={2.5} />
+        {isAiEnabled && (
+          <View style={styles.analyticsSection}>
+            <View style={[styles.aiCard, { backgroundColor: colors.cardBackground }]}>
+              <View style={styles.aiHeader}>
+                <View style={[styles.aiIcon, { backgroundColor: "rgba(147, 51, 234, 0.12)" }]}>
+                  <Sparkles size={18} color={colors.purple.light} strokeWidth={2.5} />
+                </View>
+                <Text style={[styles.aiTitle, { color: colors.text.primary }]}>{t('dashboard.aiCfoAnalysis')}</Text>
               </View>
-              <Text style={[styles.aiTitle, { color: colors.text.primary }]}>Yapay CFO Analizi</Text>
-            </View>
-            <Text style={[styles.aiSubtitle, { color: colors.text.primary }]}>
-              {aiResult ? "Son analiziniz aşağıda. Yeni analiz için tıklayın." : "Gemini'den kısa bir CFO yorumu al."}
-            </Text>
-            <TouchableOpacity
-              style={[styles.aiButton, { backgroundColor: colors.purple.primary }]}
-              onPress={handleAiAnalyze}
-              disabled={aiLoading}
-            >
-              <Text style={styles.aiButtonText}>
-                {aiLoading ? "Analiz ediliyor..." : aiResult ? "Yeni Analiz Al" : "Analiz Al"}
+              <Text style={[styles.aiSubtitle, { color: colors.text.primary }]}>
+                {aiResult ? t('dashboard.aiCfoSubtitleActive') : t('dashboard.aiCfoSubtitle')}
               </Text>
-            </TouchableOpacity>
-            {aiError ? <Text style={[styles.aiError, { color: colors.error }]}>{aiError}</Text> : null}
-            {aiResult ? (
-              <View style={styles.aiResult}>
-                <Markdown
-                  style={{
-                    body: {
-                      color: colors.text.primary,
-                      fontSize: 15,
-                      lineHeight: 22,
-                      marginBottom: 12
-                    },
-                    strong: {
-                      color: colors.text.primary,
-                      fontWeight: '700'
-                    },
-                    paragraph: {
-                      marginTop: 0,
-                      marginBottom: 8
-                    },
-                    text: {
-                      color: colors.text.primary
-                    },
-                    bullet_list: {
-                      marginBottom: 8
-                    },
-                    list_item: {
-                      marginBottom: 4
-                    }
-                  }}
-                >
-                  {aiResult.summary}
-                </Markdown>
-
-                {/* Madde sayılarını göster */}
-                {(aiResult.risks.length > 0 || aiResult.actions.length > 0) && (
-                  <View style={styles.aiStatsContainer}>
-                    {aiResult.risks.length > 0 && (
-                      <View style={[styles.aiStatBadge, { backgroundColor: 'rgba(255, 71, 87, 0.1)' }]}>
-                        <Text style={[styles.aiStatNumber, { color: colors.error }]}>{aiResult.risks.length}</Text>
-                        <Text style={[styles.aiStatLabel, { color: colors.error }]}>Risk</Text>
-                      </View>
-                    )}
-                    {aiResult.actions.length > 0 && (
-                      <View style={[styles.aiStatBadge, { backgroundColor: 'rgba(34, 197, 94, 0.1)' }]}>
-                        <Text style={[styles.aiStatNumber, { color: colors.success }]}>{aiResult.actions.length}</Text>
-                        <Text style={[styles.aiStatLabel, { color: colors.success }]}>Öneri</Text>
-                      </View>
-                    )}
-                  </View>
-                )}
-
-                {!aiResult.risks.length && !aiResult.actions.length && aiResult.rawText && (
+              <TouchableOpacity
+                style={[styles.aiButton, { backgroundColor: colors.purple.primary }]}
+                onPress={handleAiAnalyze}
+                disabled={aiLoading}
+              >
+                <Text style={styles.aiButtonText}>
+                  {aiLoading ? t('dashboard.aiCfoAnalyzing') : aiResult ? t('dashboard.aiCfoNewAnalysis') : t('dashboard.aiCfoAnalyze')}
+                </Text>
+              </TouchableOpacity>
+              {aiError ? <Text style={[styles.aiError, { color: colors.error }]}>{aiError}</Text> : null}
+              {aiResult ? (
+                <View style={styles.aiResult}>
                   <Markdown
                     style={{
                       body: {
                         color: colors.text.primary,
-                        fontSize: 13,
-                        lineHeight: 18
+                        fontSize: 15,
+                        lineHeight: 22,
+                        marginBottom: 12
+                      },
+                      strong: {
+                        color: colors.text.primary,
+                        fontWeight: '700'
                       },
                       paragraph: {
                         marginTop: 0,
                         marginBottom: 8
+                      },
+                      text: {
+                        color: colors.text.primary
+                      },
+                      bullet_list: {
+                        marginBottom: 8
+                      },
+                      list_item: {
+                        marginBottom: 4
                       }
                     }}
                   >
-                    {aiResult.rawText}
+                    {aiResult.summary}
                   </Markdown>
-                )}
-                <TouchableOpacity
-                  style={[styles.reportButton, { borderColor: colors.purple.primary }]}
-                  onPress={() => setShowReport(true)}
-                >
-                  <Text style={[styles.reportButtonText, { color: colors.purple.primary }]}>Detaylı raporu aç</Text>
-                </TouchableOpacity>
-              </View>
-            ) : null}
+
+                  {/* Show item counts */}
+                  {(aiResult.risks.length > 0 || aiResult.actions.length > 0) && (
+                    <View style={styles.aiStatsContainer}>
+                      {aiResult.risks.length > 0 && (
+                        <View style={[styles.aiStatBadge, { backgroundColor: 'rgba(255, 71, 87, 0.1)' }]}>
+                          <Text style={[styles.aiStatNumber, { color: colors.error }]}>{aiResult.risks.length}</Text>
+                          <Text style={[styles.aiStatLabel, { color: colors.error }]}>{t('dashboard.risk')}</Text>
+                        </View>
+                      )}
+                      {aiResult.actions.length > 0 && (
+                        <View style={[styles.aiStatBadge, { backgroundColor: 'rgba(34, 197, 94, 0.1)' }]}>
+                          <Text style={[styles.aiStatNumber, { color: colors.success }]}>{aiResult.actions.length}</Text>
+                          <Text style={[styles.aiStatLabel, { color: colors.success }]}>{t('dashboard.recommendation')}</Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
+                  
+                  <TouchableOpacity
+                    style={[styles.reportButton, { borderColor: colors.purple.primary }]}
+                    onPress={() => setShowReport(true)}
+                  >
+                    <Text style={[styles.reportButtonText, { color: colors.purple.primary }]}>{t('dashboard.openDetailedReport')}</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : null}
+            </View>
           </View>
-        </View>
+        )}
       </ScrollView>
 
       <CFOReportModal
@@ -834,6 +850,8 @@ export const DashboardScreen = () => {
           additionalIncome: profile.additionalIncome,
         }}
       />
+      {/* Custom Alert */}
+      {AlertComponent}
     </SafeAreaView>
   );
 };
@@ -961,11 +979,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 10,
   },
   heroCardContainer: {
     marginBottom: 28,
@@ -1055,7 +1068,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
-    elevation: 8,
   },
   tipBanner: {
     flexDirection: "row",
@@ -1071,10 +1083,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.25)",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
   tipContent: {
     flex: 1,

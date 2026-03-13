@@ -1,0 +1,32 @@
+{
+  "save": "Save",
+  "close": "Close",
+  "score": "Score",
+  "premiumFeature": "Premium Feature",
+  "premiumFeatureDesc": "This feature is exclusive to our Premium subscribers. Please subscribe to continue.",
+  "subscribe": "Subscribe",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "edit": "Edit",
+  "loading": "Loading...",
+  "error": "Error",
+  "success": "Success",
+  "selectCurrency": "Select Currency",
+  "currencies": {
+    "TRY": "Turkish Lira",
+    "USD": "US Dollar",
+    "EUR": "Euro",
+    "GBP": "British Pound",
+    "JPY": "Japanese Yen",
+    "CAD": "Canadian Dollar",
+    "AUD": "Australian Dollar"
+  },
+  "warning": "Warning",
+  "info": "Information",
+  "back": "Back",
+  "completed": "Completed",
+  "endDate": "End Date",
+  "expectedDate": "Expected Date",
+  "deleteConfirmTitle": "Delete Confirmation",
+  "deleteConfirmMessage": "Are you sure you want to delete this item? This action cannot be undone."
+}

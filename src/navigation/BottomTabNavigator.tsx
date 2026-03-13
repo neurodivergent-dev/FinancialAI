@@ -21,8 +21,11 @@ import { InstallmentsScreen } from '../screens/InstallmentsScreen';
 import { ChatScreen } from '../screens/ChatScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { useTheme } from '../context/ThemeContext';
+import { useApiKey } from '../context/ApiKeyContext';
 
-const Tab = createBottomTabNavigator();
+import { BottomTabParamList } from './types';
+
+const Tab = createBottomTabNavigator<BottomTabParamList>();
 
 const TabIcon = ({
   Icon,
@@ -54,6 +57,7 @@ const TabIcon = ({
 
 export const BottomTabNavigator = () => {
   const { colors, isDarkMode } = useTheme();
+  const { isAiEnabled } = useApiKey();
   const insets = useSafeAreaInsets();
 
   return (
@@ -117,14 +121,17 @@ export const BottomTabNavigator = () => {
           tabBarIcon: ({ focused }) => <TabIcon Icon={Calendar} focused={focused} activeColor="#FFFFFF" inactiveColor={colors.text.tertiary} />,
         }}
       />
-      <Tab.Screen
-        name="Chat"
-        component={ChatScreen}
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon Icon={MessageCircle} focused={focused} activeColor="#FFFFFF" inactiveColor={colors.text.tertiary} />,
-          tabBarHideOnKeyboard: true,
-        }}
-      />
+
+      {isAiEnabled && (
+        <Tab.Screen
+          name="Chat"
+          component={ChatScreen}
+          options={{
+            tabBarIcon: ({ focused }) => <TabIcon Icon={MessageCircle} focused={focused} activeColor="#FFFFFF" inactiveColor={colors.text.tertiary} />,
+            tabBarHideOnKeyboard: true,
+          }}
+        />
+      )}
       <Tab.Screen
         name="Settings"
         component={SettingsScreen}

@@ -1,37 +1,34 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import { ArrowLeft, FileText } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { gradients } from '../theme/colors';
 
 export const TermsOfServiceScreen = ({ navigation }: any) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+    <View style={[styles.container, { backgroundColor: colors.background, paddingBottom: insets.bottom }]}>
       <LinearGradient
         colors={gradients.purple}
         style={styles.headerGradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <View style={styles.backButtonCircle}>
               <ArrowLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
             </View>
           </TouchableOpacity>
           <View style={styles.headerTextContainer}>
-            <Text style={styles.subtitle}>Yasal</Text>
-            <Text style={styles.screenTitle}>Kullanım Koşulları</Text>
+            <Text style={styles.subtitle}>{t('settings.termsOfService.legal')}</Text>
+            <Text style={styles.screenTitle}>{t('settings.termsOfService.title')}</Text>
           </View>
           <View style={styles.headerIcon}>
             <FileText size={22} color="#FFFFFF" strokeWidth={2} />
@@ -46,112 +43,92 @@ export const TermsOfServiceScreen = ({ navigation }: any) => {
       >
         <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            1. Kabul ve Onay
+            {t('settings.termsOfService.sections.acceptance.title')}
           </Text>
           <Text style={[styles.sectionText, { color: colors.text.secondary }]}>
-            Financial AI uygulamasını kullanarak, bu kullanım koşullarını okuduğunuzu,
-            anladığınızı ve kabul ettiğinizi beyan edersiniz. Bu koşulları kabul etmiyorsanız,
-            lütfen uygulamayı kullanmayınız.
+            {t('settings.termsOfService.sections.acceptance.content')}
           </Text>
         </View>
 
         <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            2. Hizmet Tanımı
+            {t('settings.termsOfService.sections.description.title')}
           </Text>
           <Text style={[styles.sectionText, { color: colors.text.secondary }]}>
-            Financial AI, kişisel finans yönetimi için tasarlanmış bir mobil uygulamadır.
-            Uygulama, varlıklarınızı, borçlarınızı, alacaklarınızı ve taksitlerinizi
-            takip etmenize yardımcı olur. Ayrıca yapay zeka destekli finansal danışmanlık
-            hizmeti sunar.
+            {t('settings.termsOfService.sections.description.content')}
           </Text>
         </View>
 
         <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            3. Kullanıcı Sorumlulukları
+            {t('settings.termsOfService.sections.responsibilities.title')}
           </Text>
           <Text style={[styles.sectionText, { color: colors.text.secondary }]}>
-            • Uygulamaya girdiğiniz tüm finansal bilgilerin doğruluğundan siz sorumlusunuz.{'\n'}
-            • Hesap güvenliğinizi korumakla yükümlüsünüz.{'\n'}
-            • Uygulamayı yasa dışı amaçlarla kullanmayacağınızı kabul edersiniz.{'\n'}
-            • Başkalarının hesaplarına yetkisiz erişim sağlamayacağınızı taahhüt edersiniz.
+            {t('settings.termsOfService.sections.responsibilities.content')}
           </Text>
         </View>
 
         <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            4. Veri Güvenliği
+            {t('settings.termsOfService.sections.dataSecurity.title')}
           </Text>
           <Text style={[styles.sectionText, { color: colors.text.secondary }]}>
-            Tüm finansal verileriniz cihazınızda güvenli bir şekilde saklanır. Verileriniz,
-            şifreleme teknolojileri ile korunmaktadır. Ancak, internet üzerinden yapılan
-            iletişimin %100 güvenli olmadığını unutmayınız.
+            {t('settings.termsOfService.sections.dataSecurity.content')}
           </Text>
         </View>
 
         <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            5. AI Danışman Hizmeti
+            {t('settings.termsOfService.sections.aiAdvisor.title')}
           </Text>
           <Text style={[styles.sectionText, { color: colors.text.secondary }]}>
-            AI danışman tarafından sağlanan bilgiler yalnızca genel bilgilendirme amaçlıdır
-            ve profesyonel finansal danışmanlık yerine geçmez. Finansal kararlarınızı
-            almadan önce profesyonel bir danışmana başvurmanızı öneririz.
+            {t('settings.termsOfService.sections.aiAdvisor.content')}
           </Text>
         </View>
 
         <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            6. Fikri Mülkiyet Hakları
+            {t('settings.termsOfService.sections.intellectualProperty.title')}
           </Text>
           <Text style={[styles.sectionText, { color: colors.text.secondary }]}>
-            Financial AI uygulaması ve içeriği, telif hakları, ticari markalar ve diğer
-            fikri mülkiyet yasaları ile korunmaktadır. Uygulamanın izinsiz kopyalanması,
-            dağıtılması veya değiştirilmesi yasaktır.
+            {t('settings.termsOfService.sections.intellectualProperty.content')}
           </Text>
         </View>
 
         <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            7. Sorumluluk Reddi
+            {t('settings.termsOfService.sections.disclaimer.title')}
           </Text>
           <Text style={[styles.sectionText, { color: colors.text.secondary }]}>
-            Financial AI, uygulamanın kesintisiz veya hatasız çalışacağını garanti etmez.
-            Uygulamanın kullanımından kaynaklanan doğrudan veya dolaylı zararlardan
-            sorumlu değiliz.
+            {t('settings.termsOfService.sections.disclaimer.content')}
           </Text>
         </View>
 
         <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            8. Değişiklikler
+            {t('settings.termsOfService.sections.changes.title')}
           </Text>
           <Text style={[styles.sectionText, { color: colors.text.secondary }]}>
-            Bu kullanım koşullarını herhangi bir zamanda değiştirme hakkını saklı tutarız.
-            Değişiklikler uygulama içinde duyurulacaktır. Değişikliklerden sonra uygulamayı
-            kullanmaya devam etmeniz, yeni koşulları kabul ettiğiniz anlamına gelir.
+            {t('settings.termsOfService.sections.changes.content')}
           </Text>
         </View>
 
         <View style={[styles.section, { backgroundColor: colors.cardBackground }]}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            9. İletişim
+            {t('settings.termsOfService.sections.contact.title')}
           </Text>
           <Text style={[styles.sectionText, { color: colors.text.secondary }]}>
-            Bu kullanım koşulları hakkında sorularınız varsa, lütfen bizimle iletişime geçin:{'\n\n'}
-            E-posta: support@financialai.com{'\n'}
-            Web: www.financialai.com
+            {t('settings.termsOfService.sections.contact.content')}
           </Text>
         </View>
 
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: colors.text.tertiary }]}>
-            Son Güncelleme: 9 Aralık 2025
+            {t('settings.termsOfService.lastUpdate')}
           </Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

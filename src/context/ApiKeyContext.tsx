@@ -7,30 +7,41 @@ interface ApiKeyContextType {
   clearCustomApiKey: () => Promise<void>;
   hasCustomApiKey: boolean;
   getActiveApiKey: () => string;
+  isAiEnabled: boolean;
+  setAiEnabled: (enabled: boolean) => Promise<void>;
 }
 
 const ApiKeyContext = createContext<ApiKeyContextType | undefined>(undefined);
 
 const API_KEY_STORAGE_KEY = '@custom_gemini_api_key';
-
-// Varsayılan API Key
-const DEFAULT_API_KEY = 'AIzaSyBxIedxKfSTDE8OFp_Dd5Xr7yGYEHp3hUY';
+const AI_ENABLED_STORAGE_KEY = '@ai_features_enabled';
 
 export const ApiKeyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [customApiKey, setCustomApiKeyState] = useState<string>('');
+  const [isAiEnabled, setIsAiEnabledState] = useState<boolean>(false);
 
   useEffect(() => {
-    loadApiKey();
+    loadSettings();
   }, []);
 
-  const loadApiKey = async () => {
+  const loadSettings = async () => {
     try {
-      const stored = await AsyncStorage.getItem(API_KEY_STORAGE_KEY);
-      if (stored) {
-        setCustomApiKeyState(stored);
+      const [storedKey, storedEnabled] = await Promise.all([
+        AsyncStorage.getItem(API_KEY_STORAGE_KEY),
+        AsyncStorage.getItem(AI_ENABLED_STORAGE_KEY),
+      ]);
+      
+      if (storedKey) {
+        setCustomApiKeyState(storedKey);
+        // Only load enabled state if key exists
+        if (storedEnabled !== null) {
+          setIsAiEnabledState(storedEnabled === 'true');
+        }
+      } else {
+        setIsAiEnabledState(false);
       }
     } catch (error) {
-      console.error('Error loading API key:', error);
+      console.error('Error loading settings:', error);
     }
   };
 
@@ -43,6 +54,8 @@ export const ApiKeyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         await AsyncStorage.setItem(API_KEY_STORAGE_KEY, trimmedKey);
       } else {
         await AsyncStorage.removeItem(API_KEY_STORAGE_KEY);
+        setIsAiEnabledState(false);
+        await AsyncStorage.removeItem(AI_ENABLED_STORAGE_KEY);
       }
     } catch (error) {
       console.error('Error saving API key:', error);
@@ -53,16 +66,33 @@ export const ApiKeyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const clearCustomApiKey = async () => {
     try {
       setCustomApiKeyState('');
-      await AsyncStorage.removeItem(API_KEY_STORAGE_KEY);
+      setIsAiEnabledState(false);
+      await Promise.all([
+        AsyncStorage.removeItem(API_KEY_STORAGE_KEY),
+        AsyncStorage.removeItem(AI_ENABLED_STORAGE_KEY),
+      ]);
     } catch (error) {
       console.error('Error clearing API key:', error);
       throw error;
     }
   };
 
+  const setAiEnabled = async (enabled: boolean) => {
+    try {
+      // Only allow enabling if key exists
+      if (enabled && customApiKey.length === 0) {
+        return;
+      }
+      
+      setIsAiEnabledState(enabled);
+      await AsyncStorage.setItem(AI_ENABLED_STORAGE_KEY, String(enabled));
+    } catch (error) {
+      console.error('Error saving AI enabled state:', error);
+    }
+  };
+
   const getActiveApiKey = () => {
-    // Eğer custom key varsa onu kullan, yoksa varsayılanı kullan
-    return customApiKey || DEFAULT_API_KEY;
+    return customApiKey;
   };
 
   const hasCustomApiKey = customApiKey.length > 0;
@@ -75,6 +105,8 @@ export const ApiKeyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         clearCustomApiKey,
         hasCustomApiKey,
         getActiveApiKey,
+        isAiEnabled,
+        setAiEnabled,
       }}
     >
       {children}

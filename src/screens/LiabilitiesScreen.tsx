@@ -1,24 +1,28 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   TouchableOpacity,
   Modal,
 } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MoreVertical, Edit, Trash2, TrendingDown, CreditCard, Plus } from 'lucide-react-native';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { Liability } from '../types';
 import { gradients } from '../theme/colors';
 import { AddLiabilityModal } from '../components/Modals/AddLiabilityModal';
 import { EditLiabilityModal } from '../components/Modals/EditLiabilityModal';
 import { formatCurrency } from '../utils/formatters';
+import { useCustomAlert } from '../hooks/useCustomAlert';
 
 export const LiabilitiesScreen = () => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const { currencySymbol } = useCurrency(); // Get currency symbol from context
   const insets = useSafeAreaInsets();
@@ -26,27 +30,42 @@ export const LiabilitiesScreen = () => {
   const totalLiabilities = getTotalLiabilities();
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [selectedLiability, setSelectedLiability] = useState(null);
+  const [selectedLiability, setSelectedLiability] = useState<Liability | null>(null);
   const [optionsModalVisible, setOptionsModalVisible] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItem, setSelectedItem] = useState<Liability | null>(null);
+  const { showAlert, AlertComponent } = useCustomAlert();
 
   const liabilityTypeLabels = {
-    credit_card: 'Kredi Kartı',
-    personal_debt: 'Şahıs Borcu',
+    credit_card: t('finance.liabilities.types.credit_card'),
+    loan: t('finance.liabilities.types.loan'),
+    personal: t('finance.liabilities.types.personal'),
+    other: t('finance.liabilities.types.other'),
   };
 
-  const handleEditLiability = (liability) => {
+  const handleEditLiability = (liability: Liability) => {
     setSelectedLiability(liability);
     setEditModalVisible(true);
     setOptionsModalVisible(false);
   };
 
-  const handleDeleteLiability = (id) => {
-    removeLiability(id);
+  const handleDeleteLiability = (id: string) => {
     setOptionsModalVisible(false);
+    showAlert(
+      t('common.deleteConfirmTitle'),
+      t('common.deleteConfirmMessage'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        { 
+          text: t('common.delete'), 
+          style: 'destructive',
+          onPress: () => removeLiability(id)
+        }
+      ],
+      'warning'
+    );
   };
 
-  const handleLiabilityPress = (liability) => {
+  const handleLiabilityPress = (liability: Liability) => {
     setSelectedItem(liability);
     setOptionsModalVisible(true);
   };
@@ -58,10 +77,10 @@ export const LiabilitiesScreen = () => {
         <View style={styles.headerTop}>
           <View>
             <Text style={[styles.subtitle, { color: colors.text.tertiary }]}>
-              Toplam Borç
+              {t('finance.liabilities.subtitle')}
             </Text>
             <Text style={[styles.title, { color: colors.text.primary }]}>
-              Borçlarım
+              {t('finance.liabilities.title')}
             </Text>
           </View>
           <View style={[styles.headerIcon, { backgroundColor: 'rgba(255, 71, 87, 0.15)' }]}>
@@ -77,7 +96,7 @@ export const LiabilitiesScreen = () => {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
-            {/* Işık Hüzmeleri */}
+            {/* Light Beams */}
             <View style={styles.lightBeam1} />
             <View style={styles.lightBeam2} />
             <View style={styles.lightBeam3} />
@@ -91,7 +110,7 @@ export const LiabilitiesScreen = () => {
                 <TrendingDown size={24} color="rgba(255, 255, 255, 0.95)" strokeWidth={2.5} />
               </View>
               <View style={styles.heroTextArea}>
-                <Text style={styles.heroLabel}>Toplam Borç</Text>
+                <Text style={styles.heroLabel}>{t('finance.liabilities.totalValue')}</Text>
                 <Text style={styles.heroValue}>
                   {formatCurrency(totalLiabilities, currencySymbol)}
                 </Text>
@@ -101,11 +120,12 @@ export const LiabilitiesScreen = () => {
         </View>
       </View>
 
-      <FlatList
+      <FlashList<Liability>
         data={liabilities}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item: Liability) => item.id}
         contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
+        estimatedItemSize={160}
+        renderItem={({ item }: { item: Liability }) => (
           <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.cardHeader}>
               <View style={styles.cardLeft}>
@@ -138,21 +158,21 @@ export const LiabilitiesScreen = () => {
 
               {item.type === 'credit_card' && item.totalLimit && (
                 <View style={[styles.creditInfo, { borderTopColor: colors.border.secondary }]}>
-                  <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>Toplam Limit</Text>
+                  <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>{t('finance.liabilities.totalLimit')}</Text>
                   <Text style={[styles.infoValue, { color: colors.text.primary }]}>{formatCurrency(item.totalLimit, currencySymbol)}</Text>
                 </View>
               )}
-
+ 
               {item.dueDate && (
                 <View style={[styles.creditInfo, { borderTopColor: colors.border.secondary }]}>
-                  <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>Kesim Tarihi</Text>
+                  <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>{t('finance.liabilities.dueDate')}</Text>
                   <Text style={[styles.infoValue, { color: colors.text.primary }]}>{item.dueDate}</Text>
                 </View>
               )}
-
+ 
               {item.debtorName && (
                 <View style={[styles.creditInfo, { borderTopColor: colors.border.secondary }]}>
-                  <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>Borç Veren</Text>
+                  <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>{t('finance.liabilities.creditor')}</Text>
                   <Text style={[styles.infoValue, { color: colors.text.primary }]}>{item.debtorName}</Text>
                 </View>
               )}
@@ -169,10 +189,10 @@ export const LiabilitiesScreen = () => {
               <CreditCard size={48} color={colors.error} strokeWidth={1.5} />
             </View>
             <Text style={[styles.emptyText, { color: colors.text.primary }]}>
-              Henüz borç eklenmemiş
+              {t('finance.liabilities.noData')}
             </Text>
             <Text style={[styles.emptySubtext, { color: colors.text.tertiary }]}>
-              Borçlarınızı eklemek için + butonuna tıklayın
+              {t('finance.liabilities.noDataSub')}
             </Text>
           </View>
         }
@@ -193,18 +213,18 @@ export const LiabilitiesScreen = () => {
           <View style={[styles.optionsModal, { backgroundColor: colors.cardBackground }]}>
             <TouchableOpacity
               style={[styles.optionButton, { borderBottomColor: colors.border.secondary }]}
-              onPress={() => handleEditLiability(selectedItem)}
+              onPress={() => selectedItem && handleEditLiability(selectedItem)}
             >
               <Edit size={22} color={colors.text.primary} strokeWidth={2} />
-              <Text style={[styles.optionText, { color: colors.text.primary }]}>Düzenle</Text>
+              <Text style={[styles.optionText, { color: colors.text.primary }]}>{t('common.edit')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.optionButton, styles.deleteOption]}
-              onPress={() => handleDeleteLiability(selectedItem.id)}
+              onPress={() => selectedItem && handleDeleteLiability(selectedItem.id)}
             >
               <Trash2 size={22} color={colors.error} strokeWidth={2} />
-              <Text style={[styles.optionText, { color: colors.error }]}>Sil</Text>
+              <Text style={[styles.optionText, { color: colors.error }]}>{t('common.delete')}</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -240,6 +260,7 @@ export const LiabilitiesScreen = () => {
           setSelectedLiability(null);
         }}
       />
+      {AlertComponent}
     </View>
   );
 };
@@ -293,7 +314,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
   },
-  // Işık Hüzmeleri
+  // Light Rays
   lightBeam1: {
     position: 'absolute',
     width: 200,
@@ -362,11 +383,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
   },
   heroTextArea: {
     flex: 1,

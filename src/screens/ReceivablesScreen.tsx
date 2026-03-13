@@ -1,51 +1,68 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   TouchableOpacity,
   Modal,
 } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MoreVertical, Edit, Trash2, TrendingUp, HandCoins, Plus, Calendar } from 'lucide-react-native';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { Receivable } from '../types';
 import { gradients } from '../theme/colors';
 import { AddReceivableModal } from '../components/Modals/AddReceivableModal';
 import { EditReceivableModal } from '../components/Modals/EditReceivableModal';
 import { formatCurrency } from '../utils/formatters';
+import { useCustomAlert } from '../hooks/useCustomAlert';
 
 export const ReceivablesScreen = () => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const { currencySymbol } = useCurrency(); // Get currency symbol from context
   const insets = useSafeAreaInsets();
   const { receivables, addReceivable, updateReceivable, removeReceivable } = useFinanceStore();
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [selectedReceivable, setSelectedReceivable] = useState(null);
+  const [selectedReceivable, setSelectedReceivable] = useState<Receivable | null>(null);
   const [optionsModalVisible, setOptionsModalVisible] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItem, setSelectedItem] = useState<Receivable | null>(null);
+  const { showAlert, AlertComponent } = useCustomAlert();
 
   const totalReceivables = receivables.reduce(
     (total, item) => total + item.amount,
     0
   );
 
-  const handleEditReceivable = (receivable) => {
+  const handleEditReceivable = (receivable: Receivable) => {
     setSelectedReceivable(receivable);
     setEditModalVisible(true);
     setOptionsModalVisible(false);
   };
 
-  const handleDeleteReceivable = (id) => {
-    removeReceivable(id);
+  const handleDeleteReceivable = (id: string) => {
     setOptionsModalVisible(false);
+    showAlert(
+      t('common.deleteConfirmTitle'),
+      t('common.deleteConfirmMessage'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        { 
+          text: t('common.delete'), 
+          style: 'destructive',
+          onPress: () => removeReceivable(id)
+        }
+      ],
+      'warning'
+    );
   };
 
-  const handleReceivablePress = (receivable) => {
+  const handleReceivablePress = (receivable: Receivable) => {
     setSelectedItem(receivable);
     setOptionsModalVisible(true);
   };
@@ -57,10 +74,10 @@ export const ReceivablesScreen = () => {
         <View style={styles.headerTop}>
           <View>
             <Text style={[styles.subtitle, { color: colors.text.tertiary }]}>
-              Toplam Alacak
+              {t('finance.receivables.subtitle')}
             </Text>
             <Text style={[styles.title, { color: colors.text.primary }]}>
-              Alacaklarım
+              {t('finance.receivables.title')}
             </Text>
           </View>
           <View style={[styles.headerIcon, { backgroundColor: 'rgba(6, 182, 212, 0.15)' }]}>
@@ -76,7 +93,7 @@ export const ReceivablesScreen = () => {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
-            {/* Işık Hüzmeleri */}
+            {/* Light Beams */}
             <View style={styles.lightBeam1} />
             <View style={styles.lightBeam2} />
             <View style={styles.lightBeam3} />
@@ -90,7 +107,7 @@ export const ReceivablesScreen = () => {
                 <TrendingUp size={24} color="rgba(255, 255, 255, 0.95)" strokeWidth={2.5} />
               </View>
               <View style={styles.heroTextArea}>
-                <Text style={styles.heroLabel}>Toplam Alacak</Text>
+                <Text style={styles.heroLabel}>{t('finance.receivables.totalValue')}</Text>
                 <Text style={styles.heroValue}>
                   {formatCurrency(totalReceivables, currencySymbol)}
                 </Text>
@@ -100,11 +117,12 @@ export const ReceivablesScreen = () => {
         </View>
       </View>
 
-      <FlatList
+      <FlashList<Receivable>
         data={receivables}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item: Receivable) => item.id}
         contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
+        estimatedItemSize={160}
+        renderItem={({ item }: { item: Receivable }) => (
           <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.cardHeader}>
               <View style={styles.cardLeft}>
@@ -149,10 +167,10 @@ export const ReceivablesScreen = () => {
               <HandCoins size={48} color={colors.accent.cyan} strokeWidth={1.5} />
             </View>
             <Text style={[styles.emptyText, { color: colors.text.primary }]}>
-              Henüz alacak eklenmemiş
+              {t('finance.receivables.noData')}
             </Text>
             <Text style={[styles.emptySubtext, { color: colors.text.tertiary }]}>
-              Alacaklarınızı eklemek için + butonuna tıklayın
+              {t('finance.receivables.noDataSub')}
             </Text>
           </View>
         }
@@ -173,18 +191,18 @@ export const ReceivablesScreen = () => {
           <View style={[styles.optionsModal, { backgroundColor: colors.cardBackground }]}>
             <TouchableOpacity
               style={[styles.optionButton, { borderBottomColor: colors.border.secondary }]}
-              onPress={() => handleEditReceivable(selectedItem)}
+              onPress={() => selectedItem && handleEditReceivable(selectedItem)}
             >
               <Edit size={22} color={colors.text.primary} strokeWidth={2} />
-              <Text style={[styles.optionText, { color: colors.text.primary }]}>Düzenle</Text>
+              <Text style={[styles.optionText, { color: colors.text.primary }]}>{t('common.edit')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.optionButton, styles.deleteOption]}
-              onPress={() => handleDeleteReceivable(selectedItem.id)}
+              onPress={() => selectedItem && handleDeleteReceivable(selectedItem.id)}
             >
               <Trash2 size={22} color={colors.error} strokeWidth={2} />
-              <Text style={[styles.optionText, { color: colors.error }]}>Sil</Text>
+              <Text style={[styles.optionText, { color: colors.error }]}>{t('common.delete')}</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -220,6 +238,7 @@ export const ReceivablesScreen = () => {
           setSelectedReceivable(null);
         }}
       />
+      {AlertComponent}
     </View>
   );
 };
@@ -273,7 +292,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
   },
-  // Işık Hüzmeleri
+  // Light Rays
   lightBeam1: {
     position: 'absolute',
     width: 200,
@@ -342,11 +361,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
   },
   heroTextArea: {
     flex: 1,

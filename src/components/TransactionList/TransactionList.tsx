@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { Transaction } from '../../types';
 import { TransactionItem } from './TransactionItem';
 
@@ -23,10 +24,11 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   }
 
   return (
-    <FlatList
+    <FlashList<Transaction>
       data={sortedTransactions}
-      renderItem={({ item }) => <TransactionItem transaction={item} onDelete={onDelete} />}
-      keyExtractor={(item) => item.id}
+      renderItem={({ item }: { item: Transaction }) => <TransactionItem transaction={item} onDelete={onDelete} />}
+      keyExtractor={(item: Transaction) => item.id}
+      estimatedItemSize={80}
       showsVerticalScrollIndicator={false}
       scrollEnabled={false} // Disable internal scrolling since it's in a parent scroll view
     />

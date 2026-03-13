@@ -17,7 +17,7 @@ export const LockScreen = () => {
       const isEnrolled = await LocalAuthentication.isEnrolledAsync();
 
       if (!hasHardware || !isEnrolled) {
-        // Biyometrik yoksa veya tanımlı değilse kilidi aç (fallback)
+        // Unlock if biometrics are not available or not defined (fallback)
         setLocked(false);
         return;
       }
@@ -39,7 +39,7 @@ export const LockScreen = () => {
   useEffect(() => {
     handleAuthentication();
     
-    // Kilit ekranındayken geri tuşunu devre dışı bırak
+    // Disable back button when on lock screen
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => true);
     return () => backHandler.remove();
   }, []);

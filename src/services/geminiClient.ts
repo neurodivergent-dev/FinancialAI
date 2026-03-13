@@ -41,23 +41,28 @@ const extractFirstText = (data: any): string | undefined => {
   return data?.candidates?.[0]?.content?.parts?.[0]?.text;
 };
 
-const parseCfoText = (text: string): CfoAnalysisResult => {
+const parseCfoText = (text: string, language: string = 'tr'): CfoAnalysisResult => {
+  const isTr = language === 'tr';
   const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
   let section: 'none' | 'risk' | 'action' = 'none';
   const risks: string[] = [];
   const actions: string[] = [];
 
+  const summaryKeyword = isTr ? 'özet' : 'summary';
+  const riskKeyword = isTr ? 'risk' : 'risk';
+  const actionKeyword = isTr ? 'aksiyon' : 'action';
+
   lines.forEach((line) => {
     const lower = line.toLowerCase();
-    if (lower.startsWith('özet')) {
+    if (lower.startsWith(summaryKeyword)) {
       section = 'none';
       return;
     }
-    if (lower.startsWith('risk')) {
+    if (lower.startsWith(riskKeyword)) {
       section = 'risk';
       return;
     }
-    if (lower.startsWith('aksiyon')) {
+    if (lower.startsWith(actionKeyword)) {
       section = 'action';
       return;
     }
@@ -68,8 +73,8 @@ const parseCfoText = (text: string): CfoAnalysisResult => {
     }
   });
 
-  const summary =
-    lines.find((l) => l.toLowerCase().startsWith('özet')) || 'Özet bulunamadı.';
+  const summaryLine = lines.find((l) => l.toLowerCase().startsWith(summaryKeyword));
+  const summary = summaryLine || (isTr ? 'Özet bulunamadı.' : 'Summary not found.');
 
   const unique = (arr: string[]) => Array.from(new Set(arr.filter(Boolean)));
 
@@ -81,14 +86,16 @@ const parseCfoText = (text: string): CfoAnalysisResult => {
   };
 };
 
-export async function generateCfoAnalysis(input: CfoAnalysisInput, customApiKey?: string): Promise<CfoAnalysisResult> {
+export async function generateCfoAnalysis(input: CfoAnalysisInput, customApiKey?: string, language: string = 'tr'): Promise<CfoAnalysisResult> {
   const apiKey = customApiKey || AI_CONFIG.gemini.apiKey;
+  const isTr = language === 'tr';
+  
   if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY_HERE') {
-    throw new Error('Gemini API anahtarı bulunamadı. .env içine EXPO_PUBLIC_GEMINI_API_KEY ekleyin.');
+    throw new Error(isTr ? 'Gemini API anahtarı bulunamadı. Lütfen ayarlardan kontrol edin.' : 'Gemini API key not found. Please check settings.');
   }
 
   const prompt = [
-    CFO_ANALYSIS_PROMPT,
+    isTr ? 'Sen bir finansal analiz uzmanısın. Aşağıdaki verileri analiz et ve Özet, Riskler, Aksiyonlar formatında cevap ver.' : 'You are a financial analysis expert. Analyze the data below and respond in the format Summary, Risks, Actions.',
     'Input JSON:',
     JSON.stringify(input, null, 2),
   ].join('\n');

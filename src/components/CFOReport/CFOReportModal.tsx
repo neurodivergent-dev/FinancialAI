@@ -10,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import {
@@ -66,6 +67,7 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
   reportData,
   metrics,
 }) => {
+  const { t, i18n } = useTranslation();
   const { colors } = useTheme();
   const { currencySymbol } = useCurrency();
   const { profile } = useProfile();
@@ -73,22 +75,22 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
   const navigation = useNavigation();
   const [exportingPDF, setExportingPDF] = useState(false);
 
-  // Finansal Sağlık Skoru Hesaplama (0-100)
+  // Financial Health Score Calculation (0-100)
   const calculateHealthScore = (): number => {
-    let score = 50; // Başlangıç
+    let score = 50; // Initial
 
-    // Net değer pozitifse +20
+    // +20 if net worth is positive
     if (metrics.netWorth > 0) score += 20;
     else score -= 20;
 
-    // Borç/Varlık oranı
+    // Debt/Asset ratio
     const debtRatio = metrics.totalAssets > 0 ? metrics.totalLiabilities / metrics.totalAssets : 1;
     if (debtRatio < 0.3) score += 15;
     else if (debtRatio < 0.5) score += 10;
     else if (debtRatio < 0.7) score += 5;
     else score -= 10;
     
-    // Findeks notunu dahil et
+    // Include Findeks score
     if (metrics.findeksScore) {
       if (metrics.findeksScore >= 1700) score += 15;
       else if (metrics.findeksScore >= 1500) score += 10;
@@ -102,25 +104,25 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
 
   const healthScore = calculateHealthScore();
 
-  // Skor kategorisi
+  // Score category
   const getScoreCategory = (score: number) => {
-    if (score >= 80) return { text: 'Mükemmel', color: colors.success, icon: CheckCircle };
-    if (score >= 60) return { text: 'İyi', color: colors.accent.cyan, icon: TrendingUp };
-    if (score >= 40) return { text: 'Orta', color: '#F59E0B', icon: Activity };
-    return { text: 'Dikkat', color: colors.error, icon: AlertTriangle };
+    if (score >= 80) return { text: t('settings.scores.excellent'), color: colors.success, icon: CheckCircle };
+    if (score >= 60) return { text: t('settings.scores.good'), color: colors.accent.cyan, icon: TrendingUp };
+    if (score >= 40) return { text: t('settings.scores.average'), color: '#F59E0B', icon: Activity };
+    return { text: t('settings.scores.warning'), color: colors.error, icon: AlertTriangle };
   };
 
   const scoreCategory = getScoreCategory(healthScore);
 
-  // PDF Export Fonksiyonu
+  // PDF Export Function
   const handleExportPDF = async () => {
     if (!isPremium) {
       Alert.alert(
-        'Premium Özellik',
-        'Bu özellik sadece Premium abonelerimize özeldir. Devam etmek için lütfen abone olun.',
+        t('common.premiumFeature'),
+        t('common.premiumFeatureDesc'),
         [
-          { text: 'İptal', style: 'cancel' },
-          { text: 'Abone Ol', onPress: () => {
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('common.subscribe'), onPress: () => {
               onClose(); // Close the modal before navigating
               navigation.navigate('Paywall');
             }
@@ -131,13 +133,13 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
     }
 
     if (!reportData) {
-      Alert.alert('Hata', 'Rapor verisi bulunamadı.');
+      Alert.alert(t('common.error'), t('dashboard.errors.reportNotFound'));
       return;
     }
 
     setExportingPDF(true);
     try {
-      const exportDate = new Date().toLocaleDateString('tr-TR', {
+      const exportDate = new Date().toLocaleDateString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
@@ -145,7 +147,7 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
         minute: '2-digit'
       });
 
-      // Markdown'ı HTML'e çevir (basit dönüşüm)
+      // Convert Markdown to HTML (simple conversion)
       const markdownToHtml = (md: string) => {
         return md
           .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
@@ -337,137 +339,137 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
           </style>
         </head>
         <body>
-          <h1>🤖 AI CFO - Finansal Sağlık Raporu</h1>
-
+          <h1>🤖 ${t('settings.pdfReport.aiReportTitle')}</h1>
+ 
           <div class="header-info">
-            <span><strong>Rapor Tarihi:</strong> ${exportDate}</span>
-            <span><strong>Para Birimi:</strong> ${currencySymbol}</span>
+            <span><strong>${t('settings.pdfReport.date')}:</strong> ${exportDate}</span>
+            <span><strong>${t('settings.pdfReport.currency')}:</strong> ${currencySymbol}</span>
           </div>
-
+ 
           ${profile.name || profile.email || profile.phone || metrics.findeksScore || metrics.salary || metrics.additionalIncome ? `
           <div class="profile-section">
-            <h2>👤 Profil Bilgileri</h2>
-            ${profile.name ? `<div class="profile-item"><span>Ad Soyad:</span><span><strong>${profile.name}</strong></span></div>` : ''}
-            ${profile.email ? `<div class="profile-item"><span>E-posta:</span><span>${profile.email}</span></div>` : ''}
-            ${profile.phone ? `<div class="profile-item"><span>Telefon:</span><span>${profile.phone}</span></div>` : ''}
-            ${metrics.findeksScore ? `<div class="profile-item"><span>Findeks Kredi Notu:</span><span><strong>${metrics.findeksScore}</strong></span></div>` : ''}
-            ${metrics.salary ? `<div class="profile-item"><span>Aylık Net Maaş:</span><span><strong>${formatCurrency(metrics.salary, currencySymbol)}</strong></span></div>` : ''}
-            ${metrics.additionalIncome ? `<div class="profile-item"><span>Aylık Ek Gelir:</span><span><strong>${formatCurrency(metrics.additionalIncome, currencySymbol)}</strong></span></div>` : ''}
+            <h2>👤 ${t('settings.profile')}</h2>
+            ${profile.name ? `<div class="profile-item"><span>${t('settings.profileSettings.name')}:</span><span><strong>${profile.name}</strong></span></div>` : ''}
+            ${profile.email ? `<div class="profile-item"><span>${t('settings.profileSettings.email')}:</span><span>${profile.email}</span></div>` : ''}
+            ${profile.phone ? `<div class="profile-item"><span>${t('settings.profileSettings.phone')}:</span><span>${profile.phone}</span></div>` : ''}
+            ${metrics.findeksScore ? `<div class="profile-item"><span>${t('settings.profileSettings.findeks')}:</span><span><strong>${metrics.findeksScore}</strong></span></div>` : ''}
+            ${metrics.salary ? `<div class="profile-item"><span>${t('settings.pdfReport.monthlyNetSalary')}:</span><span><strong>${formatCurrency(metrics.salary, currencySymbol)}</strong></span></div>` : ''}
+            ${metrics.additionalIncome ? `<div class="profile-item"><span>${t('settings.pdfReport.monthlyAdditionalIncome')}:</span><span><strong>${formatCurrency(metrics.additionalIncome, currencySymbol)}</strong></span></div>` : ''}
           </div>
           ` : ''}
-
+ 
           <div class="health-score-card">
-            <div class="health-score-label">${scoreCategory.text} Durum</div>
+            <div class="health-score-label">${t('settings.pdfReport.scoreStatus', { status: scoreCategory.text })}</div>
             <div class="health-score-value">${Math.round(healthScore)}</div>
-            <div class="health-score-desc">Finansal Sağlık Skoru</div>
+            <div class="health-score-desc">${t('settings.pdfReport.healthScore')}</div>
           </div>
-
-          <h2>📊 Kategori Skorları</h2>
+ 
+          <h2>📊 ${t('settings.pdfReport.categoryScores')}</h2>
           <div class="category-grid">
             <div class="category-card">
-              <div class="category-title">💧 Likidite</div>
+              <div class="category-title">💧 ${t('settings.categories.liquidity')}</div>
               <div class="category-score">${Math.round(liquidityScore)}/100</div>
-              <div class="category-desc">Nakit akışı ve ödeme gücü</div>
+              <div class="category-desc">${t('settings.categories.liquidityDesc')}</div>
             </div>
             <div class="category-card">
-              <div class="category-title">🛡️ Borç Yönetimi</div>
+              <div class="category-title">🛡️ ${t('settings.categories.debtManagement')}</div>
               <div class="category-score">${Math.round(debtScore)}/100</div>
-              <div class="category-desc">Borç yönetimi kalitesi</div>
+              <div class="category-desc">${t('settings.categories.debtManagementDesc')}</div>
             </div>
             <div class="category-card">
-              <div class="category-title">📈 Varlık Kalitesi</div>
+              <div class="category-title">📈 ${t('settings.categories.assetQuality')}</div>
               <div class="category-score">${Math.round(assetScore)}/100</div>
-              <div class="category-desc">Net varlık değeri</div>
+              <div class="category-desc">${t('settings.categories.assetQualityDesc')}</div>
             </div>
             <div class="category-card">
-              <div class="category-title">🎯 Taksit Yönetimi</div>
+              <div class="category-title">🎯 ${t('settings.categories.installmentManagement')}</div>
               <div class="category-score">${Math.round(installmentScore)}/100</div>
-              <div class="category-desc">Aylık taksit oranı</div>
+              <div class="category-desc">${t('settings.categories.installmentManagementDesc')}</div>
             </div>
           </div>
-
+ 
           <div class="summary-box">
-            <h2>⚡ AI Analiz Özeti</h2>
+            <h2>⚡ ${t('settings.pdfReport.aiAnalysisSummary')}</h2>
             ${markdownToHtml(reportData.summary)}
           </div>
-
+ 
           ${reportData.risks.length > 0 ? `
-          <h2>⚠️ Tespit Edilen Riskler</h2>
+          <h2>⚠️ ${t('settings.pdfReport.detectedRisks')}</h2>
           ${reportData.risks.map((risk, idx) => `
             <div class="risk-item">
               <strong>${idx + 1}.</strong> ${markdownToHtml(risk)}
             </div>
           `).join('')}
           ` : ''}
-
+ 
           ${reportData.actions.length > 0 ? `
-          <h2>✅ Önerilen Aksiyonlar</h2>
+          <h2>✅ ${t('settings.pdfReport.recommendedActions')}</h2>
           ${reportData.actions.map((action, idx) => `
             <div class="action-item">
               <strong>${idx + 1}.</strong> ${markdownToHtml(action)}
             </div>
           `).join('')}
           ` : ''}
-
-          <h2>💼 Finansal Özet</h2>
+ 
+          <h2>💼 ${t('settings.pdfReport.financialSummary')}</h2>
           <table class="metrics-table">
             <tr>
-              <td>Toplam Varlıklar</td>
+              <td>${t('dashboard.totalAssets')}</td>
               <td class="green">${formatCurrency(metrics.totalAssets, currencySymbol)}</td>
             </tr>
             <tr>
-              <td>Toplam Borçlar</td>
+              <td>${t('dashboard.totalLiabilities')}</td>
               <td class="red">${formatCurrency(metrics.totalLiabilities, currencySymbol)}</td>
             </tr>
             <tr>
-              <td>Net Değer</td>
+              <td>${t('dashboard.netWorth')}</td>
               <td class="${metrics.netWorth >= 0 ? 'green' : 'red'}">${formatCurrency(metrics.netWorth, currencySymbol)}</td>
             </tr>
             <tr>
-              <td>Güvenli Harcama Limiti</td>
+              <td>${t('settings.pdfReport.safeToSpendLimit')}</td>
               <td class="purple">${formatCurrency(metrics.safeToSpend, currencySymbol)}</td>
             </tr>
             <tr>
-              <td>Toplam Alacaklar</td>
+              <td>${t('dashboard.totalReceivables')}</td>
               <td class="green">${formatCurrency(metrics.totalReceivables, currencySymbol)}</td>
             </tr>
             <tr>
-              <td>Toplam Taksitler</td>
+              <td>${t('dashboard.totalInstallments')}</td>
               <td class="red">${formatCurrency(metrics.totalInstallments, currencySymbol)}</td>
             </tr>
           </table>
-
+ 
           <div class="footer">
-            <p><strong>🤖 Financial AI - Yapay Zeka CFO Raporu</strong></p>
-            <p>Bu rapor ${exportDate} tarihinde AI tarafından oluşturulmuştur.</p>
+            <p><strong>🤖 Financial AI - ${t('settings.pdfReport.aiFooter')}</strong></p>
+            <p>${t('settings.pdfReport.reportGeneratedDate', { date: exportDate })}</p>
             <p>Financial AI v1.0.0</p>
           </div>
         </body>
         </html>
       `;
 
-      // PDF oluştur
+      // Create PDF
       const { uri } = await Print.printToFileAsync({ html });
 
-      // PDF'i paylaş
+      // Share PDF
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(uri, {
           mimeType: 'application/pdf',
-          dialogTitle: 'AI CFO Raporunu Paylaşın',
+          dialogTitle: t('settings.pdfReport.shareTitle', { defaultValue: 'AI CFO Raporunu Paylaşın' }),
           UTI: 'com.adobe.pdf',
         });
       } else {
-        Alert.alert('Başarılı', `PDF şu konuma kaydedildi: ${uri}`);
+        Alert.alert(t('common.success'), t('settings.pdfReport.saveSuccess', { uri }));
       }
     } catch (error) {
       console.error('PDF Export error:', error);
-      Alert.alert('Hata', 'PDF oluşturulurken bir hata oluştu.');
+      Alert.alert(t('common.error'), t('settings.pdfReport.exportError'));
     } finally {
       setExportingPDF(false);
     }
   };
 
-  // Kategori skorları
+  // Category scores
   const liquidityScore = metrics.totalLiabilities > 0
     ? Math.min(100, (metrics.safeToSpend / metrics.totalLiabilities) * 100)
     : (metrics.safeToSpend > 0 ? 100 : 0);
@@ -525,8 +527,8 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
         >
           <View style={styles.headerContent}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.headerSubtitle}>Yapay Zeka CFO</Text>
-              <Text style={styles.headerTitle}>Finansal Sağlık Raporu</Text>
+              <Text style={styles.headerSubtitle}>{t('dashboard.aiCfoAnalysis')}</Text>
+              <Text style={styles.headerTitle}>{t('settings.pdfReport.aiReportTitle')}</Text>
             </View>
             <View style={styles.headerButtons}>
               <TouchableOpacity
@@ -536,7 +538,7 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
               >
                 <Download size={20} color="#FFFFFF" strokeWidth={2.5} />
                 <Text style={styles.exportButtonText}>
-                  {exportingPDF ? 'Hazırlanıyor...' : 'PDF'}
+                  {exportingPDF ? t('common.loading') : 'PDF'}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -551,7 +553,7 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
               <View style={styles.scoreInner}>
                 <scoreCategory.icon size={32} color="#FFFFFF" strokeWidth={2.5} />
                 <Text style={styles.mainScore}>{Math.round(healthScore)}</Text>
-                <Text style={styles.scoreLabel}>Skor</Text>
+                <Text style={styles.scoreLabel}>{t('common.score', { defaultValue: 'Skor' })}</Text>
               </View>
             </View>
             <View style={styles.scoreInfo}>
@@ -559,7 +561,7 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
                 <Text style={styles.scoreBadgeText}>{scoreCategory.text}</Text>
               </View>
               <Text style={styles.scoreDescription}>
-                Finansal sağlığınız {scoreCategory.text.toLowerCase()} durumda
+                {t('settings.pdfReport.scoreStatus', { status: scoreCategory.text.toLowerCase() })}
               </Text>
             </View>
           </View>
@@ -570,13 +572,13 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
           contentContainerStyle={styles.contentContainer}
           showsVerticalScrollIndicator={false}
         >
-          {/* AI Özet */}
+          {/* AI Summary */}
           {reportData && (
             <View style={[styles.summaryCard, { backgroundColor: colors.cardBackground }]}>
               <View style={styles.summaryHeader}>
                 <Zap size={20} color={colors.purple.light} strokeWidth={2.5} />
                 <Text style={[styles.summaryTitle, { color: colors.text.primary }]}>
-                  AI Analiz Özeti
+                  {t('settings.pdfReport.aiAnalysisSummary')}
                 </Text>
               </View>
               <Markdown
@@ -605,50 +607,50 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
             </View>
           )}
 
-          {/* Kategori Skorları */}
+          {/* Category Scores */}
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-              Detaylı Analiz
+              {t('settings.pdfReport.categoryScores')}
             </Text>
             <View style={styles.categoriesGrid}>
               <CategoryCard
-                title="Likidite"
+                title={t('settings.categories.liquidity')}
                 score={liquidityScore}
                 icon={Activity}
                 color={colors.accent.cyan}
-                description="Nakit akışı ve ödeme gücü"
+                description={t('settings.categories.liquidityDesc')}
               />
               <CategoryCard
-                title="Borç Yönetimi"
+                title={t('settings.categories.debtManagement')}
                 score={debtScore}
                 icon={Shield}
                 color={debtScore > 60 ? colors.success : colors.error}
-                description="Borç yönetimi kalitesi"
+                description={t('settings.categories.debtManagementDesc')}
               />
               <CategoryCard
-                title="Varlık Kalitesi"
+                title={t('settings.categories.assetQuality')}
                 score={assetScore}
                 icon={TrendingUp}
                 color={colors.success}
-                description="Net varlık değeri"
+                description={t('settings.categories.assetQualityDesc')}
               />
               <CategoryCard
-                title="Taksit Yönetimi"
+                title={t('settings.categories.installmentManagement')}
                 score={installmentScore}
                 icon={Target}
                 color={installmentScore > 70 ? colors.success : '#F59E0B'}
-                description="Aylık taksit oranı"
+                description={t('settings.categories.installmentManagementDesc')}
               />
             </View>
           </View>
 
-          {/* Riskler */}
+          {/* Risks */}
           {reportData && reportData.risks.length > 0 && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <AlertTriangle size={20} color={colors.error} strokeWidth={2.5} />
                 <Text style={[styles.sectionTitle, { color: colors.text.primary, marginLeft: 8 }]}>
-                  Tespit Edilen Riskler
+                  {t('settings.pdfReport.detectedRisks')}
                 </Text>
               </View>
               {reportData.risks.map((risk, idx) => (
@@ -675,13 +677,13 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
             </View>
           )}
 
-          {/* Aksiyonlar */}
+          {/* Actions */}
           {reportData && reportData.actions.length > 0 && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <CheckCircle size={20} color={colors.success} strokeWidth={2.5} />
                 <Text style={[styles.sectionTitle, { color: colors.text.primary, marginLeft: 8 }]}>
-                  Önerilen Aksiyonlar
+                  {t('settings.pdfReport.recommendedActions')}
                 </Text>
               </View>
               {reportData.actions.map((action, idx) => (
@@ -708,15 +710,15 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
             </View>
           )}
 
-          {/* Finansal Özet */}
+          {/* Financial Summary */}
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-              Finansal Özet
+              {t('settings.pdfReport.financialSummary')}
             </Text>
             <View style={[styles.metricsCard, { backgroundColor: colors.cardBackground }]}>
               <View style={styles.metricRow}>
                 <Text style={[styles.metricLabel, { color: colors.text.primary }]}>
-                  Toplam Varlıklar
+                  {t('dashboard.totalAssets')}
                 </Text>
                 <Text style={[styles.metricValue, { color: colors.success }]}>
                   {formatCurrency(metrics.totalAssets, currencySymbol)}
@@ -725,7 +727,7 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
               <View style={styles.metricDivider} />
               <View style={styles.metricRow}>
                 <Text style={[styles.metricLabel, { color: colors.text.primary }]}>
-                  Toplam Borçlar
+                  {t('dashboard.totalLiabilities')}
                 </Text>
                 <Text style={[styles.metricValue, { color: colors.error }]}>
                   {formatCurrency(metrics.totalLiabilities, currencySymbol)}
@@ -733,7 +735,7 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
               </View>
               <View style={styles.metricDivider} />
               <View style={styles.metricRow}>
-                <Text style={[styles.metricLabel, { color: colors.text.primary }]}>Net Değer</Text>
+                <Text style={[styles.metricLabel, { color: colors.text.primary }]}>{t('dashboard.netWorth')}</Text>
                 <Text
                   style={[
                     styles.metricValue,
@@ -746,7 +748,7 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
               <View style={styles.metricDivider} />
                <View style={styles.metricRow}>
                 <Text style={[styles.metricLabel, { color: colors.text.primary }]}>
-                  Güvenli Harcama
+                  {t('settings.pdfReport.safeToSpendLimit')}
                 </Text>
                 <Text style={[styles.metricValue, { color: colors.purple.light }]}>
                   {formatCurrency(metrics.safeToSpend, currencySymbol)}
@@ -758,7 +760,7 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
                   <View style={styles.metricDivider} />
                   <View style={styles.metricRow}>
                     <Text style={[styles.metricLabel, { color: colors.text.primary }]}>
-                      Aylık Maaş
+                      {t('settings.profileSettings.salary')}
                     </Text>
                     <Text style={[styles.metricValue, { color: colors.text.primary }]}>
                       {formatCurrency(metrics.salary, currencySymbol)}
@@ -771,7 +773,7 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
                   <View style={styles.metricDivider} />
                   <View style={styles.metricRow}>
                     <Text style={[styles.metricLabel, { color: colors.text.primary }]}>
-                      Ek Gelir
+                      {t('settings.profileSettings.additionalIncome')}
                     </Text>
                     <Text style={[styles.metricValue, { color: colors.text.primary }]}>
                       {formatCurrency(metrics.additionalIncome, currencySymbol)}
@@ -784,7 +786,7 @@ export const CFOReportModal: React.FC<CFOReportModalProps> = ({
                   <View style={styles.metricDivider} />
                   <View style={styles.metricRow}>
                     <Text style={[styles.metricLabel, { color: colors.text.primary }]}>
-                      Findeks Notu
+                      {t('settings.profileSettings.findeks')}
                     </Text>
                     <Text style={[styles.metricValue, { color: colors.text.primary }]}>
                       {metrics.findeksScore}

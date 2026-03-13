@@ -7,6 +7,7 @@ import {
   Linking,
   TouchableOpacity,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Info, Github, Mail, Bug, Heart, Code, Sparkles } from 'lucide-react-native';
 import { useTheme } from '../context/ThemeContext';
@@ -18,6 +19,7 @@ interface AboutScreenProps {
 }
 
 export const AboutScreen = ({ onBack }: AboutScreenProps) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
 
@@ -41,8 +43,8 @@ export const AboutScreen = ({ onBack }: AboutScreenProps) => {
             </View>
           </TouchableOpacity>
           <View style={styles.headerTextContainer}>
-            <Text style={styles.subtitle}>Uygulama</Text>
-            <Text style={styles.screenTitle}>Hakkında</Text>
+            <Text style={styles.subtitle}>{t('settings.aboutPage.appLabel')}</Text>
+            <Text style={styles.screenTitle}>{t('settings.aboutPage.title')}</Text>
           </View>
           <View style={styles.headerIcon}>
             <Info size={22} color="#FFFFFF" strokeWidth={2} />
@@ -69,13 +71,13 @@ export const AboutScreen = ({ onBack }: AboutScreenProps) => {
             <View style={styles.versionBadge}>
               <Text style={styles.appVersion}>v1.0.0</Text>
             </View>
-            <Text style={styles.appDescription}>Kişisel finans yönetiminin geleceği</Text>
+            <Text style={styles.appDescription}>{t('settings.aboutPage.heroDescription')}</Text>
           </LinearGradient>
         </View>
 
         {/* Info Cards */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Uygulama Bilgileri</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>{t('settings.aboutPage.appInfo')}</Text>
 
           <View style={[styles.infoCard, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.infoRow}>
@@ -83,7 +85,7 @@ export const AboutScreen = ({ onBack }: AboutScreenProps) => {
                 <View style={[styles.infoIconCircle, { backgroundColor: 'rgba(147, 51, 234, 0.15)' }]}>
                   <Code size={20} color={colors.purple.light} strokeWidth={2.5} />
                 </View>
-                <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>Versiyon</Text>
+                <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>{t('settings.aboutPage.version')}</Text>
               </View>
               <Text style={[styles.infoValue, { color: colors.text.primary }]}>1.0.0</Text>
             </View>
@@ -95,7 +97,7 @@ export const AboutScreen = ({ onBack }: AboutScreenProps) => {
                 <View style={[styles.infoIconCircle, { backgroundColor: 'rgba(147, 51, 234, 0.15)' }]}>
                   <Heart size={20} color={colors.purple.light} strokeWidth={2.5} />
                 </View>
-                <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>Geliştirici</Text>
+                <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>{t('settings.aboutPage.developer')}</Text>
               </View>
               <Text style={[styles.infoValue, { color: colors.text.primary }]}>Melih Can Demir</Text>
             </View>
@@ -107,7 +109,7 @@ export const AboutScreen = ({ onBack }: AboutScreenProps) => {
                 <View style={[styles.infoIconCircle, { backgroundColor: 'rgba(147, 51, 234, 0.15)' }]}>
                   <Info size={20} color={colors.purple.light} strokeWidth={2.5} />
                 </View>
-                <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>Lisans</Text>
+                <Text style={[styles.infoLabel, { color: colors.text.secondary }]}>{t('settings.aboutPage.license')}</Text>
               </View>
               <Text style={[styles.infoValue, { color: colors.text.primary }]}>MIT</Text>
             </View>
@@ -116,7 +118,7 @@ export const AboutScreen = ({ onBack }: AboutScreenProps) => {
 
         {/* Contribute Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Katkıda Bulun</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>{t('settings.aboutPage.contribute')}</Text>
 
           <TouchableOpacity
             style={[styles.linkButton, { backgroundColor: colors.cardBackground }]}
@@ -127,9 +129,9 @@ export const AboutScreen = ({ onBack }: AboutScreenProps) => {
                 <Github size={20} color={colors.purple.light} strokeWidth={2.5} />
               </View>
               <View style={styles.linkTextContainer}>
-                <Text style={[styles.linkTitle, { color: colors.text.primary }]}>GitHub Reposu</Text>
+                <Text style={[styles.linkTitle, { color: colors.text.primary }]}>{t('settings.aboutPage.githubRepo')}</Text>
                 <Text style={[styles.linkSubtitle, { color: colors.text.tertiary }]}>
-                  Kaynak kodunu incele
+                  {t('settings.aboutPage.githubRepoSub')}
                 </Text>
               </View>
             </View>
@@ -144,9 +146,9 @@ export const AboutScreen = ({ onBack }: AboutScreenProps) => {
                 <Bug size={20} color={colors.purple.light} strokeWidth={2.5} />
               </View>
               <View style={styles.linkTextContainer}>
-                <Text style={[styles.linkTitle, { color: colors.text.primary }]}>Hata Bildir</Text>
+                <Text style={[styles.linkTitle, { color: colors.text.primary }]}>{t('settings.aboutPage.reportBug')}</Text>
                 <Text style={[styles.linkSubtitle, { color: colors.text.tertiary }]}>
-                  Sorun bildirin veya öneride bulunun
+                  {t('settings.aboutPage.reportBugSub')}
                 </Text>
               </View>
             </View>
@@ -155,7 +157,7 @@ export const AboutScreen = ({ onBack }: AboutScreenProps) => {
 
         {/* Contact Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>İletişim</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>{t('settings.aboutPage.contact')}</Text>
 
           <TouchableOpacity
             style={[styles.linkButton, { backgroundColor: colors.cardBackground }]}
@@ -166,7 +168,7 @@ export const AboutScreen = ({ onBack }: AboutScreenProps) => {
                 <Mail size={20} color={colors.purple.light} strokeWidth={2.5} />
               </View>
               <View style={styles.linkTextContainer}>
-                <Text style={[styles.linkTitle, { color: colors.text.primary }]}>E-posta Gönder</Text>
+                <Text style={[styles.linkTitle, { color: colors.text.primary }]}>{t('settings.aboutPage.sendEmail')}</Text>
                 <Text style={[styles.linkSubtitle, { color: colors.text.tertiary }]}>
                   melihcandemir@protonmail.com
                 </Text>
@@ -178,7 +180,7 @@ export const AboutScreen = ({ onBack }: AboutScreenProps) => {
         {/* Footer */}
         <View style={styles.footerSection}>
           <Text style={[styles.footerText, { color: colors.text.secondary }]}>
-            Made with
+            {t('settings.aboutPage.madeWith')}
           </Text>
           <Heart size={16} color={colors.purple.primary} fill={colors.purple.primary} style={styles.heartIcon} />
           <Text style={[styles.footerText, { color: colors.text.secondary }]}>
@@ -186,7 +188,7 @@ export const AboutScreen = ({ onBack }: AboutScreenProps) => {
           </Text>
         </View>
         <Text style={[styles.copyright, { color: colors.text.tertiary }]}>
-          © {new Date().getFullYear()} Financial AI. Tüm hakları saklıdır.
+          {t('settings.aboutPage.copyright', { year: new Date().getFullYear() })}
         </Text>
       </ScrollView>
     </View>

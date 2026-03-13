@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Modal,
   View,
@@ -36,6 +37,7 @@ export const CurrencySelectionModal: React.FC<CurrencySelectionModalProps> = ({
   currentCurrency,
   onSelect,
 }) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
 
   const handleSelect = (currencyCode: string) => {
@@ -53,7 +55,7 @@ export const CurrencySelectionModal: React.FC<CurrencySelectionModalProps> = ({
       <View style={styles.modalOverlay}>
         <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
           <View style={styles.modalHeader}>
-            <Text style={[styles.modalTitle, { color: colors.text.primary }]}>Para Birimi Seçin</Text>
+            <Text style={[styles.modalTitle, { color: colors.text.primary }]}>{t('common.selectCurrency')}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <X size={24} color={colors.text.secondary} />
             </TouchableOpacity>
@@ -81,7 +83,7 @@ export const CurrencySelectionModal: React.FC<CurrencySelectionModalProps> = ({
                       {currency.code}
                     </Text>
                     <Text style={[styles.currencyName, { color: colors.text.secondary }]}>
-                      {currency.name}
+                      {t(`common.currencies.${currency.code}`)}
                     </Text>
                   </View>
                 </View>

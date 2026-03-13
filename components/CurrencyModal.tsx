@@ -1,5 +1,7 @@
 import React from 'react';
-import { View, Text, Modal, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import { View, Text, Modal, TouchableOpacity, StyleSheet } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
+import { useTranslation } from 'react-i18next';
 import { useCurrency } from '../src/context/CurrencyContext';
 import { useTheme } from '../src/context/ThemeContext';
 
@@ -25,6 +27,7 @@ interface CurrencyModalProps {
 }
 
 export default function CurrencyModal({ visible, onClose }: CurrencyModalProps) {
+  const { t } = useTranslation();
   const { currency, currencySymbol, setCurrency } = useCurrency();
   const { colors } = useTheme();
 
@@ -43,7 +46,7 @@ export default function CurrencyModal({ visible, onClose }: CurrencyModalProps) 
           {item.code} {item.symbol}
         </Text>
         <Text style={[styles.currencyName, { color: colors.text.secondary }, item.code === currency && styles.selectedCurrencyName]}>
-          {item.name}
+          {t(`common.currencies.${item.code}`)}
         </Text>
       </View>
       {item.code === currency && (
@@ -63,21 +66,22 @@ export default function CurrencyModal({ visible, onClose }: CurrencyModalProps) 
     >
       <View style={[styles.centeredView, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
         <View style={[styles.modalView, { backgroundColor: colors.background, borderColor: colors.border.primary }]}>
-          <Text style={[styles.modalTitle, { color: colors.text.primary }]}>Para Birimi Seçin</Text>
+          <Text style={[styles.modalTitle, { color: colors.text.primary }]}>{t('common.selectCurrency')}</Text>
 
-          <FlatList
+          <FlashList<CurrencyItem>
             data={currencies}
-            keyExtractor={(item) => item.code}
+            keyExtractor={(item: CurrencyItem) => item.code}
             renderItem={renderItem}
             showsVerticalScrollIndicator={true}
             style={styles.currencyList}
+            estimatedItemSize={70}
           />
 
           <TouchableOpacity
             style={[styles.button, styles.buttonCancel, { backgroundColor: colors.cardBackground, borderColor: colors.border.secondary }]}
             onPress={onClose}
           >
-            <Text style={[styles.buttonText, { color: colors.text.primary }]}>Kapat</Text>
+            <Text style={[styles.buttonText, { color: colors.text.primary }]}>{t('common.close')}</Text>
           </TouchableOpacity>
         </View>
       </View>

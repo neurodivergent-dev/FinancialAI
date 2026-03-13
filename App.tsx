@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import './src/i18n';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { View, StyleSheet, Platform, AppState } from 'react-native';
@@ -22,13 +23,13 @@ const AppContent = () => {
   const { theme, colors, isDarkMode } = useTheme();
   const { isBiometricsEnabled, isLocked, setLocked } = useSecurityStore();
 
-  // Biyometrik Kilit Mantığı: Uygulama her açıldığında kilitle
+  // Biometric Lock Logic: Lock every time the app opens
   useEffect(() => {
     if (isBiometricsEnabled) {
       setLocked(true);
     }
 
-    // Uygulama arka plana gidip geri geldiğinde tekrar kilitle
+    // Lock again when the app goes to background and comes back
     const subscription = AppState.addEventListener('change', nextAppState => {
       if (isBiometricsEnabled && nextAppState === 'active') {
         setLocked(true);
@@ -73,7 +74,7 @@ const AppContent = () => {
         backgroundColor={Platform.OS === 'android' ? colors.background : undefined}
       />
       
-      {/* Eğer kilitliyse LockScreen göster, değilse navigasyona devam et */}
+      {/* Show LockScreen if locked, otherwise continue to navigation */}
       {isLocked ? (
         <LockScreen />
       ) : (

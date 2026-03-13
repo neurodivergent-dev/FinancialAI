@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Modal,
   View,
@@ -26,6 +27,7 @@ interface EditAssetModalProps {
 }
 
 export const EditAssetModal: React.FC<EditAssetModalProps> = ({ visible, onClose, asset, onUpdate }) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const { currencySymbol } = useCurrency();
   const [type, setType] = useState<'liquid' | 'term' | 'gold_currency' | 'funds'>('liquid');
@@ -33,6 +35,7 @@ export const EditAssetModal: React.FC<EditAssetModalProps> = ({ visible, onClose
   const [value, setValue] = useState('');
   const [currency, setCurrency] = useState('TRY');
   const [details, setDetails] = useState('');
+  const insets = useSafeAreaInsets();
 
   // Populate form when asset changes
   useEffect(() => {
@@ -56,10 +59,10 @@ export const EditAssetModal: React.FC<EditAssetModalProps> = ({ visible, onClose
   };
 
   const assetTypes = [
-    { id: 'liquid', label: 'Likit (Nakit)' },
-    { id: 'term', label: 'Vadeli' },
-    { id: 'gold_currency', label: 'Altın/Döviz' },
-    { id: 'funds', label: 'Fonlar' },
+    { id: 'liquid', label: t('finance.assets.types.liquid') },
+    { id: 'term', label: t('finance.assets.types.term') },
+    { id: 'gold_currency', label: t('finance.assets.types.gold_currency') },
+    { id: 'funds', label: t('finance.assets.types.funds') },
   ] as const;
 
   const handleUpdate = () => {
@@ -107,15 +110,28 @@ export const EditAssetModal: React.FC<EditAssetModalProps> = ({ visible, onClose
                 <View style={styles.headerIcon}>
                   <TrendingUp size={28} color="#FFFFFF" strokeWidth={2.5} />
                 </View>
-                <Text style={styles.modalTitle}>Varlık Düzenle</Text>
+                <Text style={styles.modalTitle} numberOfLines={2} adjustsFontSizeToFit>{t('finance.assets.editTitle')}</Text>
               </View>
-              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <X size={24} color="#FFFFFF" strokeWidth={2.5} />
-              </TouchableOpacity>
+              <View style={styles.headerActions}>
+                <TouchableOpacity
+                  onPress={handleUpdate}
+                  style={[styles.headerActionButton, { backgroundColor: 'rgba(255,255,255,0.25)' }]}
+                  disabled={!name.trim() || !value.trim()}
+                >
+                  <Check size={22} color="#FFFFFF" strokeWidth={3} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                  <X size={24} color="#FFFFFF" strokeWidth={2.5} />
+                </TouchableOpacity>
+              </View>
             </LinearGradient>
           </View>
 
-          <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
+          <ScrollView 
+            style={styles.form} 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
+          >
             {/* Asset Type */}
             <View style={styles.section}>
               <Text style={[styles.label, { color: colors.text.primary }]}>Varlık Tipi</Text>
@@ -152,14 +168,14 @@ export const EditAssetModal: React.FC<EditAssetModalProps> = ({ visible, onClose
 
             {/* Name */}
             <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>İsim</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.assets.nameLabel')}</Text>
               <View style={[styles.inputContainer, { backgroundColor: colors.background }]}>
                 <Wallet size={20} color={colors.text.tertiary} strokeWidth={2} />
                 <TextInput
                   style={[styles.input, { color: colors.text.primary }]}
                   value={name}
                   onChangeText={setName}
-                  placeholder="Örn: Banka Hesabı"
+                  placeholder={t('finance.assets.namePlaceholder')}
                   placeholderTextColor={colors.text.tertiary}
                 />
               </View>
@@ -167,14 +183,14 @@ export const EditAssetModal: React.FC<EditAssetModalProps> = ({ visible, onClose
 
             {/* Amount */}
             <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>Tutar</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.assets.amountLabel')}</Text>
               <View style={[styles.inputContainer, { backgroundColor: colors.background }]}>
                 <Text style={[styles.currencyPrefix, { color: colors.text.tertiary }]}>{currencySymbol}</Text>
                 <TextInput
                   style={[styles.input, { color: colors.text.primary }]}
                   value={value}
                   onChangeText={setValue}
-                  placeholder="0.00"
+                  placeholder={t('finance.assets.amountPlaceholder')}
                   placeholderTextColor={colors.text.tertiary}
                   keyboardType="decimal-pad"
                 />
@@ -183,13 +199,13 @@ export const EditAssetModal: React.FC<EditAssetModalProps> = ({ visible, onClose
 
             {/* Details */}
             <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>Detaylar (Opsiyonel)</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.assets.detailsLabel')}</Text>
               <View style={[styles.inputContainer, styles.textAreaContainer, { backgroundColor: colors.background }]}>
                 <TextInput
                   style={[styles.input, styles.textArea, { color: colors.text.primary }]}
                   value={details}
                   onChangeText={setDetails}
-                  placeholder="Ek bilgiler..."
+                  placeholder={t('finance.assets.detailsPlaceholder')}
                   placeholderTextColor={colors.text.tertiary}
                   multiline
                   numberOfLines={3}
@@ -197,24 +213,6 @@ export const EditAssetModal: React.FC<EditAssetModalProps> = ({ visible, onClose
               </View>
             </View>
           </ScrollView>
-
-          {/* Update Button */}
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.updateButton}
-              onPress={handleUpdate}
-              disabled={!name.trim() || !value.trim()}
-            >
-              <LinearGradient
-                colors={!name.trim() || !value.trim() ? ['#666', '#666'] : ['#22c55e', '#10b981']}
-                style={styles.updateButtonGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <Text style={styles.updateButtonText}>Güncelle</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -246,6 +244,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerActionButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -265,6 +275,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: -0.5,
+    flexShrink: 1,
   },
   closeButton: {
     width: 40,
@@ -340,30 +351,5 @@ const styles = StyleSheet.create({
     minHeight: 80,
     textAlignVertical: 'top',
     paddingTop: 0,
-  },
-
-  // Button Styles
-  buttonContainer: {
-    padding: 24,
-    paddingBottom: 32,
-  },
-  updateButton: {
-    borderRadius: 20,
-    overflow: 'hidden',
-    shadowColor: '#22c55e',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 12,
-  },
-  updateButtonGradient: {
-    paddingVertical: 18,
-    alignItems: 'center',
-  },
-  updateButtonText: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: -0.3,
   },
 });

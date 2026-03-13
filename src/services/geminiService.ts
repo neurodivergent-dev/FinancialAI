@@ -22,108 +22,26 @@ export interface SpellCheckResponse {
 export class GeminiService {
   private apiKey: string;
   private endpoint: string;
-  private groqApiKey: string;
-  private groqEndpoint: string;
 
   constructor() {
     this.apiKey = AI_CONFIG.gemini.apiKey;
     this.endpoint = AI_CONFIG.gemini.endpoint;
-    this.groqApiKey = AI_CONFIG.groq.apiKey;
-    this.groqEndpoint = AI_CONFIG.groq.endpoint;
+  }
+
+  updateApiKey(newApiKey: string) {
+    this.apiKey = newApiKey;
   }
 
   getModel(): string {
     return AI_CONFIG.gemini.model;
   }
 
-  isGroqConfigured(): boolean {
-    return this.groqApiKey !== 'YOUR_GROQ_API_KEY_HERE' && this.groqApiKey.length > 0;
-  }
-
-  private async generateContentWithGroq(prompt: string): Promise<GeminiResponse> {
-    if (!this.isGroqConfigured()) {
-      return {
-        success: false,
-        error: 'GROQ_NOT_CONFIGURED',
-      };
-    }
-
-    const modelsToTry = [AI_CONFIG.groq.model, ...(AI_CONFIG.groq.fallbackModels || [])];
-
-    for (let i = 0; i < modelsToTry.length; i++) {
-      const model = modelsToTry[i];
-
-      try {
-        const response = await fetch(this.groqEndpoint, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${this.groqApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: model,
-            messages: [
-              {
-                role: 'user',
-                content: prompt,
-              },
-            ],
-            temperature: 0.7,
-            max_tokens: AI_CONFIG.groq.maxTokens,
-            top_p: 0.95,
-          }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-
-          if (response.status === 429) {
-            throw new Error('RATE_LIMIT');
-          }
-
-          throw new Error(`HTTP ${response.status}: ${errorData?.error?.message || response.statusText}`);
-        }
-
-        const data = await response.json();
-
-        if (data.choices && data.choices[0] && data.choices[0].message) {
-          const generatedText = data.choices[0].message.content;
-          return {
-            success: true,
-            content: generatedText.trim(),
-          };
-        } else {
-          throw new Error('İçerik oluşturulamadı');
-        }
-      } catch (error: any) {
-        console.error(`Groq ${model} hatası:`, error);
-
-        if (error.message === 'RATE_LIMIT' && i < modelsToTry.length - 1) {
-          console.log(`Groq rate limit, sonraki modeli deniyorum...`);
-          await this.delay(1000);
-          continue;
-        }
-
-        if (i === modelsToTry.length - 1) {
-          return {
-            success: false,
-            error: error.message || 'Groq başarısız oldu',
-          };
-        }
-      }
-    }
-
-    return {
-      success: false,
-      error: 'Tüm Groq modelleri başarısız oldu',
-    };
-  }
 
   async generateContentWithTitle(prompt: string): Promise<ContentGenerationResponse> {
     if (!this.isConfigured()) {
       return {
         success: false,
-        error: 'Gemini API anahtarı yapılandırılmamış. .env dosyasına anahtarınızı ekleyin.',
+        error: 'CONFIG_ERROR',
       };
     }
 
@@ -194,34 +112,22 @@ CONTENT:
     }
 
     return {
-      title: title || 'Oluşturulan İçerik',
+      title: title || 'Generated Content',
       content: content.trim() || response.trim(),
     };
   }
 
   async generateContent(prompt: string): Promise<GeminiResponse> {
-    // Önce Groq dene (daha hızlı ve cömert rate limit)
-    if (this.isGroqConfigured()) {
-      console.log('🚀 Groq ile deneniyor...');
-      const groqResponse = await this.generateContentWithGroq(prompt);
 
-      if (groqResponse.success) {
-        console.log('✅ Groq başarılı!');
-        return groqResponse;
-      }
-
-      console.log('⚠️ Groq başarısız, Gemini\'ye geçiliyor...', groqResponse.error);
-    }
-
-    // Groq başarısız veya yapılandırılmamışsa Gemini'ye düş
+    // Return error if not configured
     if (!this.isConfigured()) {
       return {
         success: false,
-        error: 'Gemini API anahtarı yapılandırılmamış. .env dosyasına anahtarınızı ekleyin.',
+        error: 'CONFIG_ERROR',
       };
     }
 
-    console.log('🔮 Gemini ile deneniyor...');
+    console.log('🔮 Trying with Gemini...');
     const modelsToTry = [AI_CONFIG.gemini.model, ...(AI_CONFIG.gemini.fallbackModels || [])];
 
     for (let i = 0; i < modelsToTry.length; i++) {
@@ -334,7 +240,7 @@ CONTENT:
   }
 
   isConfigured(): boolean {
-    return this.apiKey !== 'YOUR_GEMINI_API_KEY_HERE' && this.apiKey.length > 0;
+    return this.apiKey.length > 0;
   }
 
   private async delay(ms: number): Promise<void> {
@@ -345,7 +251,7 @@ CONTENT:
     if (!this.isConfigured()) {
       return {
         success: false,
-        error: 'Gemini API anahtarı yapılandırılmamış. .env dosyasına anahtarınızı ekleyin.',
+        error: 'CONFIG_ERROR',
       };
     }
 
@@ -393,7 +299,7 @@ SADECE düzeltilmiş metni döndür, açıklama veya ek metin ekleme.`;
     if (!this.isConfigured()) {
       return {
         success: false,
-        error: 'Gemini API anahtarı yapılandırılmamış. .env dosyasına anahtarınızı ekleyin.',
+        error: 'CONFIG_ERROR',
       };
     }
 
@@ -429,7 +335,7 @@ SADECE iyileştirilmiş metni döndür, açıklama veya ek metin ekleme.`;
     if (!this.isConfigured()) {
       return {
         success: false,
-        error: 'Gemini API anahtarı yapılandırılmamış. .env dosyasına anahtarınızı ekleyin.',
+        error: 'CONFIG_ERROR',
       };
     }
 
@@ -459,7 +365,7 @@ Tavsiyelerini ver:`;
     if (!this.isConfigured()) {
       return {
         success: false,
-        error: 'Gemini API anahtarı yapılandırılmamış. .env dosyasına anahtarınızı ekleyin.',
+        error: 'CONFIG_ERROR',
       };
     }
 
@@ -493,11 +399,12 @@ Analiz:`;
     findeksScore?: number;
     salary?: number;
     additionalIncome?: number;
+    language?: string;
   }): Promise<GeminiResponse> {
     if (!this.isConfigured()) {
       return {
         success: false,
-        error: 'Gemini API anahtarı yapılandırılmamış.',
+        error: 'CONFIG_ERROR',
       };
     }
 
@@ -512,20 +419,33 @@ Analiz:`;
       findeksScore,
       salary,
       additionalIncome,
+      language: lang = 'tr',
     } = reportContext;
 
-    const personalInfo =
-      findeksScore || salary || additionalIncome
+    const isTr = lang === 'tr';
+    const currentLanguage = isTr ? 'Turkish' : 'English';
+
+    const personalInfo = isTr 
+      ? (findeksScore || salary || additionalIncome
         ? `
 ### Kişisel Finansal Bilgiler
 *   **Findeks Kredi Notu:** ${findeksScore || 'Belirtilmemiş'}
 *   **Aylık Net Maaş:** ${salary ? `${currencySymbol}${salary.toFixed(0)}` : 'Belirtilmemiş'}
 *   **Aylık Ek Gelir:** ${additionalIncome ? `${currencySymbol}${additionalIncome.toFixed(0)}` : 'Belirtilmemiş'}
 `
-        : '';
+        : '')
+      : (findeksScore || salary || additionalIncome
+        ? `
+### Personal Financial Information
+*   **Findeks Credit Score:** ${findeksScore || 'Not specified'}
+*   **Monthly Net Salary:** ${salary ? `${currencySymbol}${salary.toFixed(0)}` : 'Not specified'}
+*   **Monthly Additional Income:** ${additionalIncome ? `${currencySymbol}${additionalIncome.toFixed(0)}` : 'Not specified'}
+`
+        : '');
 
-    const prompt = `
+    const prompt = isTr ? `
 Sen FinancialAI uygulamasının kıdemli Finans Direktörü (CFO) olarak görev yapıyorsun. Kullanıcının finansal durumunu detaylı analiz et ve kapsamlı, profesyonel bir rapor oluştur.
+Lütfen tüm raporu Turkish dilinde hazırla.
 
 **Kullanıcı Verileri:**
 *   Toplam Varlıklar: ${currencySymbol}${totalAssets.toFixed(0)}
@@ -583,6 +503,66 @@ ${personalInfo}
 - Her bölümü detaylı bir şekilde doldur
 - ASLA başlık sonuna çift iki nokta (::) koyma, sadece tek iki nokta (:) kullan
 - Örnek: "**Varlık Yapısı:**" şeklinde ("::" DEĞİL!)
+` : `
+You are serving as the Senior Chief Financial Officer (CFO) of the FinancialAI application. Analyze the user's financial situation in detail and create a comprehensive, professional report.
+Please prepare the entire report in English.
+
+**User Data:**
+*   Total Assets: ${currencySymbol}${totalAssets.toFixed(0)}
+*   Total Debts: ${currencySymbol}${totalLiabilities.toFixed(0)}
+*   Net Worth: ${currencySymbol}${netWorth.toFixed(0)}
+*   Total Receivables: ${currencySymbol}${totalReceivables.toFixed(0)}
+*   Total Installments: ${currencySymbol}${totalInstallments.toFixed(0)}
+*   Safe to Spend Limit: ${currencySymbol}${safeToSpend.toFixed(0)}
+${personalInfo}
+
+**Report Format (Fill in ALL sections EXACTLY in Markdown format):**
+
+**Executive Summary:**
+* [Summarize the financial situation comprehensively with 4-5 bullet points]
+* [Balance sheet analysis, cash flow assessment, debt structure, and overall financial health]
+* [Each point can be 20-25 words, be clear and understandable]
+
+**Financial Health Grade:** [Detailed grade from A+ to F] - [Explain financial health in 2-3 sentences]
+
+**Detailed Analysis:**
+* **Asset Structure:** [2-3 sentences about the composition and quality of assets]
+* **Debt Management:** [Debt level, sustainability, and risk analysis - 2-3 sentences]
+* **Liquidity Status:** [Cash flow and solvency assessment - 2-3 sentences]
+* **Installment Burden:** [Analysis of the monthly installment amount and recommendations - 2-3 sentences]
+
+**Strategic Recommendations:**
+
+**Short Term (0-3 months):**
+* [Urgent actions - 3-4 concrete recommendations, each 15-20 words]
+* [Focus on what needs to be done immediately]
+
+**Medium Term (3-12 months):**
+* [Goal-oriented recommendations - 3-4 recommendations, each 15-20 words]
+* [Financial improvement and growth strategies]
+
+**Long Term (1+ year):**
+* [Strategic advice - 2-3 recommendations, each 15-20 words]
+* [Long-term financial security and growth plan]
+
+**Potential Risks:**
+* [Identify at least 3-4 important risk factors, each 15-20 words]
+* [Evaluate the potential impact and probability of each risk]
+
+**Conclusion and General Assessment:**
+* [Summarize the overall situation in 2-3 paragraphs]
+* [Highlight strengths and areas for improvement]
+* [Motivational and constructive conclusion]
+
+**IMPORTANT:**
+- You MUST fill in all sections
+- Use Markdown format properly (**bold**, *italic*, bullet points)
+- Use clear and professional language
+- Prefer simple English over jargon
+- Complete the report FULLY and COMPLETELY
+- Fill each section in detail
+- NEVER put double colons (::) at the end of titles, use only a single colon (:)
+- Example: "**Asset Structure:**" (NOT "::"!)
 `;
 
     return this.generateContent(prompt);

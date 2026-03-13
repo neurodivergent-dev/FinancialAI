@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Modal,
   View,
@@ -29,6 +30,7 @@ interface AddReceivableModalProps {
 }
 
 export const AddReceivableModal: React.FC<AddReceivableModalProps> = ({ visible, onClose, onAdd }) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const { currencySymbol } = useCurrency();
   const insets = useSafeAreaInsets();
@@ -81,7 +83,7 @@ export const AddReceivableModal: React.FC<AddReceivableModalProps> = ({ visible,
                 <View style={styles.headerIcon}>
                   <TrendingUp size={28} color="#FFFFFF" strokeWidth={2.5} />
                 </View>
-                <Text style={styles.modalTitle}>Yeni Alacak Ekle</Text>
+                <Text style={styles.modalTitle} numberOfLines={2} adjustsFontSizeToFit>{t('finance.receivables.addTitle')}</Text>
               </View>
               <View style={styles.headerActions}>
                 <TouchableOpacity
@@ -105,14 +107,14 @@ export const AddReceivableModal: React.FC<AddReceivableModalProps> = ({ visible,
           >
             {/* Debtor */}
             <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>Kimden</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.receivables.nameLabel')}</Text>
               <View style={[styles.inputContainer, { backgroundColor: colors.background }]}>
                 <User size={20} color={colors.text.tertiary} strokeWidth={2} />
                 <TextInput
                   style={[styles.input, { color: colors.text.primary }]}
                   value={debtor}
                   onChangeText={setDebtor}
-                  placeholder="Örn: Ahmet Yılmaz"
+                  placeholder={t('finance.receivables.namePlaceholder')}
                   placeholderTextColor={colors.text.tertiary}
                 />
               </View>
@@ -120,14 +122,14 @@ export const AddReceivableModal: React.FC<AddReceivableModalProps> = ({ visible,
 
             {/* Amount */}
             <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>Tutar</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.receivables.amountLabel')}</Text>
               <View style={[styles.inputContainer, { backgroundColor: colors.background }]}>
                 <Text style={[styles.currencyPrefix, { color: colors.text.tertiary }]}>{currencySymbol}</Text>
                 <TextInput
                   style={[styles.input, { color: colors.text.primary }]}
                   value={amount}
                   onChangeText={setAmount}
-                  placeholder="0.00"
+                  placeholder={t('finance.liabilities.amountPlaceholder')}
                   placeholderTextColor={colors.text.tertiary}
                   keyboardType="decimal-pad"
                 />
@@ -136,14 +138,14 @@ export const AddReceivableModal: React.FC<AddReceivableModalProps> = ({ visible,
 
             {/* Due Date */}
             <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>Vade Tarihi</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.receivables.dueDateLabel')}</Text>
               <View style={[styles.inputContainer, { backgroundColor: colors.background }]}>
                 <Calendar size={20} color={colors.text.tertiary} strokeWidth={2} />
                 <TextInput
                   style={[styles.input, { color: colors.text.primary }]}
                   value={dueDate}
                   onChangeText={setDueDate}
-                  placeholder="Örn: 15/01/2025"
+                  placeholder={t('finance.receivables.dueDatePlaceholder')}
                   placeholderTextColor={colors.text.tertiary}
                 />
               </View>
@@ -151,13 +153,13 @@ export const AddReceivableModal: React.FC<AddReceivableModalProps> = ({ visible,
 
             {/* Details */}
             <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>Detaylar (Opsiyonel)</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.receivables.detailsLabel')}</Text>
               <View style={[styles.inputContainer, styles.textAreaContainer, { backgroundColor: colors.background }]}>
                 <TextInput
                   style={[styles.input, styles.textArea, { color: colors.text.primary }]}
                   value={details}
                   onChangeText={setDetails}
-                  placeholder="Ek bilgiler..."
+                  placeholder={t('finance.receivables.detailsPlaceholder')}
                   placeholderTextColor={colors.text.tertiary}
                   multiline
                   numberOfLines={3}
@@ -227,6 +229,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: -0.5,
+    flexShrink: 1,
   },
   closeButton: {
     width: 40,

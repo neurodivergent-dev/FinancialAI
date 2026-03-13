@@ -1,4 +1,4 @@
-// Assets: Likit (Nakit), Vadeli, Altın/Döviz, Fonlar
+// Assets: Liquid (Cash), Term, Gold/Foreign Currency, Funds
 export interface Asset {
   id: string;
   type: 'liquid' | 'term' | 'gold_currency' | 'funds';
@@ -8,33 +8,43 @@ export interface Asset {
   details?: string;
 }
 
-// Liabilities: Kredi Kartı (Toplam Limit, Güncel Borç, Kesim Tarihi), Şahıs Borçları
+// Liabilities: Credit Card (Total Limit, Current Debt, Closing Date), Personal Debts
 export interface Liability {
   id: string;
   type: 'credit_card' | 'personal_debt';
   name: string;
-  totalLimit?: number; // For credit cards
+  totalLimit?: number;
   currentDebt: number;
-  dueDate?: string; // For credit cards (kesim tarihi)
-  debtorName?: string; // For personal debts
+  dueDate?: string;
+  debtorName?: string;
   details?: string;
 }
 
-// Receivables (Alacaklar): Kimden, Tutar, Vade Tarihi (Örn: Annemin Kocası)
+// Receivables: From whom, Amount, Due Date
 export interface Receivable {
   id: string;
-  debtor: string; // Kimden
-  amount: number; // Tutar
-  dueDate: string; // Vade Tarihi
+  debtor: string;
+  amount: number;
+  dueDate: string;
   details?: string;
 }
 
-// StrategicInstallments: Taksit tutarı, Bitiş tarihi, Kalan ay
+// StrategicInstallments: Installment amount, End date, Remaining months
 export interface StrategicInstallment {
   id: string;
-  installmentAmount: number; // Taksit tutarı
-  endDate: string; // Bitiş tarihi
-  remainingMonths: number; // Kalan ay
+  installmentAmount: number;
+  endDate: string;
+  remainingMonths: number;
   name?: string;
+  details?: string;
+}
+
+// Transaction: Income/Expense movement
+export interface Transaction {
+  id: string;
+  type: 'asset' | 'liability';
+  name: string;
+  amount: number;
+  date: string;
   details?: string;
 }

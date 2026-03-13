@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Modal,
   View,
@@ -30,6 +31,7 @@ interface AddAssetModalProps {
 }
 
 export const AddAssetModal: React.FC<AddAssetModalProps> = ({ visible, onClose, onAdd }) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const { currencySymbol } = useCurrency();
   const insets = useSafeAreaInsets();
@@ -40,10 +42,10 @@ export const AddAssetModal: React.FC<AddAssetModalProps> = ({ visible, onClose, 
   const [details, setDetails] = useState('');
 
   const assetTypes = [
-    { id: 'liquid', label: 'Likit (Nakit)' },
-    { id: 'term', label: 'Vadeli' },
-    { id: 'gold_currency', label: 'Altın/Döviz' },
-    { id: 'funds', label: 'Fonlar' },
+    { id: 'liquid', label: t('finance.assets.types.liquid') },
+    { id: 'term', label: t('finance.assets.types.term') },
+    { id: 'gold_currency', label: t('finance.assets.types.gold_currency') },
+    { id: 'funds', label: t('finance.assets.types.funds') },
   ] as const;
 
   const handleAdd = () => {
@@ -92,7 +94,7 @@ export const AddAssetModal: React.FC<AddAssetModalProps> = ({ visible, onClose, 
                 <View style={styles.headerIcon}>
                   <TrendingUp size={28} color="#FFFFFF" strokeWidth={2.5} />
                 </View>
-                <Text style={styles.modalTitle}>Yeni Varlık Ekle</Text>
+                <Text style={styles.modalTitle} numberOfLines={2} adjustsFontSizeToFit>{t('finance.assets.addTitle')}</Text>
               </View>
               <View style={styles.headerActions}>
                 <TouchableOpacity
@@ -116,7 +118,7 @@ export const AddAssetModal: React.FC<AddAssetModalProps> = ({ visible, onClose, 
           >
             {/* Asset Type */}
             <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>Varlık Tipi</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.assets.typeLabel')}</Text>
               <View style={styles.typeContainer}>
                 {assetTypes.map((assetType) => (
                   <TouchableOpacity
@@ -150,14 +152,14 @@ export const AddAssetModal: React.FC<AddAssetModalProps> = ({ visible, onClose, 
 
             {/* Name */}
             <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>İsim</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.assets.nameLabel')}</Text>
               <View style={[styles.inputContainer, { backgroundColor: colors.background }]}>
                 <Wallet size={20} color={colors.text.tertiary} strokeWidth={2} />
                 <TextInput
                   style={[styles.input, { color: colors.text.primary }]}
                   value={name}
                   onChangeText={setName}
-                  placeholder="Örn: Banka Hesabı"
+                  placeholder={t('finance.assets.namePlaceholder')}
                   placeholderTextColor={colors.text.tertiary}
                 />
               </View>
@@ -165,14 +167,14 @@ export const AddAssetModal: React.FC<AddAssetModalProps> = ({ visible, onClose, 
 
             {/* Amount */}
             <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>Tutar</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.assets.amountLabel')}</Text>
               <View style={[styles.inputContainer, { backgroundColor: colors.background }]}>
                 <Text style={[styles.currencyPrefix, { color: colors.text.tertiary }]}>{currencySymbol}</Text>
                 <TextInput
                   style={[styles.input, { color: colors.text.primary }]}
                   value={value}
                   onChangeText={setValue}
-                  placeholder="0.00"
+                  placeholder={t('finance.assets.amountPlaceholder')}
                   placeholderTextColor={colors.text.tertiary}
                   keyboardType="decimal-pad"
                 />
@@ -181,13 +183,13 @@ export const AddAssetModal: React.FC<AddAssetModalProps> = ({ visible, onClose, 
 
             {/* Details */}
             <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>Detaylar (Opsiyonel)</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.assets.detailsLabel')}</Text>
               <View style={[styles.inputContainer, styles.textAreaContainer, { backgroundColor: colors.background }]}>
                 <TextInput
                   style={[styles.input, styles.textArea, { color: colors.text.primary }]}
                   value={details}
                   onChangeText={setDetails}
-                  placeholder="Ek bilgiler..."
+                  placeholder={t('finance.assets.detailsPlaceholder')}
                   placeholderTextColor={colors.text.tertiary}
                   multiline
                   numberOfLines={3}
@@ -257,6 +259,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: -0.5,
+    flexShrink: 1,
   },
   closeButton: {
     width: 40,

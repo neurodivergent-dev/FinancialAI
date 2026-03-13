@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -18,6 +19,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Notifications from 'expo-notifications';
 
 export const NotificationSettingsScreen = ({ navigation }: any) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { settings, updateSettings, requestPermissions, hasPermission } = useNotifications();
@@ -29,9 +31,9 @@ export const NotificationSettingsScreen = ({ navigation }: any) => {
       const granted = await requestPermissions();
       if (!granted) {
         showAlert(
-          'İzin Gerekli',
-          'Bildirimler için uygulama izni vermeniz gerekmektedir. Lütfen ayarlardan bildirimleri açınız.',
-          [{ text: 'Tamam' }],
+          t('settings.notificationSettings.permissionRequired'),
+          t('settings.notificationSettings.permissionMessage'),
+          [{ text: t('common.ok') || 'Tamam' }],
           'warning'
         );
         return;
@@ -42,9 +44,9 @@ export const NotificationSettingsScreen = ({ navigation }: any) => {
 
     if (value) {
       showAlert(
-        'Bildirimler Açıldı',
-        'Artık önemli finansal hatırlatmalar alacaksınız.',
-        [{ text: 'Tamam' }],
+        t('settings.notificationSettings.enabledTitle'),
+        t('settings.notificationSettings.enabledMessage'),
+        [{ text: t('common.ok') || 'Tamam' }],
         'success'
       );
     }
@@ -53,9 +55,9 @@ export const NotificationSettingsScreen = ({ navigation }: any) => {
   const handleToggleSetting = async (key: keyof typeof settings, value: boolean) => {
     if (!settings.enabled && value) {
       showAlert(
-        'Bildirimler Kapalı',
-        'Bu özelliği kullanmak için önce bildirimleri açmanız gerekmektedir.',
-        [{ text: 'Tamam' }],
+        t('settings.notificationSettings.disabledTitle'),
+        t('settings.notificationSettings.disabledMessage'),
+        [{ text: t('common.ok') || 'Tamam' }],
         'warning'
       );
       return;
@@ -89,9 +91,9 @@ export const NotificationSettingsScreen = ({ navigation }: any) => {
       const granted = await requestPermissions();
       if (!granted) {
         showAlert(
-          'İzin Gerekli',
-          'Test bildirimi göndermek için bildirim izni vermeniz gerekmektedir.',
-          [{ text: 'Tamam' }],
+          t('settings.notificationSettings.permissionRequired'),
+          t('settings.notificationSettings.permissionMessage'),
+          [{ text: t('common.ok') || 'Tamam' }],
           'warning'
         );
         return;
@@ -101,29 +103,29 @@ export const NotificationSettingsScreen = ({ navigation }: any) => {
     try {
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: '💰 Test Bildirimi',
-          body: 'Harika! Bildirimler düzgün çalışıyor. Financial AI ile finansal hedeflerinize ulaşın!',
+        title: t('settings.notificationSettings.testTitle'),
+        body: t('settings.notificationSettings.testBody'),
           sound: true,
           data: { type: 'test' },
-          priority: Notifications.AndroidNotificationPriority.MAX, // Maksimum öncelik
+          priority: Notifications.AndroidNotificationPriority.MAX, // Maximum priority
         },
         trigger: {
           seconds: 2,
-          channelId: 'default', // Android kanalı
+          channelId: 'default', // Android channel
         },
       });
 
       showAlert(
-        'Test Bildirimi Gönderildi',
-        'Bildirim 2 saniye içinde gelecek!',
-        [{ text: 'Tamam' }],
+        t('settings.notificationSettings.testSentTitle'),
+        t('settings.notificationSettings.testSentMessage'),
+        [{ text: t('common.ok') || 'Tamam' }],
         'success'
       );
     } catch (error) {
       showAlert(
-        'Hata',
-        'Test bildirimi gönderilemedi. Lütfen tekrar deneyin.',
-        [{ text: 'Tamam' }],
+        t('settings.notificationSettings.testError'),
+        t('settings.notificationSettings.testErrorMessage'),
+        [{ text: t('common.ok') || 'Tamam' }],
         'error'
       );
     }
@@ -151,8 +153,8 @@ export const NotificationSettingsScreen = ({ navigation }: any) => {
               </View>
             </TouchableOpacity>
             <View style={styles.headerTextContainer}>
-              <Text style={styles.subtitle}>Ayarlar</Text>
-              <Text style={styles.screenTitle}>Bildirimler</Text>
+              <Text style={styles.subtitle}>{t('settings.title')}</Text>
+              <Text style={styles.screenTitle}>{t('settings.notificationSettings.title')}</Text>
             </View>
             <View style={styles.headerIcon}>
               <Bell size={22} color="#FFFFFF" strokeWidth={2} />
@@ -169,19 +171,19 @@ export const NotificationSettingsScreen = ({ navigation }: any) => {
         {/* Master Toggle */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            Genel
+            {t('settings.notificationSettings.general')}
           </Text>
           <View style={[styles.option, { backgroundColor: colors.cardBackground }]}>
             <View style={styles.optionLeft}>
               <View style={[styles.iconCircle, { backgroundColor: 'rgba(147, 51, 234, 0.15)' }]}>
                 <Bell size={20} color={colors.purple.light} strokeWidth={2.5} />
               </View>
-              <View>
+              <View style={styles.optionTextContainer}>
                 <Text style={[styles.optionTitle, { color: colors.text.primary }]}>
-                  Bildirimleri Aç
+                  {t('settings.notificationSettings.enableNotifications')}
                 </Text>
                 <Text style={[styles.optionSubtitle, { color: colors.text.tertiary }]}>
-                  Tüm bildirimleri {settings.enabled ? 'kapat' : 'aç'}
+                  {t('settings.notificationSettings.enableNotificationsSub', { action: settings.enabled ? t('settings.notificationSettings.actionClose') : t('settings.notificationSettings.actionOpen') })}
                 </Text>
               </View>
             </View>
@@ -198,7 +200,7 @@ export const NotificationSettingsScreen = ({ navigation }: any) => {
         {!hasPermission && (
           <View style={[styles.warningCard, { backgroundColor: 'rgba(245, 158, 11, 0.1)', borderColor: '#f59e0b' }]}>
             <Text style={[styles.warningText, { color: colors.text.primary }]}>
-              ⚠️ Bildirim izni verilmedi. Bildirimler çalışmayacaktır. Lütfen uygulama ayarlarından izin veriniz.
+              {t('settings.notificationSettings.noPermission')}
             </Text>
           </View>
         )}
@@ -206,7 +208,7 @@ export const NotificationSettingsScreen = ({ navigation }: any) => {
         {/* Notification Types */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            Bildirim Türleri
+            {t('settings.notificationSettings.types')}
           </Text>
 
           {/* Daily Reminder */}
@@ -215,12 +217,12 @@ export const NotificationSettingsScreen = ({ navigation }: any) => {
               <View style={[styles.iconCircle, { backgroundColor: 'rgba(147, 51, 234, 0.15)' }]}>
                 <Clock size={20} color={colors.purple.light} strokeWidth={2.5} />
               </View>
-              <View style={{ flex: 1 }}>
+              <View style={styles.optionTextContainer}>
                 <Text style={[styles.optionTitle, { color: colors.text.primary }]}>
-                  Günlük Hatırlatma
+                  {t('settings.notificationSettings.dailyReminder')}
                 </Text>
                 <Text style={[styles.optionSubtitle, { color: colors.text.tertiary }]}>
-                  Her gün {settings.dailyReminderTime} - Finansal kontrol hatırlatması
+                  {t('settings.notificationSettings.dailyReminderSub', { time: settings.dailyReminderTime })}
                 </Text>
               </View>
             </View>
@@ -241,7 +243,7 @@ export const NotificationSettingsScreen = ({ navigation }: any) => {
             >
               <Clock size={18} color={colors.purple.light} strokeWidth={2.5} />
               <Text style={[styles.timePickerText, { color: colors.text.primary }]}>
-                Hatırlatma Saati: {settings.dailyReminderTime}
+                {t('settings.notificationSettings.reminderTime', { time: settings.dailyReminderTime })}
               </Text>
             </TouchableOpacity>
           )}
@@ -262,12 +264,12 @@ export const NotificationSettingsScreen = ({ navigation }: any) => {
               <View style={[styles.iconCircle, { backgroundColor: 'rgba(147, 51, 234, 0.15)' }]}>
                 <DollarSign size={20} color={colors.purple.light} strokeWidth={2.5} />
               </View>
-              <View>
+              <View style={styles.optionTextContainer}>
                 <Text style={[styles.optionTitle, { color: colors.text.primary }]}>
-                  Ödeme Hatırlatmaları
+                  {t('settings.notificationSettings.paymentReminders')}
                 </Text>
                 <Text style={[styles.optionSubtitle, { color: colors.text.tertiary }]}>
-                  Yaklaşan taksit ve borç ödemeleri
+                  {t('settings.notificationSettings.paymentRemindersSub')}
                 </Text>
               </View>
             </View>
@@ -286,12 +288,12 @@ export const NotificationSettingsScreen = ({ navigation }: any) => {
               <View style={[styles.iconCircle, { backgroundColor: 'rgba(147, 51, 234, 0.15)' }]}>
                 <TrendingUp size={20} color={colors.purple.light} strokeWidth={2.5} />
               </View>
-              <View>
+              <View style={styles.optionTextContainer}>
                 <Text style={[styles.optionTitle, { color: colors.text.primary }]}>
-                  Bütçe Uyarıları
+                  {t('settings.notificationSettings.budgetAlerts')}
                 </Text>
                 <Text style={[styles.optionSubtitle, { color: colors.text.tertiary }]}>
-                  Bütçe aşımı ve hedef bildirimleri
+                  {t('settings.notificationSettings.budgetAlertsSub')}
                 </Text>
               </View>
             </View>
@@ -310,12 +312,12 @@ export const NotificationSettingsScreen = ({ navigation }: any) => {
               <View style={[styles.iconCircle, { backgroundColor: 'rgba(147, 51, 234, 0.15)' }]}>
                 <Calendar size={20} color={colors.purple.light} strokeWidth={2.5} />
               </View>
-              <View>
+              <View style={styles.optionTextContainer}>
                 <Text style={[styles.optionTitle, { color: colors.text.primary }]}>
-                  Haftalık Raporlar
+                  {t('settings.notificationSettings.weeklyReports')}
                 </Text>
                 <Text style={[styles.optionSubtitle, { color: colors.text.tertiary }]}>
-                  Her Pazartesi finansal özet raporu
+                  {t('settings.notificationSettings.weeklyReportsSub')}
                 </Text>
               </View>
             </View>
@@ -332,7 +334,7 @@ export const NotificationSettingsScreen = ({ navigation }: any) => {
         {/* Test Notification Button */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            Test
+            {t('settings.notificationSettings.testSection')}
           </Text>
           <TouchableOpacity
             style={styles.testButton}
@@ -345,7 +347,7 @@ export const NotificationSettingsScreen = ({ navigation }: any) => {
               end={{ x: 1, y: 1 }}
             >
               <Send size={20} color="#FFFFFF" strokeWidth={2.5} />
-              <Text style={styles.testButtonText}>Test Bildirimi Gönder</Text>
+              <Text style={styles.testButtonText}>{t('settings.notificationSettings.sendTest')}</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -353,12 +355,12 @@ export const NotificationSettingsScreen = ({ navigation }: any) => {
         {/* Info Card */}
         <View style={[styles.infoCard, { backgroundColor: colors.cardBackground }]}>
           <Text style={[styles.infoTitle, { color: colors.text.primary }]}>
-            📱 Bildirim İpuçları
+            {t('settings.notificationSettings.tipsTitle')}
           </Text>
           <Text style={[styles.infoText, { color: colors.text.secondary }]}>
-            • Bildirimleri kapatırsanız, önemli ödeme hatırlatmalarını kaçırabilirsiniz.{'\n'}
-            • Günlük hatırlatmalar, finansal disiplininizi korumanıza yardımcı olur.{'\n'}
-            • Tüm bildirimler tamamen opsiyoneldir ve istediğiniz zaman değiştirebilirsiniz.
+            • {t('settings.notificationSettings.tip1')}{'\n'}
+            • {t('settings.notificationSettings.tip2')}{'\n'}
+            • {t('settings.notificationSettings.tip3')}
           </Text>
         </View>
       </ScrollView>
@@ -501,6 +503,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  optionTextContainer: {
+    flex: 1,
+    paddingRight: 16,
   },
   optionTitle: {
     fontSize: 16,

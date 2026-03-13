@@ -1,0 +1,32 @@
+{
+  "save": "Kaydet",
+  "close": "Kapat",
+  "score": "Skor",
+  "premiumFeature": "Premium Özellik",
+  "premiumFeatureDesc": "Bu özellik sadece Premium abonelerimize özeldir. Devam etmek için lütfen abone olun.",
+  "subscribe": "Abone Ol",
+  "cancel": "İptal",
+  "delete": "Sil",
+  "edit": "Düzenle",
+  "loading": "Yükleniyor...",
+  "error": "Hata",
+  "success": "Başarılı",
+  "selectCurrency": "Para Birimini Seçin",
+  "currencies": {
+    "TRY": "Türk Lirası",
+    "USD": "Amerikan Doları",
+    "EUR": "Euro",
+    "GBP": "İngiliz Sterlini",
+    "JPY": "Japon Yeni",
+    "CAD": "Kanada Doları",
+    "AUD": "Avustralya Doları"
+  },
+  "warning": "Uyarı",
+  "info": "Bilgi",
+  "back": "Geri",
+  "completed": "Tamamlandı",
+  "endDate": "Bitiş Tarihi",
+  "expectedDate": "Beklenen Tarih",
+  "deleteConfirmTitle": "Silme Onayı",
+  "deleteConfirmMessage": "Bu öğeyi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
+}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Modal,
   View,
@@ -12,7 +13,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { X, CreditCard, TrendingDown, Check, Calendar, User } from 'lucide-react-native';
+import { X, CreditCard, TrendingUp, Check, Calendar, User } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { gradients } from '../../theme/colors';
@@ -32,6 +33,7 @@ interface AddLiabilityModalProps {
 }
 
 export const AddLiabilityModal: React.FC<AddLiabilityModalProps> = ({ visible, onClose, onAdd }) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const { currencySymbol } = useCurrency();
   const insets = useSafeAreaInsets();
@@ -91,9 +93,9 @@ export const AddLiabilityModal: React.FC<AddLiabilityModalProps> = ({ visible, o
             >
               <View style={styles.headerContent}>
                 <View style={styles.headerIcon}>
-                  <TrendingDown size={28} color="#FFFFFF" strokeWidth={2.5} />
+                  <TrendingUp size={28} color="#FFFFFF" strokeWidth={2.5} />
                 </View>
-                <Text style={styles.modalTitle}>Yeni Borç Ekle</Text>
+                <Text style={styles.modalTitle} numberOfLines={2} adjustsFontSizeToFit>{t('finance.liabilities.addTitle')}</Text>
               </View>
               <View style={styles.headerActions}>
                 <TouchableOpacity
@@ -117,7 +119,7 @@ export const AddLiabilityModal: React.FC<AddLiabilityModalProps> = ({ visible, o
           >
             {/* Liability Type */}
             <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>Borç Tipi</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.liabilities.typeLabel')}</Text>
               <View style={styles.typeContainer}>
                 <TouchableOpacity
                   style={[
@@ -140,7 +142,7 @@ export const AddLiabilityModal: React.FC<AddLiabilityModalProps> = ({ visible, o
                       { color: type === 'credit_card' ? '#ff4757' : colors.text.primary },
                     ]}
                   >
-                    Kredi Kartı
+                    {t('finance.liabilities.types.credit_card')}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -164,7 +166,7 @@ export const AddLiabilityModal: React.FC<AddLiabilityModalProps> = ({ visible, o
                       { color: type === 'personal_debt' ? '#ff4757' : colors.text.primary },
                     ]}
                   >
-                    Şahıs Borcu
+                    {t('finance.liabilities.types.personal_debt')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -172,14 +174,14 @@ export const AddLiabilityModal: React.FC<AddLiabilityModalProps> = ({ visible, o
 
             {/* Name */}
             <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>İsim</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.liabilities.nameLabel')}</Text>
               <View style={[styles.inputContainer, { backgroundColor: colors.background }]}>
                 <CreditCard size={20} color={colors.text.tertiary} strokeWidth={2} />
                 <TextInput
                   style={[styles.input, { color: colors.text.primary }]}
                   value={name}
                   onChangeText={setName}
-                  placeholder={type === 'credit_card' ? 'Örn: X Bank Kartı' : 'Örn: Araç Kredisi'}
+                  placeholder={t('finance.liabilities.namePlaceholder')}
                   placeholderTextColor={colors.text.tertiary}
                 />
               </View>
@@ -187,14 +189,14 @@ export const AddLiabilityModal: React.FC<AddLiabilityModalProps> = ({ visible, o
 
             {/* Current Debt */}
             <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>Güncel Borç</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.liabilities.amountLabel')}</Text>
               <View style={[styles.inputContainer, { backgroundColor: colors.background }]}>
                 <Text style={[styles.currencyPrefix, { color: colors.text.tertiary }]}>{currencySymbol}</Text>
                 <TextInput
                   style={[styles.input, { color: colors.text.primary }]}
                   value={currentDebt}
                   onChangeText={setCurrentDebt}
-                  placeholder="0.00"
+                  placeholder={t('finance.liabilities.amountPlaceholder')}
                   placeholderTextColor={colors.text.tertiary}
                   keyboardType="decimal-pad"
                 />
@@ -205,14 +207,14 @@ export const AddLiabilityModal: React.FC<AddLiabilityModalProps> = ({ visible, o
               <>
                 {/* Total Limit */}
                 <View style={styles.section}>
-                  <Text style={[styles.label, { color: colors.text.primary }]}>Toplam Limit</Text>
+                  <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.liabilities.limitLabel')}</Text>
                   <View style={[styles.inputContainer, { backgroundColor: colors.background }]}>
                     <Text style={[styles.currencyPrefix, { color: colors.text.tertiary }]}>{currencySymbol}</Text>
                     <TextInput
                       style={[styles.input, { color: colors.text.primary }]}
                       value={totalLimit}
                       onChangeText={setTotalLimit}
-                      placeholder="0.00"
+                      placeholder={t('finance.liabilities.amountPlaceholder')}
                       placeholderTextColor={colors.text.tertiary}
                       keyboardType="decimal-pad"
                     />
@@ -221,14 +223,14 @@ export const AddLiabilityModal: React.FC<AddLiabilityModalProps> = ({ visible, o
 
                 {/* Due Date */}
                 <View style={styles.section}>
-                  <Text style={[styles.label, { color: colors.text.primary }]}>Kesim Tarihi</Text>
+                  <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.liabilities.statementDayLabel')}</Text>
                   <View style={[styles.inputContainer, { backgroundColor: colors.background }]}>
                     <Calendar size={20} color={colors.text.tertiary} strokeWidth={2} />
                     <TextInput
                       style={[styles.input, { color: colors.text.primary }]}
                       value={dueDate}
                       onChangeText={setDueDate}
-                      placeholder="Örn: 15/01/2025"
+                      placeholder={t('finance.liabilities.statementDayPlaceholder')}
                       placeholderTextColor={colors.text.tertiary}
                     />
                   </View>
@@ -238,14 +240,14 @@ export const AddLiabilityModal: React.FC<AddLiabilityModalProps> = ({ visible, o
 
             {type === 'personal_debt' && (
               <View style={styles.section}>
-                <Text style={[styles.label, { color: colors.text.primary }]}>Borç Veren</Text>
+                <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.liabilities.creditor')}</Text>
                 <View style={[styles.inputContainer, { backgroundColor: colors.background }]}>
                   <User size={20} color={colors.text.tertiary} strokeWidth={2} />
                   <TextInput
                     style={[styles.input, { color: colors.text.primary }]}
                     value={debtorName}
                     onChangeText={setDebtorName}
-                    placeholder="Örn: Ahmet Yılmaz"
+                    placeholder={t('finance.liabilities.creditorPlaceholder')}
                     placeholderTextColor={colors.text.tertiary}
                   />
                 </View>
@@ -254,13 +256,13 @@ export const AddLiabilityModal: React.FC<AddLiabilityModalProps> = ({ visible, o
 
             {/* Details */}
             <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>Detaylar (Opsiyonel)</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.liabilities.detailsLabel')}</Text>
               <View style={[styles.inputContainer, styles.textAreaContainer, { backgroundColor: colors.background }]}>
                 <TextInput
                   style={[styles.input, styles.textArea, { color: colors.text.primary }]}
                   value={details}
                   onChangeText={setDetails}
-                  placeholder="Ek bilgiler..."
+                  placeholder={t('finance.liabilities.detailsPlaceholder')}
                   placeholderTextColor={colors.text.tertiary}
                   multiline
                   numberOfLines={3}
@@ -330,6 +332,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: -0.5,
+    flexShrink: 1,
   },
   closeButton: {
     width: 40,

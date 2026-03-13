@@ -1,0 +1,314 @@
+{
+  "title": "Ayarlar",
+  "categoryApp": "Uygulama",
+  "profile": "Profil Ayarları",
+  "apiKey": "API Key Ayarları",
+  "theme": "Tema",
+  "language": "Dil",
+  "selectLanguage": "Lütfen tercih ettiğiniz dili seçin.",
+  "currency": "Para Birimi",
+  "notifications": "Bildirimler",
+  "onboarding": "Onboarding'i Tekrar Göster",
+  "export": "Verileri Dışa Aktar",
+  "exportFormat": "Hangi formatta dışa aktarmak istersiniz?",
+  "import": "Verileri İçe Aktar",
+  "about": "Hakkında",
+  "general": "Genel",
+  "themeSelection": {
+    "title": "Tema Tercihi",
+    "light": "Açık",
+    "dark": "Koyu",
+    "system": "Sistem"
+  },
+  "dangerZone": "Tehlikeli Alan",
+  "deleteAllData": "Tüm Verileri Sil",
+  "footerSubtitle": "Kişisel finans yönetim aracınız",
+  "appearance": {
+    "title": "Görünüm",
+    "amoledMode": "AMOLED Modu",
+    "amoledSub": "Tam siyah arka plan ile pil tasarrufu yapın"
+  },
+  "security": {
+    "biometricTitle": "Biyometrik Kilit",
+    "biometricSub": "Uygulama açılışında FaceID/Parmak İzi iste",
+    "noHardware": "Cihazınızda biyometrik doğrulama donanımı bulunmuyor.",
+    "notEnrolled": "Cihazınızda kayıtlı FaceID veya parmak izi bulunamadı. Lütfen sistem ayarlarından ekleyin.",
+    "authPrompt": "Biyometrik kilidi {{action}} için doğrulama yapın",
+    "actionActivate": "aktifleştirmek",
+    "actionDeactivate": "kapatmak",
+    "enabled": "aktifleştirildi",
+    "disabled": "devre dışı bırakıldı",
+    "statusSuccess": "Biyometrik kilit {{status}}."
+  },
+  "dataManagement": {
+    "resetTitle": "Tüm Verileri Sil",
+    "resetMessage": "Bu işlem geri alınamaz! Tüm varlıklarınız, borçlarınız, alacaklarınız ve taksitleriniz kalıcı olarak silinecek. Uygulama sıfırlanacak ve yeniden başlatılacaktır.",
+    "resetButton": "Sıfırla",
+    "resetSuccess": "Uygulama başarıyla sıfırlandı.",
+    "resetError": "Uygulama sıfırlanırken bir hata oluştu.",
+    "importTitle": "Verileri İçe Aktar",
+    "importDesc": "Bu dosya {{date}} tarihinde dışa aktarılmış.\n\nMevcut tüm verileriniz silinecek ve dosyadaki verilerle değiştirilecek. Devam etmek istiyor musunuz?",
+    "importFormatError": "Geçersiz dosya formatı. Lütfen Financial AI tarafından dışa aktarılan bir dosya seçin.",
+    "importSuccess": "Veriler başarıyla içe aktarıldı!",
+    "exportJsonTitle": "Finansal Verilerinizi Dışa Aktarın (JSON)",
+    "exportPdfTitle": "Finansal Raporunuzu Paylaşın",
+    "exportSuccess": "Veriler şu konuma kaydedildi: {{path}}",
+    "exportError": "Dışa aktarma sırasında bir hata oluştu."
+  },
+  "pdfReport": {
+    "title": "Finansal Rapor",
+    "date": "Rapor Tarihi",
+    "currency": "Para Birimi",
+    "summary": "Özet",
+    "netWorth": "Net Değer",
+    "assets": "Varlıklar",
+    "liabilities": "Borçlar",
+    "receivables": "Alacaklar",
+    "installments": "Taksitler",
+    "income": "Gelir",
+    "footer": "Financial AI ile oluşturuldu",
+    "aiReportTitle": "AI CFO - Finansal Sağlık Raporu",
+    "healthScore": "Finansal Sağlık Skoru",
+    "scoreStatus": "{{status}} Durum",
+    "categoryScores": "Kategori Skorları",
+    "aiAnalysisSummary": "AI Analiz Özeti",
+    "detectedRisks": "Tespit Edilen Riskler",
+    "recommendedActions": "Önerilen Aksiyonlar",
+    "financialSummary": "Finansal Özet",
+    "aiFooter": "AI CFO Raporu",
+    "aiFooterSub": "Bu rapor {{date}} tarihinde AI tarafından oluşturulmuştur.",
+    "monthlyNetSalary": "Aylık Net Maaş",
+    "monthlyAdditionalIncome": "Aylık Ek Gelir",
+    "safeToSpendLimit": "Güvenli Harcama Limiti",
+    "reportGeneratedDate": "Bu rapor {{date}} tarihinde AI tarafından oluşturulmuştur.",
+    "shareTitle": "AI CFO Raporunu Paylaşın",
+    "saveSuccess": "PDF şu konuma kaydedildi: {{uri}}",
+    "exportError": "PDF oluşturulurken bir hata oluştu."
+  },
+  "categories": {
+    "liquidity": "Likidite",
+    "liquidityDesc": "Nakit akışı ve ödeme gücü",
+    "debtManagement": "Borç Yönetimi",
+    "debtManagementDesc": "Borç yönetimi kalitesi",
+    "assetQuality": "Varlık Kalitesi",
+    "assetQualityDesc": "Net varlık değeri",
+    "installmentManagement": "Taksit Yönetimi",
+    "installmentManagementDesc": "Aylık taksit oranı"
+  },
+  "scores": {
+    "excellent": "Mükemmel",
+    "good": "İyi",
+    "average": "Orta",
+    "warning": "Dikkat"
+  },
+  "apiKeySettings": {
+    "title": "API Key Ayarları",
+    "description": "Yapay zeka özelliklerini kullanmak için kendi Gemini API key'inizi ekleyebilirsiniz.",
+    "isAiEnabled": "AI Özellikleri Aktif",
+    "isAiEnabledSub": "API key girildiğinde özellikleri açıp kapatabilirsiniz.",
+    "enterKey": "Gemini API Key Girin",
+    "placeholder": "API Key'inizi buraya yapıştırın...",
+    "save": "Key'i Kaydet",
+    "delete": "Key'i Sil",
+    "howTo": "Nasıl Alınır?",
+    "howToSub": "Google AI Studio üzerinden ücretsiz alabilirsiniz.",
+    "invalidKey": "Lütfen geçerli bir API key giriniz.",
+    "formatWarning": "Girdiğiniz key geçerli bir Gemini API key formatında görünmüyor. Yine de kaydetmek istiyor musunuz?",
+    "saveSuccess": "API Key kaydedildi. Artık AI Chat ve AI CFO kendi API key'inizi kullanacak.",
+    "saveError": "API Key kaydedilirken bir hata oluştu.",
+    "deleteTitle": "API Key'i Sil",
+    "deleteConfirm": "Kendi API key'inizi silmek istediğinizden emin misiniz?",
+    "deleteSuccess": "API Key silindi.",
+    "integration": "Entegrasyon",
+    "statusLabel": "Mevcut Durum",
+    "customKeyActive": "Kendi API Key'inizi kullanıyorsunuz",
+    "warningNoKey": "Lütfen önce bir API key kaydederek özellikleri aktif edin.",
+    "guideTitle": "API Key Nasıl Alınır?",
+    "guideStep1": "1. Google AI Studio'ya gidin:",
+    "guideStep2": "2. 'Get API Key' butonuna tıklayarak yeni bir anahtar oluşturun."
+  },
+  "profileSettings": {
+    "title": "Profil Ayarları",
+    "userLabel": "Kullanıcı",
+    "imageHint": "Profil fotoğrafınızı değiştirmek için dokunun",
+    "imageOptions": "Profil Fotoğrafı",
+    "imageDesc": "Nasıl bir fotoğraf eklemek istersiniz?",
+    "gallery": "Galeri",
+    "camera": "Kamera",
+    "permissionRequired": "İzin Gerekli",
+    "galleryPermission": "Fotoğraf seçmek için galeri erişim izni gereklidir.",
+    "cameraPermission": "Fotoğraf çekmek için kamera erişim izni gereklidir.",
+    "name": "İsim",
+    "namePlaceholder": "Adınız ve soyadınız",
+    "email": "E-posta",
+    "emailPlaceholder": "ornek@email.com",
+    "phone": "Telefon",
+    "phonePlaceholder": "+90 555 123 45 67",
+    "findeks": "Findeks Puanı",
+    "findeksPlaceholder": "Findeks kredi notunuz",
+    "salary": "Maaş",
+    "salaryPlaceholder": "Aylık net maaşınız",
+    "additionalIncome": "Ek Gelir",
+    "additionalIncomePlaceholder": "Aylık ek gelirleriniz",
+    "updateSuccess": "Profil bilgileriniz güncellendi.",
+    "updateError": "Profil güncellenirken bir hata oluştu."
+  },
+  "aboutPage": {
+    "title": "Hakkında",
+    "appLabel": "Uygulama",
+    "heroDescription": "Kişisel finans yönetiminin geleceği",
+    "appInfo": "Uygulama Bilgileri",
+    "version": "Versiyon",
+    "developer": "Geliştirici",
+    "license": "Lisans",
+    "contribute": "Katkıda Bulun",
+    "githubRepo": "GitHub Reposu",
+    "githubRepoSub": "Kaynak kodunu incele",
+    "reportBug": "Hata Bildir",
+    "reportBugSub": "Sorun bildirin veya öneride bulunun",
+    "contact": "İletişim",
+    "sendEmail": "E-posta Gönder",
+    "madeWith": "Made with",
+    "copyright": "© {{year}} Financial AI. Tüm hakları saklıdır."
+  },
+  "notificationSettings": {
+    "title": "Bildirimler",
+    "permissionRequired": "İzin Gerekli",
+    "permissionMessage": "Bildirimler için uygulama izni vermeniz gerekmektedir. Lütfen ayarlardan bildirimleri açınız.",
+    "enabledTitle": "Bildirimler Açıldı",
+    "enabledMessage": "Artık önemli finansal hatırlatmalar alacaksınız.",
+    "disabledTitle": "Bildirimler Kapalı",
+    "disabledMessage": "Bu özelliği kullanmak için önce bildirimleri açmanız gerekmektedir.",
+    "dailyReminderTitle": "💰 Günlük Finansal Kontrol",
+    "dailyReminderBody": "Bugünün harcamalarını kontrol etmeyi unutma!",
+    "testTitle": "💰 Test Bildirimi",
+    "testBody": "Harika! Bildirimler düzgün çalışıyor. Financial AI ile finansal hedeflerinize ulaşın!",
+    "testSentTitle": "Test Bildirimi Gönderildi",
+    "testSentMessage": "Bildirim 2 saniye içinde gelecek!",
+    "testError": "Hata",
+    "testErrorMessage": "Test bildirimi gönderilemedi. Lütfen tekrar deneyin.",
+    "general": "Genel",
+    "enableNotifications": "Bildirimleri Aç",
+    "enableNotificationsSub": "Tüm bildirimleri {{action}}",
+    "actionOpen": "aç",
+    "actionClose": "kapat",
+    "noPermission": "⚠️ Bildirim izni verilmedi. Bildirimler çalışmayacaktır. Lütfen uygulama ayarlarından izin veriniz.",
+    "types": "Bildirim Türleri",
+    "dailyReminder": "Günlük Hatırlatma",
+    "dailyReminderSub": "Her gün {{time}} - Finansal kontrol hatırlatması",
+    "reminderTime": "Hatırlatma Saati: {{time}}",
+    "paymentReminders": "Ödeme Hatırlatmaları",
+    "paymentRemindersSub": "Yaklaşan taksit ve borç ödemeleri",
+    "budgetAlerts": "Bütçe Uyarıları",
+    "budgetAlertsSub": "Bütçe aşımı ve hedef bildirimleri",
+    "weeklyReports": "Haftalık Raporlar",
+    "weeklyReportsSub": "Her Pazartesi finansal özet raporu",
+    "testSection": "Test",
+    "sendTest": "Test Bildirimi Gönder",
+    "tipsTitle": "📱 Bildirim İpuçları",
+    "tip1": "Bildirimleri kapatırsanız, önemli ödeme hatırlatmalarını kaçırabilirsiniz.",
+    "tip2": "Günlük hatırlatmalar, finansal disiplininizi korumanıza yardımcı olur.",
+    "tip3": "Tüm bildirimler tamamen opsiyoneldir ve istediğiniz zaman değiştirebilirsiniz."
+  },
+  "privacyPolicy": {
+    "title": "Gizlilik Politikası",
+    "legal": "Yasal",
+    "lastUpdate": "Son Güncelleme: 9 Aralık 2025",
+    "footerText": "Verileriniz bizim için değerlidir ve güvenliğiniz önceliğimizdir.",
+    "sections": {
+      "intro": {
+        "title": "Giriş",
+        "content": "Financial AI olarak gizliliğinize önem veriyoruz. Bu gizlilik politikası, uygulamayı kullanırken toplanan, kullanılan ve korunan bilgiler hakkında sizi bilgilendirmek amacıyla hazırlanmıştır."
+      },
+      "collectedData": {
+        "title": "1. Toplanan Bilgiler",
+        "personalInfo": "Kişisel Bilgiler:",
+        "personalInfoList": "• İsim ve e-posta adresi (kayıt sırasında)\n• Telefon numarası (isteğe bağlı)\n• Profil fotoğrafı (isteğe bağlı)",
+        "financialInfo": "Finansal Bilgiler:",
+        "financialInfoList": "• Varlık bilgileri\n• Borç ve taksit bilgileri\n• Alacak bilgileri\n• Finansal hedefler ve bütçe bilgileri"
+      },
+      "useOfData": {
+        "title": "2. Bilgilerin Kullanımı",
+        "content": "Toplanan bilgiler aşağıdaki amaçlarla kullanılır:\n\n• Uygulama hizmetlerini sağlamak ve geliştirmek\n• Kişiselleştirilmiş finansal analiz ve öneriler sunmak\n• AI danışman hizmetini iyileştirmek\n• Kullanıcı deneyimini optimize etmek\n• Teknik destek sağlamak\n• Güvenlik ve dolandırıcılık önleme"
+      },
+      "storageAndSecurity": {
+        "title": "3. Veri Saklama ve Güvenlik",
+        "localStorage": "Yerel Depolama:",
+        "localStorageDesc": "Tüm finansal verileriniz öncelikli olarak cihazınızda güvenli bir şekilde saklanır. Bu veriler şifreleme teknolojileri ile korunmaktadır.",
+        "securityMeasures": "Güvenlik Önlemleri:",
+        "securityMeasuresList": "• AES-256 şifreleme\n• Biyometrik kimlik doğrulama (Face ID/Touch ID)\n• Güvenli veri aktarımı (SSL/TLS)\n• Düzenli güvenlik güncellemeleri"
+      },
+      "thirdParty": {
+        "title": "4. Üçüncü Taraf Paylaşımı",
+        "content": "Finansal bilgilerinizi üçüncü taraflarla paylaşmıyoruz. Ancak, aşağıdaki durumlar istisnadır:\n\n• Yasal zorunluluklar\n• Açık onayınız ile\n• Hizmet sağlayıcılar (örn: AI API'leri) - Yalnızca anonim veriler"
+      },
+      "aiAndML": {
+        "title": "5. AI ve Makine Öğrenimi",
+        "content": "AI danışman hizmeti için Google Gemini API kullanılmaktadır. AI ile paylaşılan veriler anonim hale getirilir ve kişisel kimlik bilgileriniz içermez. AI sağlayıcıları bu verileri sadece yanıt üretmek için kullanır ve saklamaz."
+      },
+      "cookies": {
+        "title": "6. Çerezler ve Takip Teknolojileri",
+        "content": "Uygulama, kullanıcı deneyimini iyileştirmek için minimal düzeyde yerel depolama (AsyncStorage) kullanır. Bu veriler yalnızca cihazınızda saklanır ve izleme amaçlı kullanılmaz."
+      },
+      "userRights": {
+        "title": "7. Kullanıcı Hakları",
+        "content": "Verileriniz üzerinde tam kontrole sahipsiniz:\n\n• Erişim: Verilerinize her zaman uygulama içinden erişebilirsiniz\n• Dışa Aktarma: Verilerinizi JSON veya PDF formatında dışa aktarabilirsiniz\n• Silme: Tüm verilerinizi kalıcı olarak silebilirsiniz\n• Düzenleme: Bilgilerinizi istediğiniz zaman güncelleyebilirsiniz"
+      },
+      "childrenPrivacy": {
+        "title": "8. Çocukların Gizliliği",
+        "content": "Uygulamamız 18 yaş altındaki kullanıcılara yönelik değildir. Bilerek 18 yaş altındaki kişilerden kişisel bilgi toplamıyoruz. Eğer 18 yaşından küçükseniz, lütfen bu uygulamayı kullanmayınız."
+      },
+      "policyChanges": {
+        "title": "9. Politika Değişiklikleri",
+        "content": "Bu gizlilik politikasını zaman zaman güncelleyebiliriz. Önemli değişiklikler uygulama içinde bildirilecektir. Politikayı düzenli olarak gözden geçirmenizi öneririz."
+      },
+      "contact": {
+        "title": "10. İletişim",
+        "content": "Gizlilik politikamız veya verilerinizin işlenmesi hakkında sorularınız varsa:\n\nE-posta: privacy@financialai.com\nWeb: www.financialai.com/privacy\nAdres: İstanbul, Türkiye"
+      }
+    }
+  },
+  "termsOfService": {
+    "title": "Kullanım Koşulları",
+    "legal": "Yasal",
+    "lastUpdate": "Son Güncelleme: 9 Aralık 2025",
+    "sections": {
+      "acceptance": {
+        "title": "1. Kabul ve Onay",
+        "content": "Financial AI uygulamasını kullanarak, bu kullanım koşullarını okuduğunuzu, anladığınızu ve kabul ettiğinizi beyan edersiniz. Bu koşulları kabul etmiyorsanız, lütfen uygulamayı kullanmayınız."
+      },
+      "description": {
+        "title": "2. Hizmet Tanımı",
+        "content": "Financial AI, kişisel finans yönetimi için tasarlanmış bir mobil uygulamadır. Uygulama, varlıklarınızı, borçlarınızı, alacaklarınızı ve taksitlerinizi takip etmenize yardımcı olur. Ayrıca yapay zeka destekli finansal danışmanlık hizmeti sunar."
+      },
+      "responsibilities": {
+        "title": "3. Kullanıcı Sorumlulukları",
+        "content": "• Uygulamaya girdiğiniz tüm finansal bilgilerin doğruluğundan siz sorumlusunuz.\n• Hesap güvenliğinizi korumakla yükümlüsünüz.\n• Uygulamayı yasa dışı amaçlarla kullanmayacağınızı kabul edersiniz.\n• Başkalarının hesaplarına yetkisiz erişim sağlamayacağınızı taahhüt edersiniz."
+      },
+      "dataSecurity": {
+        "title": "4. Veri Güvenliği",
+        "content": "Tüm finansal verileriniz cihazınızda güvenli bir şekilde saklanır. Verileriniz, şifreleme teknolojileri ile korunmaktadır. Ancak, internet üzerinden yapılan iletişimin %100 güvenli olmadığını unutmayınız."
+      },
+      "aiAdvisor": {
+        "title": "5. AI Danışman Hizmeti",
+        "content": "AI danışman tarafından sağlanan bilgiler yalnızca genel bilgilendirme amaçlıdır ve profesyonel finansal danışmanlık yerine geçmez. Finansal kararlarınızı almadan önce profesyonel bir danışmana başvurmanızı öneririz."
+      },
+      "intellectualProperty": {
+        "title": "6. Fikri Mülkiyet Hakları",
+        "content": "Financial AI uygulaması ve içeriği, telif hakları, ticari markalar ve diğer fikri mülkiyet yasaları ile korunmaktadır. Uygulamanın izinsiz kopyalanması, dağıtılması veya değiştirilmesi yasaktır."
+      },
+      "disclaimer": {
+        "title": "7. Sorumluluk Reddi",
+        "content": "Financial AI, uygulamanın kesintisiz veya hatasız çalışacağını garanti etmez. Uygulamanın kullanımından kaynaklanan doğrudan veya dolaylı zararlardan sorumlu değiliz."
+      },
+      "changes": {
+        "title": "8. Değişiklikler",
+        "content": "Bu kullanım koşullarını herhangi bir zamanda değiştirme hakkını saklı tutarız. Değişiklikler uygulama içinde duyurulacaktır. Değişikliklerden sonra uygulamayı kullanmaya devam etmeniz, yeni koşulları kabul ettiğiniz anlamına gelir."
+      },
+      "contact": {
+        "title": "9. İletişim",
+        "content": "Bu kullanım koşulları hakkında sorularınız varsa, lütfen bizimle iletişime geçin:\n\nE-posta: support@financialai.com\nWeb: www.financialai.com"
+      }
+    }
+  }
+}

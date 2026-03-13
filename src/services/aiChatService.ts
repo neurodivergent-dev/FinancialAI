@@ -71,10 +71,10 @@ FORMAT:
     onChunk: (chunk: string) => void
   ): Promise<string> {
     if (!this.isConfigured()) {
-      throw new Error('Gemini API anahtarı yapılandırılmamış.');
+      throw new Error('CONFIG_ERROR');
     }
 
-    // Kullanıcı mesajını ekle
+    // Add user message
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
@@ -83,7 +83,7 @@ FORMAT:
     };
     this.conversationHistory.push(userMsg);
 
-    // Gemini API'ye gönderilecek içeriği hazırla
+    // Prepare content to be sent to Gemini API
     const contents = [
       {
         role: 'user',
@@ -101,7 +101,7 @@ FORMAT:
       const model = modelsToTry[i];
 
       try {
-        // React Native'de streaming çalışmıyor, normal endpoint kullan
+        // Streaming doesn't work in React Native, use normal endpoint
         const url = `${this.endpoint}/models/${model}:generateContent?key=${this.apiKey}`;
 
         const requestBody = {
@@ -144,7 +144,7 @@ FORMAT:
           const errorText = await response.text();
           console.error('API Error:', errorText);
 
-          // Quota ve rate limit hatalarını yakala
+          // Catch quota and rate limit errors
           if (response.status === 429) {
             throw new Error('RATE_LIMIT|Çok fazla istek gönderildi. Lütfen birkaç saniye bekleyip tekrar deneyin.');
           }
@@ -164,7 +164,7 @@ FORMAT:
           throw new Error(`API_ERROR|Bir hata oluştu (${response.status}). Lütfen tekrar deneyin.`);
         }
 
-        // Non-streaming endpoint kullanıyoruz, direkt JSON al
+        // We are using non-streaming endpoint, get JSON directly
         const data = await response.json();
 
         if (!data.candidates || !data.candidates[0]) {
@@ -175,17 +175,17 @@ FORMAT:
         const candidate = data.candidates[0];
         const finishReason = candidate.finishReason || 'STOP';
 
-        // Yan?t STOP de?ilse (MAX_TOKENS, SAFETY vb.) k?smi i?erik g?stermeden fallback/hata
+        // If response is not STOP (MAX_TOKENS, SAFETY etc.), fallback/error without showing partial content
         if (finishReason !== 'STOP') {
           console.warn('Finish reason:', finishReason, 'Prompt feedback:', data?.promptFeedback);
           const blockReason =
             data?.promptFeedback?.blockReason || candidate?.safetyFeedback?.[0]?.blockReason;
           const reasonText =
             finishReason === 'MAX_TOKENS'
-              ? 'Token limiti doldu, yan?t kesildi.'
+              ? 'Token limiti doldu, yanıt kesildi.'
               : blockReason === 'SAFETY'
-              ? 'G?venlik filtresi yan?t? kesti.'
-              : 'Yan?t tamamlanamad?.';
+                ? 'G?venlik filtresi yanıtı kesti.'
+                : 'Yanıt tamamlanamadı.';
 
           if (i < modelsToTry.length - 1) {
             console.log(`Finish reason ${finishReason}, sonraki modeli deniyorum...`);
@@ -195,7 +195,7 @@ FORMAT:
           throw new Error(`${reasonText} Mesaj? k?salt?p tekrar dener misin?`);
         }
 
-        // T?m parts'lar? birle?tir
+        // Combine all parts
         if (!candidate.content?.parts || candidate.content.parts.length === 0) {
           console.error('No parts in response:', JSON.stringify(data, null, 2));
           throw new Error('API yan?t?nda metin yok');
@@ -210,7 +210,7 @@ FORMAT:
           throw new Error('API bo? yan?t d?nd?');
         }
 
-        // Direkt t?m yan?t? g?ster (streaming efekti yok)
+        // Show the entire response directly (no streaming effect)
         onChunk(fullContent);
 
         const assistantMsg: ChatMessage = {
@@ -250,7 +250,7 @@ FORMAT:
   }
 
   isConfigured(): boolean {
-    return this.apiKey !== 'YOUR_GEMINI_API_KEY_HERE' && this.apiKey.length > 0;
+    return this.apiKey.length > 0;
   }
 }
 

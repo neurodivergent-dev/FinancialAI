@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Modal,
   View,
@@ -12,7 +13,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { X, CreditCard, TrendingDown, Check, Calendar, User } from 'lucide-react-native';
+import { X, CreditCard, TrendingUp, Check, Calendar, User } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { gradients } from '../../theme/colors';
@@ -26,6 +27,7 @@ interface EditLiabilityModalProps {
 }
 
 export const EditLiabilityModal: React.FC<EditLiabilityModalProps> = ({ visible, onClose, liability, onUpdate }) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const { currencySymbol } = useCurrency();
   const [type, setType] = useState<'credit_card' | 'personal_debt'>('credit_card');
@@ -35,6 +37,7 @@ export const EditLiabilityModal: React.FC<EditLiabilityModalProps> = ({ visible,
   const [dueDate, setDueDate] = useState('');
   const [debtorName, setDebtorName] = useState('');
   const [details, setDetails] = useState('');
+  const insets = useSafeAreaInsets();
 
   // Populate form when liability changes
   useEffect(() => {
@@ -106,20 +109,33 @@ export const EditLiabilityModal: React.FC<EditLiabilityModalProps> = ({ visible,
             >
               <View style={styles.headerContent}>
                 <View style={styles.headerIcon}>
-                  <TrendingDown size={28} color="#FFFFFF" strokeWidth={2.5} />
+                  <TrendingUp size={28} color="#FFFFFF" strokeWidth={2.5} />
                 </View>
-                <Text style={styles.modalTitle}>Borç Düzenle</Text>
+                <Text style={styles.modalTitle} numberOfLines={2} adjustsFontSizeToFit>{t('finance.liabilities.editTitle')}</Text>
               </View>
-              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <X size={24} color="#FFFFFF" strokeWidth={2.5} />
-              </TouchableOpacity>
+              <View style={styles.headerActions}>
+                <TouchableOpacity
+                  onPress={handleUpdate}
+                  style={[styles.headerActionButton, { backgroundColor: 'rgba(255,255,255,0.25)' }]}
+                  disabled={!name.trim() || !currentDebt.trim()}
+                >
+                  <Check size={22} color="#FFFFFF" strokeWidth={3} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                  <X size={24} color="#FFFFFF" strokeWidth={2.5} />
+                </TouchableOpacity>
+              </View>
             </LinearGradient>
           </View>
 
-          <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
+          <ScrollView 
+            style={styles.form} 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
+          >
             {/* Liability Type */}
             <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>Borç Tipi</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.liabilities.typeLabel')}</Text>
               <View style={styles.typeContainer}>
                 <TouchableOpacity
                   style={[
@@ -142,7 +158,7 @@ export const EditLiabilityModal: React.FC<EditLiabilityModalProps> = ({ visible,
                       { color: type === 'credit_card' ? '#ff4757' : colors.text.primary },
                     ]}
                   >
-                    Kredi Kartı
+                    {t('finance.liabilities.types.credit_card')}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -166,7 +182,7 @@ export const EditLiabilityModal: React.FC<EditLiabilityModalProps> = ({ visible,
                       { color: type === 'personal_debt' ? '#ff4757' : colors.text.primary },
                     ]}
                   >
-                    Şahıs Borcu
+                    {t('finance.liabilities.types.personal_debt')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -174,14 +190,14 @@ export const EditLiabilityModal: React.FC<EditLiabilityModalProps> = ({ visible,
 
             {/* Name */}
             <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>İsim</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.liabilities.nameLabel')}</Text>
               <View style={[styles.inputContainer, { backgroundColor: colors.background }]}>
                 <CreditCard size={20} color={colors.text.tertiary} strokeWidth={2} />
                 <TextInput
                   style={[styles.input, { color: colors.text.primary }]}
                   value={name}
                   onChangeText={setName}
-                  placeholder={type === 'credit_card' ? 'Örn: X Bank Kartı' : 'Örn: Araç Kredisi'}
+                  placeholder={t('finance.liabilities.namePlaceholder')}
                   placeholderTextColor={colors.text.tertiary}
                 />
               </View>
@@ -189,14 +205,14 @@ export const EditLiabilityModal: React.FC<EditLiabilityModalProps> = ({ visible,
 
             {/* Current Debt */}
             <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>Güncel Borç</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.liabilities.amountLabel')}</Text>
               <View style={[styles.inputContainer, { backgroundColor: colors.background }]}>
                 <Text style={[styles.currencyPrefix, { color: colors.text.tertiary }]}>{currencySymbol}</Text>
                 <TextInput
                   style={[styles.input, { color: colors.text.primary }]}
                   value={currentDebt}
                   onChangeText={setCurrentDebt}
-                  placeholder="0.00"
+                  placeholder={t('finance.liabilities.amountPlaceholder')}
                   placeholderTextColor={colors.text.tertiary}
                   keyboardType="decimal-pad"
                 />
@@ -207,30 +223,30 @@ export const EditLiabilityModal: React.FC<EditLiabilityModalProps> = ({ visible,
               <>
                 {/* Total Limit */}
                 <View style={styles.section}>
-                  <Text style={[styles.label, { color: colors.text.primary }]}>Toplam Limit</Text>
+                  <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.liabilities.limitLabel')}</Text>
                   <View style={[styles.inputContainer, { backgroundColor: colors.background }]}>
                     <Text style={[styles.currencyPrefix, { color: colors.text.tertiary }]}>{currencySymbol}</Text>
                     <TextInput
                       style={[styles.input, { color: colors.text.primary }]}
                       value={totalLimit}
                       onChangeText={setTotalLimit}
-                      placeholder="0.00"
+                      placeholder={t('finance.liabilities.amountPlaceholder')}
                       placeholderTextColor={colors.text.tertiary}
                       keyboardType="decimal-pad"
                     />
                   </View>
                 </View>
-
+ 
                 {/* Due Date */}
                 <View style={styles.section}>
-                  <Text style={[styles.label, { color: colors.text.primary }]}>Kesim Tarihi</Text>
+                  <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.liabilities.statementDayLabel')}</Text>
                   <View style={[styles.inputContainer, { backgroundColor: colors.background }]}>
                     <Calendar size={20} color={colors.text.tertiary} strokeWidth={2} />
                     <TextInput
                       style={[styles.input, { color: colors.text.primary }]}
                       value={dueDate}
                       onChangeText={setDueDate}
-                      placeholder="Örn: 15/01/2025"
+                      placeholder={t('finance.liabilities.statementDayPlaceholder')}
                       placeholderTextColor={colors.text.tertiary}
                     />
                   </View>
@@ -240,14 +256,14 @@ export const EditLiabilityModal: React.FC<EditLiabilityModalProps> = ({ visible,
 
             {type === 'personal_debt' && (
               <View style={styles.section}>
-                <Text style={[styles.label, { color: colors.text.primary }]}>Borç Veren</Text>
+                <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.liabilities.creditor')}</Text>
                 <View style={[styles.inputContainer, { backgroundColor: colors.background }]}>
                   <User size={20} color={colors.text.tertiary} strokeWidth={2} />
                   <TextInput
                     style={[styles.input, { color: colors.text.primary }]}
                     value={debtorName}
                     onChangeText={setDebtorName}
-                    placeholder="Örn: Ahmet Yılmaz"
+                    placeholder={t('finance.liabilities.creditorPlaceholder')}
                     placeholderTextColor={colors.text.tertiary}
                   />
                 </View>
@@ -256,13 +272,13 @@ export const EditLiabilityModal: React.FC<EditLiabilityModalProps> = ({ visible,
 
             {/* Details */}
             <View style={styles.section}>
-              <Text style={[styles.label, { color: colors.text.primary }]}>Detaylar (Opsiyonel)</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>{t('finance.liabilities.detailsLabel')}</Text>
               <View style={[styles.inputContainer, styles.textAreaContainer, { backgroundColor: colors.background }]}>
                 <TextInput
                   style={[styles.input, styles.textArea, { color: colors.text.primary }]}
                   value={details}
                   onChangeText={setDetails}
-                  placeholder="Ek bilgiler..."
+                  placeholder={t('finance.liabilities.detailsPlaceholder')}
                   placeholderTextColor={colors.text.tertiary}
                   multiline
                   numberOfLines={3}
@@ -270,24 +286,6 @@ export const EditLiabilityModal: React.FC<EditLiabilityModalProps> = ({ visible,
               </View>
             </View>
           </ScrollView>
-
-          {/* Update Button */}
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.updateButton}
-              onPress={handleUpdate}
-              disabled={!name.trim() || !currentDebt.trim()}
-            >
-              <LinearGradient
-                colors={!name.trim() || !currentDebt.trim() ? ['#666', '#666'] : ['#ff4757', '#ff6348']}
-                style={styles.updateButtonGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <Text style={styles.updateButtonText}>Güncelle</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -319,6 +317,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerActionButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -338,6 +348,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: -0.5,
+    flexShrink: 1,
   },
   closeButton: {
     width: 40,
@@ -414,30 +425,5 @@ const styles = StyleSheet.create({
     minHeight: 80,
     textAlignVertical: 'top',
     paddingTop: 0,
-  },
-
-  // Button Styles
-  buttonContainer: {
-    padding: 24,
-    paddingBottom: 32,
-  },
-  updateButton: {
-    borderRadius: 20,
-    overflow: 'hidden',
-    shadowColor: '#ff4757',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 12,
-  },
-  updateButtonGradient: {
-    paddingVertical: 18,
-    alignItems: 'center',
-  },
-  updateButtonText: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: -0.3,
   },
 });

@@ -4,7 +4,7 @@ const path = require('path');
 
 const OUTPUT_PATH = path.join(process.cwd(), 'assets/notification-icon.png');
 
-// Önceki (daha sade ve şık olan) gerçek cüzdan tasarımı
+// Previous (simpler and more elegant) real wallet design
 const realWalletSvg = `
 <svg width="96" height="96" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M20 7V5C20 3.89543 19.1046 3 18 3H4C2.89543 3 2 3.89543 2 5V19C2 20.1046 2.89543 21 4 21H18C19.1046 21 20 20.1046 20 19V17" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>

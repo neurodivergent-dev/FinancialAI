@@ -1,28 +1,28 @@
 import React, { useState } from 'react';
 import { View, Text, Modal, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { useFinanceStore } from '../store'; // Store yolunu kendine göre düzelt
+import { useFinanceStore } from '../store'; // Correct the store path according to your needs
 import { useCurrency } from '../src/context/CurrencyContext';
 
 export default function AddModal() {
   const [visible, setVisible] = useState(false);
-  const [type, setType] = useState<'asset' | 'liability'>('asset'); // Neyin ekleneceğini seçiyoruz
+  const [type, setType] = useState<'asset' | 'liability'>('asset'); // We choose what to add
   const [name, setName] = useState('');
   const [value, setValue] = useState('');
 
-  // Store'dan ekleme fonksiyonlarını çekiyoruz
+  // Pulling add functions from store
   const addAsset = useFinanceStore(state => state.addAsset);
   const addLiability = useFinanceStore(state => state.addLiability);
   const { currency } = useCurrency(); // Get the current currency from context
 
   const handleSave = () => {
-    if (!name || !value) return; // Boşsa kaydetme
+    if (!name || !value) return; // Don't save if empty
 
     const amount = parseFloat(value);
 
     if (type === 'asset') {
       addAsset({
         id: Date.now().toString(),
-        type: 'liquid', // Şimdilik default liquid olsun, sonra detaylandırırız
+        type: 'liquid', // Default liquid for now, will detail later
         name,
         value: amount,
         currency: currency, // Use selected currency instead of hardcoded 'TL'
@@ -36,7 +36,7 @@ export default function AddModal() {
       });
     }
 
-    // Temizlik ve Kapatma
+    // Cleaning and Closing
     setName('');
     setValue('');
     setVisible(false);
@@ -44,7 +44,7 @@ export default function AddModal() {
 
   return (
     <View>
-      {/* 1. EKRANDAKİ EKLEME BUTONU (FAB) */}
+      {/* 1. ADD BUTTON ON SCREEN (FAB) */}
       <TouchableOpacity
         style={styles.fab}
         onPress={() => setVisible(true)}
@@ -52,7 +52,7 @@ export default function AddModal() {
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
 
-      {/* 2. VERİ GİRİŞ MODALI */}
+      {/* 2. DATA ENTRY MODAL */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -66,7 +66,7 @@ export default function AddModal() {
           <View style={styles.modalView}>
             <Text style={styles.modalTitle}>YENİ GİRİŞ</Text>
 
-            {/* Varlık / Borç Seçimi (Tab) */}
+            {/* Asset / Debt Selection (Tab) */}
             <View style={styles.tabContainer}>
               <TouchableOpacity
                 style={[styles.tab, type === 'asset' && styles.activeTab]}
@@ -82,7 +82,7 @@ export default function AddModal() {
               </TouchableOpacity>
             </View>
 
-            {/* Inputlar */}
+            {/* Inputs */}
             <View style={styles.inputContainer}>
               <Text style={styles.label}>İSİM / AÇIKLAMA</Text>
               <TextInput
@@ -104,7 +104,7 @@ export default function AddModal() {
               />
             </View>
 
-            {/* Butonlar */}
+            {/* Buttons */}
             <View style={styles.buttonRow}>
               <TouchableOpacity
                 style={[styles.button, styles.buttonCancel]}
@@ -128,7 +128,7 @@ export default function AddModal() {
   );
 }
 
-// CYBERPUNK STİLİ TASARIM
+// CYBERPUNK STYLE DESIGN
 const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#00ff9d', // Neon Yeşil
+    backgroundColor: '#00ff9d', // Neon Green
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: "#00ff9d",
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: 'rgba(0,0,0,0.8)', // Arka planı karart
+    backgroundColor: 'rgba(0,0,0,0.8)', // Darken the background
   },
   modalView: {
     width: '85%',

@@ -1,17 +1,15 @@
+import i18n from '../i18n';
+
 /**
- * Sayıları Türkçe formatında biçimlendirir
- * Binlikler için nokta (.), ondalıklar için virgül (,) kullanır
+ * Sayıları dile göre formatlar
  *
  * @param num - Formatlanacak sayı
  * @param decimals - Ondalık basamak sayısı (varsayılan: 2)
  * @returns Formatlanmış sayı string olarak
- *
- * @example
- * formatNumber(1000.323, 3) // "1.000,323"
- * formatNumber(1234567.89, 2) // "1.234.567,89"
  */
 export const formatNumber = (num: number, decimals: number = 2): string => {
-  return num.toLocaleString('tr-TR', {
+  const locale = i18n.language === 'tr' ? 'tr-TR' : 'en-US';
+  return num.toLocaleString(locale, {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   });
@@ -19,15 +17,6 @@ export const formatNumber = (num: number, decimals: number = 2): string => {
 
 /**
  * Para birimi sembolü ile birlikte sayıyı formatlar
- *
- * @param num - Formatlanacak sayı
- * @param currencySymbol - Para birimi sembolü (₺, $, €, vb.)
- * @param decimals - Ondalık basamak sayısı (varsayılan: 2)
- * @returns Formatlanmış para birimi string'i
- *
- * @example
- * formatCurrency(1234.56, '₺') // "₺1.234,56"
- * formatCurrency(1000000, '$') // "$1.000.000,00"
  */
 export const formatCurrency = (
   num: number,
@@ -38,27 +27,23 @@ export const formatCurrency = (
 };
 
 /**
- * Büyük sayıları kısaltılmış formatta gösterir (Mlr, Mn, B, M, K)
- * Binlikler ve ondalıklar için Türkçe format kullanır
- *
- * @param num - Formatlanacak sayı
- * @returns Kısaltılmış formatlanmış sayı
- *
- * @example
- * formatNumberAbbreviated(1500000000) // "1,5Mlr"
- * formatNumberAbbreviated(1500000) // "1,5Mn"
- * formatNumberAbbreviated(2500) // "2,5B"
- * formatNumberAbbreviated(500) // "500"
+ * Büyük sayıları kısaltılmış formatta gösterir
  */
 export const formatNumberAbbreviated = (num: number): string => {
+  const isTr = i18n.language === 'tr';
+  const locale = isTr ? 'tr-TR' : 'en-US';
+  
   if (num >= 1000000000) {
-    return `${(num / 1000000000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}Mlr`;
+    const label = isTr ? 'Mlr' : 'B';
+    return `${(num / 1000000000).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}${label}`;
   } else if (num >= 1000000) {
-    return `${(num / 1000000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}Mn`;
+    const label = isTr ? 'Mn' : 'M';
+    return `${(num / 1000000).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}${label}`;
   } else if (num >= 1000) {
-    return `${(num / 1000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}B`;
+    const label = isTr ? 'B' : 'K';
+    return `${(num / 1000).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}${label}`;
   }
-  return num.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  return num.toLocaleString(locale, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 };
 
 /**

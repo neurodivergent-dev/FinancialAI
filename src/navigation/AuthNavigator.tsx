@@ -6,9 +6,13 @@ import { NotificationSettingsScreen } from '../screens/NotificationSettingsScree
 import { ApiKeySettingsScreen } from '../screens/ApiKeySettingsScreen';
 import { PaywallScreen } from '../screens/PaywallScreen';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
+import { PrivacyPolicyScreen } from '../screens/PrivacyPolicyScreen';
+import { TermsOfServiceScreen } from '../screens/TermsOfServiceScreen';
 import { useOnboardingStore } from '../store/useOnboardingStore';
 
-const Stack = createStackNavigator();
+import { RootStackParamList } from './types';
+
+const Stack = createStackNavigator<RootStackParamList>();
 
 export const AuthenticatedNavigator = () => {
   const { isCompleted, checkOnboarding, completeOnboarding } = useOnboardingStore();
@@ -23,7 +27,7 @@ export const AuthenticatedNavigator = () => {
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {/* Kök Neden Çözümü: Eğer onboarding bitmemişse İLK EKRAN olarak Onboarding'i göster */}
+      {/* Root Cause Solution: If onboarding is not completed, show Onboarding as the FIRST SCREEN */}
       {!isCompleted ? (
         <Stack.Screen name="Onboarding">
           {(props) => (
@@ -31,8 +35,8 @@ export const AuthenticatedNavigator = () => {
               {...props} 
               onComplete={async () => {
                 await completeOnboarding();
-                // Store güncellendiğinde bu Navigator yeniden render olacak 
-                // ve 'Main' ekranı otomatik olarak aktifleşecek.
+                // When store is updated, this Navigator will re-render 
+                // and 'Main' screen will automatically be activated.
               }} 
             />
           )}
@@ -44,8 +48,10 @@ export const AuthenticatedNavigator = () => {
             <Stack.Screen name="ProfileSettings" component={ProfileSettingsScreen} />
             <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
             <Stack.Screen name="ApiKeySettings" component={ApiKeySettingsScreen} />
+            <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+            <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
           </Stack.Group>
-          <Stack.Group screenOptions={{ presentation: 'fullScreenModal' }}>
+          <Stack.Group screenOptions={{ presentation: 'modal' }}>
             <Stack.Screen name="Paywall" component={PaywallScreen} />
           </Stack.Group>
         </>

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   TouchableOpacity,
   Modal,
 } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MoreVertical, Edit, Trash2, TrendingUp, Wallet, Plus } from 'lucide-react-native';
@@ -16,9 +17,12 @@ import { useCurrency } from '../context/CurrencyContext';
 import { gradients } from '../theme/colors';
 import { AddAssetModal } from '../components/Modals/AddAssetModal';
 import { EditAssetModal } from '../components/Modals/EditAssetModal';
+import { Asset } from '../types';
 import { formatCurrency } from '../utils/formatters';
+import { useCustomAlert } from '../hooks/useCustomAlert';
 
 export const AssetsScreen = () => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const { currencySymbol } = useCurrency(); // Get currency symbol from context
   const insets = useSafeAreaInsets();
@@ -26,29 +30,42 @@ export const AssetsScreen = () => {
   const totalAssets = getTotalAssets();
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [selectedAsset, setSelectedAsset] = useState(null);
+  const [selectedAsset, setSelectedAsset] = useState<any>(null);
   const [optionsModalVisible, setOptionsModalVisible] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const { showAlert, AlertComponent } = useCustomAlert();
 
   const assetTypeLabels = {
-    liquid: 'Likit (Nakit)',
-    term: 'Vadeli',
-    gold_currency: 'Altın/Döviz',
-    funds: 'Fonlar',
+    liquid: t('finance.assets.types.liquid'),
+    term: t('finance.assets.types.term'),
+    gold_currency: t('finance.assets.types.gold_currency'),
+    funds: t('finance.assets.types.funds'),
   };
 
-  const handleEditAsset = (asset) => {
+  const handleEditAsset = (asset: any) => {
     setSelectedAsset(asset);
     setEditModalVisible(true);
     setOptionsModalVisible(false);
   };
 
-  const handleDeleteAsset = (id) => {
-    removeAsset(id);
+  const handleDeleteAsset = (id: string) => {
     setOptionsModalVisible(false);
+    showAlert(
+      t('common.deleteConfirmTitle'),
+      t('common.deleteConfirmMessage'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        { 
+          text: t('common.delete'), 
+          style: 'destructive',
+          onPress: () => removeAsset(id)
+        }
+      ],
+      'warning'
+    );
   };
 
-  const handleAssetPress = (asset) => {
+  const handleAssetPress = (asset: any) => {
     setSelectedItem(asset);
     setOptionsModalVisible(true);
   };
@@ -60,10 +77,10 @@ export const AssetsScreen = () => {
         <View style={styles.headerTop}>
           <View>
             <Text style={[styles.subtitle, { color: colors.text.tertiary }]}>
-              Toplam Varlık
+              {t('finance.assets.subtitle')}
             </Text>
             <Text style={[styles.title, { color: colors.text.primary }]}>
-              Varlıklarım
+              {t('finance.assets.title')}
             </Text>
           </View>
           <View style={[styles.headerIcon, { backgroundColor: 'rgba(34, 197, 94, 0.15)' }]}>
@@ -79,7 +96,7 @@ export const AssetsScreen = () => {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
-            {/* Işık Hüzmeleri */}
+            {/* Light Beams */}
             <View style={styles.lightBeam1} />
             <View style={styles.lightBeam2} />
             <View style={styles.lightBeam3} />
@@ -93,7 +110,7 @@ export const AssetsScreen = () => {
                 <TrendingUp size={24} color="rgba(255, 255, 255, 0.95)" strokeWidth={2.5} />
               </View>
               <View style={styles.heroTextArea}>
-                <Text style={styles.heroLabel}>Toplam Değer</Text>
+                <Text style={styles.heroLabel}>{t('finance.assets.totalValue')}</Text>
                 <Text style={styles.heroValue}>
                   {formatCurrency(totalAssets, currencySymbol)}
                 </Text>
@@ -103,11 +120,12 @@ export const AssetsScreen = () => {
         </View>
       </View>
 
-      <FlatList
+      <FlashList<Asset>
         data={assets}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item: Asset) => item.id}
         contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
+        estimatedItemSize={160}
+        renderItem={({ item }: { item: Asset }) => (
           <View
             style={[styles.card, { backgroundColor: colors.cardBackground }]}
           >
@@ -153,10 +171,10 @@ export const AssetsScreen = () => {
               <Wallet size={48} color={colors.success} strokeWidth={1.5} />
             </View>
             <Text style={[styles.emptyText, { color: colors.text.primary }]}>
-              Henüz varlık eklenmemiş
+              {t('finance.assets.noData')}
             </Text>
             <Text style={[styles.emptySubtext, { color: colors.text.tertiary }]}>
-              Varlıklarınızı eklemek için + butonuna tıklayın
+              {t('finance.assets.noDataSub')}
             </Text>
           </View>
         }
@@ -177,18 +195,18 @@ export const AssetsScreen = () => {
           <View style={[styles.optionsModal, { backgroundColor: colors.cardBackground }]}>
             <TouchableOpacity
               style={[styles.optionButton, { borderBottomColor: colors.border.secondary }]}
-              onPress={() => handleEditAsset(selectedItem)}
+              onPress={() => selectedItem && handleEditAsset(selectedItem)}
             >
               <Edit size={22} color={colors.text.primary} strokeWidth={2} />
-              <Text style={[styles.optionText, { color: colors.text.primary }]}>Düzenle</Text>
+              <Text style={[styles.optionText, { color: colors.text.primary }]}>{t('common.edit')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.optionButton, styles.deleteOption]}
-              onPress={() => handleDeleteAsset(selectedItem.id)}
+              onPress={() => selectedItem && handleDeleteAsset(selectedItem.id)}
             >
               <Trash2 size={22} color={colors.error} strokeWidth={2} />
-              <Text style={[styles.optionText, { color: colors.error }]}>Sil</Text>
+              <Text style={[styles.optionText, { color: colors.error }]}>{t('common.delete')}</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -224,6 +242,7 @@ export const AssetsScreen = () => {
           setSelectedAsset(null);
         }}
       />
+      {AlertComponent}
     </View>
   );
 };
@@ -277,7 +296,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
   },
-  // Işık Hüzmeleri
+  // Light Rays
   lightBeam1: {
     position: 'absolute',
     width: 200,
@@ -346,11 +365,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
   },
   heroTextArea: {
     flex: 1,

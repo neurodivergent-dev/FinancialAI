@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import Animated, { useAnimatedStyle, useAnimatedRef, useSharedValue } from 'react-native-reanimated';
 import { useReanimatedKeyboardAnimation, useKeyboardHandler } from 'react-native-keyboard-controller';
-import { Send, Bot, Trash2, Sparkles } from 'lucide-react-native';
+import { useNavigation } from "@react-navigation/native";
+import { Send, Bot, Trash2, Sparkles, Settings } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Markdown from 'react-native-markdown-display';
@@ -21,6 +22,7 @@ import { useApiKey } from '../context/ApiKeyContext';
 import { useProfile } from '../context/ProfileContext';
 import { useFinanceStore } from '../store/useFinanceStore';
 import { AIChatService, ChatMessage, FinancialContext } from '../services/aiChatService';
+import { useCustomAlert } from '../hooks/useCustomAlert';
 
 export const ChatScreen = () => {
   const { colors } = useTheme();
@@ -28,6 +30,8 @@ export const ChatScreen = () => {
   const { getActiveApiKey } = useApiKey();
   const { profile } = useProfile();
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation<any>();
+  const { showAlert, AlertComponent } = useCustomAlert();
   
   const scrollViewRef = useAnimatedRef<Animated.ScrollView>();
   const aiChatServiceRef = useRef<AIChatService | null>(null);
@@ -49,8 +53,8 @@ export const ChatScreen = () => {
   const { height: keyboardHeight } = useReanimatedKeyboardAnimation();
   const isKeyboardOpen = useSharedValue(false);
 
-  // Klavye olaylarını dinle
-  // Eğer klavye kapanırsa, explicit olarak padding'i 0 yapmak için bir state tutuyoruz.
+  // Listen to keyboard events
+  // We maintain a state to explicitly set padding to 0 if the keyboard closes.
   useKeyboardHandler({
     onStart: (e: any) => {
       'worklet';
@@ -62,16 +66,16 @@ export const ChatScreen = () => {
     },
   }, []);
 
-  // Animasyon stili: Klavyenin çıktığı kadar içeriğe alttan boşluk(padding) ekler.
-  // Absolute bir değer olduğu için OS düzeyindeki hayalet boşlukları ezer.
-  // Ek olarak: Android 15 için "kapanma" state'ini isKeyboardOpen ile kontrol ediyoruz.
+  // Animation style: Adds bottom padding to content by the height of the keyboard.
+  // Being an absolute value, it overrides ghost spaces at the OS level.
+  // Additionally: We control the "closing" state with isKeyboardOpen for Android 15.
   const animatedKeyboardPadding = useAnimatedStyle(() => {
-    // Klavye kapalıysa kesin olarak 0 vererek hayalet boşluğu engelle
+    // If keyboard is closed, definitely give 0 to prevent ghost space
     if (!isKeyboardOpen.value) {
       return { paddingBottom: 0 };
     }
     
-    // Açıkken saf yüksekliği uygula
+    // Apply the net height when open
     return {
       paddingBottom: Math.abs(keyboardHeight.value),
     };
@@ -204,13 +208,29 @@ export const ChatScreen = () => {
       setStreamingMessage('');
     } catch (error: any) {
       const errorStr = error.message || 'Bilinmeyen hata';
-      const aiErrorMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: `## ⚠️ Bir Hata Oluştu\n\n${errorStr}`,
-        timestamp: Date.now(),
-      };
-      setMessages((prev) => [...prev, aiErrorMessage]);
+      
+      if (errorStr.includes('CONFIG_ERROR')) {
+        showAlert(
+          'API Anahtarı Gerekli',
+          'AI Finansal Danışman ile sohbet etmek için kendi Gemini API anahtarınızı eklemelisiniz. Ücretsiz anahtar almak çok kolaydır.',
+          [
+            { text: 'İptal', style: 'cancel' },
+            { 
+              text: 'Ayarlara Git', 
+              onPress: () => navigation.navigate('ApiKeySettings') 
+            }
+          ],
+          'warning'
+        );
+      } else {
+        const aiErrorMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: `## ⚠️ Bir Hata Oluştu\n\n${errorStr}`,
+          timestamp: Date.now(),
+        };
+        setMessages((prev) => [...prev, aiErrorMessage]);
+      }
     } finally {
       setIsLoading(false);
       setTimeout(() => {
@@ -230,7 +250,7 @@ export const ChatScreen = () => {
   };
 
   return (
-    // 2. Ana çerçeveye Animated Padding katmanı ekliyoruz.
+    // 2. Add Animated Padding layer to the main frame.
     <Animated.View style={[styles.container, { backgroundColor: colors.background }, animatedKeyboardPadding]}>
       
       {/* 3. Header */}
@@ -259,7 +279,7 @@ export const ChatScreen = () => {
                   <Text style={styles.headerTitle}>AI Finansal Danışman</Text>
                   <Sparkles size={14} color="rgba(255, 255, 255, 0.8)" strokeWidth={2.5} />
                 </View>
-                <Text style={styles.headerSubtitle}>Gemini & Groq Destekli</Text>
+                <Text style={styles.headerSubtitle}>Gemini Destekli</Text>
               </View>
             </View>
             <TouchableOpacity onPress={handleClearChat} style={styles.clearButton} activeOpacity={0.7}>
@@ -315,7 +335,7 @@ export const ChatScreen = () => {
         </Animated.ScrollView>
       </View>
 
-      {/* 5. Input Alanı */}
+      {/* 5. Input Area */}
       <View style={[styles.inputContainer, { backgroundColor: colors.cardBackground, paddingBottom: 12 }]}>
         <TextInput
           style={[styles.input, { color: colors.text.primary, backgroundColor: colors.background }]} 
@@ -336,6 +356,8 @@ export const ChatScreen = () => {
         </TouchableOpacity>
       </View>
 
+      {/* Custom Alert */}
+      {AlertComponent}
     </Animated.View>
   );
 };

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -6,6 +7,7 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
+  Switch,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,9 +17,17 @@ import { useCustomAlert } from '../hooks/useCustomAlert';
 import { ArrowLeft, Key, Eye, EyeOff, Save, Trash2, Info, Sparkles } from 'lucide-react-native';
 
 export const ApiKeySettingsScreen = ({ navigation }: any) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { customApiKey, setCustomApiKey, clearCustomApiKey, hasCustomApiKey } = useApiKey();
+  const { 
+    customApiKey, 
+    setCustomApiKey, 
+    clearCustomApiKey, 
+    hasCustomApiKey,
+    isAiEnabled,
+    setAiEnabled 
+  } = useApiKey();
   const { showAlert, AlertComponent } = useCustomAlert();
 
   const [apiKey, setApiKeyLocal] = useState(customApiKey);
@@ -26,9 +36,9 @@ export const ApiKeySettingsScreen = ({ navigation }: any) => {
   const handleSave = async () => {
     if (!apiKey.trim()) {
       showAlert(
-        'Hata',
-        'Lütfen geçerli bir API key giriniz.',
-        [{ text: 'Tamam' }],
+        t('common.error'),
+        t('settings.apiKeySettings.invalidKey'),
+        [{ text: t('common.save') }],
         'error'
       );
       return;
@@ -36,12 +46,12 @@ export const ApiKeySettingsScreen = ({ navigation }: any) => {
 
     if (!apiKey.trim().startsWith('AIza')) {
       showAlert(
-        'Uyarı',
-        'Girdiğiniz key geçerli bir Gemini API key formatında görünmüyor. Yine de kaydetmek istiyor musunuz?',
+        t('common.warning'),
+        t('settings.apiKeySettings.formatWarning'),
         [
-          { text: 'İptal', style: 'cancel' },
+          { text: t('common.cancel'), style: 'cancel' },
           {
-            text: 'Kaydet',
+            text: t('common.save'),
             onPress: async () => {
               await saveKey();
             },
@@ -59,16 +69,16 @@ export const ApiKeySettingsScreen = ({ navigation }: any) => {
     try {
       await setCustomApiKey(apiKey.trim());
       showAlert(
-        'Başarılı',
-        'API Key kaydedildi. Artık AI Chat ve AI CFO kendi API key\'inizi kullanacak.',
-        [{ text: 'Tamam', onPress: () => navigation.goBack() }],
+        t('common.success'),
+        t('settings.apiKeySettings.saveSuccess'),
+        [{ text: t('common.save'), onPress: () => navigation.goBack() }],
         'success'
       );
     } catch (error) {
       showAlert(
-        'Hata',
-        'API Key kaydedilirken bir hata oluştu.',
-        [{ text: 'Tamam' }],
+        t('common.error'),
+        t('settings.apiKeySettings.saveError'),
+        [{ text: t('common.save') }],
         'error'
       );
     }
@@ -76,28 +86,28 @@ export const ApiKeySettingsScreen = ({ navigation }: any) => {
 
   const handleClear = () => {
     showAlert(
-      'API Key\'i Sil',
-      'Kendi API key\'inizi silmek istediğinizden emin misiniz? Varsayılan key kullanılacak.',
+      t('settings.apiKeySettings.deleteTitle'),
+      t('settings.apiKeySettings.deleteConfirm'),
       [
-        { text: 'İptal', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Sil',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               await clearCustomApiKey();
               setApiKeyLocal('');
               showAlert(
-                'Başarılı',
-                'API Key silindi. Varsayılan key kullanılacak.',
-                [{ text: 'Tamam' }],
+                t('common.success'),
+                t('settings.apiKeySettings.deleteSuccess'),
+                [{ text: t('common.save') }],
                 'success'
               );
             } catch (error) {
               showAlert(
-                'Hata',
-                'API Key silinirken bir hata oluştu.',
-                [{ text: 'Tamam' }],
+                t('common.error'),
+                t('settings.apiKeySettings.saveError'),
+                [{ text: t('common.save') }],
                 'error'
               );
             }
@@ -110,7 +120,7 @@ export const ApiKeySettingsScreen = ({ navigation }: any) => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Modern Header with Dashboard Style Gradient - Edge to Edge */}
+      {/* Modern Header */}
       <View style={styles.modernHeader}>
         <LinearGradient
           colors={['#FF0080', '#7928CA', '#0070F3', '#00DFD8']}
@@ -130,8 +140,8 @@ export const ApiKeySettingsScreen = ({ navigation }: any) => {
               </View>
             </TouchableOpacity>
             <View style={styles.headerTextContainer}>
-              <Text style={styles.subtitle}>Entegrasyon</Text>
-              <Text style={styles.screenTitle}>API Key Ayarları</Text>
+              <Text style={styles.subtitle}>{t('settings.apiKeySettings.integration')}</Text>
+              <Text style={styles.screenTitle}>{t('settings.apiKeySettings.title')}</Text>
             </View>
             <View style={styles.headerIcon}>
               <Key size={22} color="#FFFFFF" strokeWidth={2} />
@@ -150,37 +160,68 @@ export const ApiKeySettingsScreen = ({ navigation }: any) => {
           <View style={styles.infoHeader}>
             <Info size={20} color={colors.purple.primary} strokeWidth={2.5} />
             <Text style={[styles.infoTitle, { color: colors.purple.primary }]}>
-              Neden Kendi API Key'inizi Kullanmalısınız?
+              {t('settings.apiKeySettings.howTo')}
             </Text>
           </View>
           <Text style={[styles.infoText, { color: colors.text.secondary }]}>
-            • Sınırsız kullanım - Kendi limitinizi belirleyin{'\n'}
-            • Daha hızlı yanıtlar - Kendi quota'nız{'\n'}
-            • Gizlilik - Sorularınız sadece size ait{'\n'}
-            • Ücretsiz - Google Gemini API ücretsiz tier sunuyor
+            {t('settings.apiKeySettings.description')}
           </Text>
         </View>
 
-        {/* Status Card */}
-        <View style={[styles.statusCard, { backgroundColor: colors.cardBackground }]}>
-          <Text style={[styles.statusLabel, { color: colors.text.tertiary }]}>
-            Mevcut Durum
-          </Text>
-          <View style={styles.statusRow}>
-            <View style={[
-              styles.statusDot,
-              { backgroundColor: hasCustomApiKey ? '#22c55e' : '#f59e0b' }
-            ]} />
-            <Text style={[styles.statusText, { color: colors.text.primary }]}>
-              {hasCustomApiKey ? 'Kendi API Key\'inizi kullanıyorsunuz' : 'Varsayılan API Key kullanılıyor'}
+        {/* Status Card - Only shown if custom key is present */}
+        {hasCustomApiKey && (
+          <View style={[styles.statusCard, { backgroundColor: colors.cardBackground }]}>
+            <Text style={[styles.statusLabel, { color: colors.text.tertiary }]}>
+              {t('settings.apiKeySettings.statusLabel')}
             </Text>
+            <View style={styles.statusRow}>
+              <View style={[
+                styles.statusDot,
+                { backgroundColor: '#22c55e' }
+              ]} />
+              <Text style={[styles.statusText, { color: colors.text.primary }]}>
+                {t('settings.apiKeySettings.customKeyActive')}
+              </Text>
+            </View>
           </View>
+        )}
+
+        {/* AI Features Toggle Card */}
+        <View style={[styles.switchCard, { backgroundColor: colors.cardBackground }]}>
+          <View style={styles.switchHeader}>
+            <View style={[styles.iconContainer, { backgroundColor: 'rgba(147, 51, 234, 0.1)' }]}>
+              <Sparkles size={20} color={colors.purple.primary} strokeWidth={2.5} />
+            </View>
+            <View style={styles.switchTextContainer}>
+              <Text style={[styles.switchTitle, { color: colors.text.primary }]}>
+                {t('settings.apiKeySettings.isAiEnabled')}
+              </Text>
+              <Text style={[styles.switchDescription, { color: colors.text.tertiary }]}>
+                {t('settings.apiKeySettings.isAiEnabledSub')}
+              </Text>
+            </View>
+            <Switch
+              value={isAiEnabled}
+              onValueChange={setAiEnabled}
+              disabled={!hasCustomApiKey}
+              trackColor={{ false: '#767577', true: colors.purple.primary + '80' }}
+              thumbColor={isAiEnabled ? colors.purple.primary : '#f4f3f4'}
+              ios_backgroundColor="#3e3e3e"
+            />
+          </View>
+          {!hasCustomApiKey && (
+            <View style={styles.warningBox}>
+              <Text style={[styles.warningText, { color: colors.text.tertiary }]}>
+                {t('settings.apiKeySettings.warningNoKey')}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* API Key Input */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            Google Gemini API Key
+            {t('settings.apiKeySettings.enterKey')}
           </Text>
           <View style={[styles.inputContainer, { backgroundColor: colors.cardBackground }]}>
             <Key size={20} color={colors.text.tertiary} strokeWidth={2} />
@@ -188,7 +229,7 @@ export const ApiKeySettingsScreen = ({ navigation }: any) => {
               style={[styles.input, { color: colors.text.primary }]}
               value={apiKey}
               onChangeText={setApiKeyLocal}
-              placeholder="AIzaSy..."
+              placeholder={t('settings.apiKeySettings.placeholder')}
               placeholderTextColor={colors.text.tertiary}
               secureTextEntry={!showKey}
               autoCapitalize="none"
@@ -204,24 +245,18 @@ export const ApiKeySettingsScreen = ({ navigation }: any) => {
           </View>
         </View>
 
-        {/* How to Get API Key */}
+        {/* Guide Card */}
         <View style={[styles.guideCard, { backgroundColor: colors.cardBackground }]}>
           <Text style={[styles.guideTitle, { color: colors.text.primary }]}>
-            🔑 API Key Nasıl Alınır?
+            {t('settings.apiKeySettings.guideTitle')}
           </Text>
           <View style={styles.guideSteps}>
             <Text style={[styles.guideStep, { color: colors.text.secondary }]}>
-              1. Google AI Studio'ya gidin:{'\n'}
+              {t('settings.apiKeySettings.guideStep1')}{'\n'}
               <Text style={{ color: colors.purple.light }}>https://aistudio.google.com/</Text>
             </Text>
             <Text style={[styles.guideStep, { color: colors.text.secondary }]}>
-              2. Google hesabınızla giriş yapın
-            </Text>
-            <Text style={[styles.guideStep, { color: colors.text.secondary }]}>
-              3. "Create API Key" butonuna tıklayın
-            </Text>
-            <Text style={[styles.guideStep, { color: colors.text.secondary }]}>
-              4. API Key'inizi kopyalayıp buraya yapıştırın
+              {t('settings.apiKeySettings.guideStep2')}
             </Text>
           </View>
         </View>
@@ -239,7 +274,7 @@ export const ApiKeySettingsScreen = ({ navigation }: any) => {
               end={{ x: 1, y: 1 }}
             >
               <Save size={20} color="#FFFFFF" strokeWidth={2.5} />
-              <Text style={styles.saveButtonText}>Kaydet</Text>
+              <Text style={styles.saveButtonText}>{t('settings.apiKeySettings.save')}</Text>
             </LinearGradient>
           </TouchableOpacity>
 
@@ -250,7 +285,7 @@ export const ApiKeySettingsScreen = ({ navigation }: any) => {
             >
               <Trash2 size={20} color={colors.error} strokeWidth={2.5} />
               <Text style={[styles.clearButtonText, { color: colors.error }]}>
-                API Key'i Sil
+                {t('settings.apiKeySettings.delete')}
               </Text>
             </TouchableOpacity>
           )}
@@ -267,7 +302,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  // Header Styles
   modernHeader: {
     overflow: 'hidden',
     borderBottomLeftRadius: 32,
@@ -279,15 +313,10 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   headerGradient: {
-    position: 'relative',
-    overflow: 'hidden',
+    paddingBottom: 24,
   },
   decorativePattern: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    ...StyleSheet.absoluteFillObject,
   },
   patternCircle1: {
     position: 'absolute',
@@ -321,40 +350,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 24,
-    justifyContent: 'space-between',
-    zIndex: 10,
+    gap: 12,
   },
   backButton: {
-    marginRight: 8,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   backButtonCircle: {
-    width: 40,
-    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTextContainer: {
     flex: 1,
-    alignItems: 'center',
   },
   subtitle: {
     fontSize: 12,
-    marginBottom: 2,
-    letterSpacing: 0.5,
     color: 'rgba(255, 255, 255, 0.8)',
-    textAlign: 'center',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   screenTitle: {
     fontSize: 22,
-    fontWeight: '800',
-    letterSpacing: -0.5,
     color: '#FFFFFF',
-    textAlign: 'center',
+    fontWeight: '800',
   },
   headerIcon: {
     width: 44,
     height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -362,38 +391,37 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: 24,
-    paddingTop: 24,
-    paddingBottom: 100,
+    padding: 20,
   },
   infoCard: {
     padding: 16,
     borderRadius: 16,
-    marginBottom: 20,
     borderWidth: 1,
+    marginBottom: 20,
   },
   infoHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
+    gap: 10,
+    marginBottom: 8,
   },
   infoTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
   },
   infoText: {
     fontSize: 14,
-    lineHeight: 22,
+    lineHeight: 20,
   },
   statusCard: {
     padding: 16,
     borderRadius: 16,
-    marginBottom: 24,
+    marginBottom: 20,
   },
   statusLabel: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
     marginBottom: 8,
   },
   statusRow: {
@@ -402,13 +430,51 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   statusDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   statusText: {
     fontSize: 15,
     fontWeight: '600',
+  },
+  switchCard: {
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 24,
+  },
+  switchHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  switchTextContainer: {
+    flex: 1,
+  },
+  switchTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  switchDescription: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  warningBox: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.05)',
+  },
+  warningText: {
+    fontSize: 12,
+    fontStyle: 'italic',
   },
   section: {
     marginBottom: 24,
@@ -417,21 +483,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     marginBottom: 12,
-    letterSpacing: -0.2,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 16,
     paddingHorizontal: 16,
-    paddingVertical: 4,
-    gap: 12,
   },
   input: {
     flex: 1,
-    fontSize: 15,
-    paddingVertical: 12,
-    fontWeight: '600',
+    height: 56,
+    fontSize: 16,
+    marginLeft: 12,
   },
   guideCard: {
     padding: 20,
@@ -441,14 +504,14 @@ const styles = StyleSheet.create({
   guideTitle: {
     fontSize: 16,
     fontWeight: '700',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   guideSteps: {
     gap: 12,
   },
   guideStep: {
     fontSize: 14,
-    lineHeight: 22,
+    lineHeight: 20,
   },
   buttonGroup: {
     gap: 12,
@@ -456,37 +519,30 @@ const styles = StyleSheet.create({
   saveButton: {
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#9333EA',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
   },
   saveButtonGradient: {
+    height: 56,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
-    gap: 8,
+    gap: 10,
   },
   saveButtonText: {
-    fontSize: 17,
-    fontWeight: '800',
     color: '#FFFFFF',
-    letterSpacing: -0.3,
+    fontSize: 16,
+    fontWeight: '700',
   },
   clearButton: {
+    height: 56,
+    borderRadius: 16,
+    borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 16,
-    borderWidth: 2,
-    gap: 8,
+    gap: 10,
   },
   clearButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    letterSpacing: -0.3,
   },
 });
