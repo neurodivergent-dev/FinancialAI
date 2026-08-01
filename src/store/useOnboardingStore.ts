@@ -1,40 +1,30 @@
 import { create } from 'zustand';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { storage } from './mmkv-storage';
 
 interface OnboardingStore {
   isCompleted: boolean | null;
-  checkOnboarding: () => Promise<void>;
-  completeOnboarding: () => Promise<void>;
-  resetOnboarding: () => Promise<void>;
+  checkOnboarding: () => void;
+  completeOnboarding: () => void;
+  resetOnboarding: () => void;
 }
 
+const ONBOARDING_KEY = '@onboarding_completed';
+
 export const useOnboardingStore = create<OnboardingStore>((set) => ({
-  isCompleted: null,
+  isCompleted: storage.getString(ONBOARDING_KEY) === 'true',
 
-  checkOnboarding: async () => {
-    try {
-      const completed = await AsyncStorage.getItem('@onboarding_completed');
-      set({ isCompleted: completed === 'true' });
-    } catch (error) {
-      set({ isCompleted: true });
-    }
+  checkOnboarding: () => {
+    const completed = storage.getString(ONBOARDING_KEY);
+    set({ isCompleted: completed === 'true' });
   },
 
-  completeOnboarding: async () => {
-    try {
-      await AsyncStorage.setItem('@onboarding_completed', 'true');
-      set({ isCompleted: true });
-    } catch (error) {
-      console.error('Error saving onboarding status:', error);
-    }
+  completeOnboarding: () => {
+    storage.set(ONBOARDING_KEY, 'true');
+    set({ isCompleted: true });
   },
 
-  resetOnboarding: async () => {
-    try {
-      await AsyncStorage.removeItem('@onboarding_completed');
-      set({ isCompleted: false });
-    } catch (error) {
-      console.error('Error resetting onboarding status:', error);
-    }
+  resetOnboarding: () => {
+    storage.remove(ONBOARDING_KEY);
+    set({ isCompleted: false });
   },
 }));

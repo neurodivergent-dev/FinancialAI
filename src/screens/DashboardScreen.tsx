@@ -11,7 +11,7 @@ import {
   Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { storage } from "../store/mmkv-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import Markdown from 'react-native-markdown-display';
 import { useNavigation } from "@react-navigation/native";
@@ -87,9 +87,9 @@ export const DashboardScreen = () => {
     geminiService.updateApiKey(getActiveApiKey());
   }, [getActiveApiKey]);
 
-  const loadLastCFOAnalysis = async () => {
+  const loadLastCFOAnalysis = () => {
     try {
-      const savedAnalysis = await AsyncStorage.getItem('@last_cfo_analysis');
+      const savedAnalysis = storage.getString('@last_cfo_analysis');
       if (savedAnalysis) {
         const parsed = JSON.parse(savedAnalysis);
         setAiResult(parsed);
@@ -99,9 +99,9 @@ export const DashboardScreen = () => {
     }
   };
 
-  const saveCFOAnalysis = async (analysis: any) => {
+  const saveCFOAnalysis = (analysis: any) => {
     try {
-      await AsyncStorage.setItem('@last_cfo_analysis', JSON.stringify(analysis));
+      storage.set('@last_cfo_analysis', JSON.stringify(analysis));
     } catch (error) {
       console.log('CFO analysis could not be saved:', error);
     }

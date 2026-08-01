@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { mmkvStorage } from './mmkv-storage';
 
 interface SecurityState {
   isBiometricsEnabled: boolean;
@@ -19,7 +19,7 @@ export const useSecurityStore = create<SecurityState>()(
     }),
     {
       name: 'security-storage',
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => mmkvStorage),
       // Only save isBiometricsEnabled, isLocked should be reset on every launch
       partialize: (state) => ({ isBiometricsEnabled: state.isBiometricsEnabled }),
     }

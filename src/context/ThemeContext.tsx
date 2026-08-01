@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { storage } from '../store/mmkv-storage';
 import { useColorScheme } from 'react-native';
 
 type ThemeMode = 'dark' | 'light' | 'system';
@@ -95,10 +95,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [themeMode, systemColorScheme]);
 
-  const loadTheme = async () => {
+  const loadTheme = () => {
     try {
-      const savedMode = await AsyncStorage.getItem('themeMode');
-      const savedAmoled = await AsyncStorage.getItem('amoledEnabled');
+      const savedMode = storage.getString('themeMode');
+      const savedAmoled = storage.getString('amoledEnabled');
       
       if (savedMode) setThemeModeState(savedMode as ThemeMode);
       if (savedAmoled) setAmoledEnabledState(savedAmoled === 'true');
@@ -107,19 +107,19 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  const setThemeMode = async (mode: ThemeMode) => {
+  const setThemeMode = (mode: ThemeMode) => {
     setThemeModeState(mode);
     try {
-      await AsyncStorage.setItem('themeMode', mode);
+      storage.set('themeMode', mode);
     } catch (error) {
       console.error('Error saving theme mode:', error);
     }
   };
 
-  const setAmoledEnabled = async (enabled: boolean) => {
+  const setAmoledEnabled = (enabled: boolean) => {
     setAmoledEnabledState(enabled);
     try {
-      await AsyncStorage.setItem('amoledEnabled', String(enabled));
+      storage.set('amoledEnabled', String(enabled));
     } catch (error) {
       console.error('Error saving amoled mode:', error);
     }

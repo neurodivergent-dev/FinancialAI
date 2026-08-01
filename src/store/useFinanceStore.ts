@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { mmkvStorage } from './mmkv-storage';
 import { Asset, Liability, Receivable, StrategicInstallment } from '../types';
 
 interface FinanceStore {
@@ -112,7 +112,7 @@ export const useFinanceStore = create<FinanceStore>()(
     }),
     {
       name: 'finance-storage',
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => mmkvStorage),
     }
   )
 );

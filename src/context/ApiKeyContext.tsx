@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { storage } from '../store/mmkv-storage';
 
 interface ApiKeyContextType {
   customApiKey: string;
@@ -24,17 +24,15 @@ export const ApiKeyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     loadSettings();
   }, []);
 
-  const loadSettings = async () => {
+  const loadSettings = () => {
     try {
-      const [storedKey, storedEnabled] = await Promise.all([
-        AsyncStorage.getItem(API_KEY_STORAGE_KEY),
-        AsyncStorage.getItem(AI_ENABLED_STORAGE_KEY),
-      ]);
+      const storedKey = storage.getString(API_KEY_STORAGE_KEY);
+      const storedEnabled = storage.getString(AI_ENABLED_STORAGE_KEY);
       
       if (storedKey) {
         setCustomApiKeyState(storedKey);
         // Only load enabled state if key exists
-        if (storedEnabled !== null) {
+        if (storedEnabled !== undefined) {
           setIsAiEnabledState(storedEnabled === 'true');
         }
       } else {
@@ -51,11 +49,11 @@ export const ApiKeyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setCustomApiKeyState(trimmedKey);
 
       if (trimmedKey) {
-        await AsyncStorage.setItem(API_KEY_STORAGE_KEY, trimmedKey);
+        storage.set(API_KEY_STORAGE_KEY, trimmedKey);
       } else {
-        await AsyncStorage.removeItem(API_KEY_STORAGE_KEY);
+        storage.remove(API_KEY_STORAGE_KEY);
         setIsAiEnabledState(false);
-        await AsyncStorage.removeItem(AI_ENABLED_STORAGE_KEY);
+        storage.remove(AI_ENABLED_STORAGE_KEY);
       }
     } catch (error) {
       console.error('Error saving API key:', error);
@@ -67,10 +65,8 @@ export const ApiKeyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       setCustomApiKeyState('');
       setIsAiEnabledState(false);
-      await Promise.all([
-        AsyncStorage.removeItem(API_KEY_STORAGE_KEY),
-        AsyncStorage.removeItem(AI_ENABLED_STORAGE_KEY),
-      ]);
+      storage.remove(API_KEY_STORAGE_KEY);
+      storage.remove(AI_ENABLED_STORAGE_KEY);
     } catch (error) {
       console.error('Error clearing API key:', error);
       throw error;
@@ -85,7 +81,7 @@ export const ApiKeyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
       
       setIsAiEnabledState(enabled);
-      await AsyncStorage.setItem(AI_ENABLED_STORAGE_KEY, String(enabled));
+      storage.set(AI_ENABLED_STORAGE_KEY, String(enabled));
     } catch (error) {
       console.error('Error saving AI enabled state:', error);
     }

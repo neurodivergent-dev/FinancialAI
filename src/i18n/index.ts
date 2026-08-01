@@ -1,7 +1,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import * as Localization from 'expo-localization';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { storage } from '../store/mmkv-storage';
 
 // English translations
 import enCommon from './locales/en/common.json';
@@ -44,8 +44,8 @@ const resources = {
 
 const LANGUAGE_KEY = '@app_language';
 
-const initI18n = async () => {
-  let savedLanguage = await AsyncStorage.getItem(LANGUAGE_KEY);
+const initI18n = () => {
+  let savedLanguage = storage.getString(LANGUAGE_KEY);
   
   if (!savedLanguage) {
     // Cihaz dilini algıla

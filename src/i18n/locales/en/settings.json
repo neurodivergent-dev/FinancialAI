@@ -213,7 +213,7 @@
   "privacyPolicy": {
     "title": "Privacy Policy",
     "legal": "Legal",
-    "lastUpdate": "Last Update: December 9, 2025",
+    "lastUpdate": "Last Update: March 2026",
     "footerText": "Your data is valuable to us and your security is our priority.",
     "sections": {
       "intro": {
@@ -264,14 +264,14 @@
       },
       "contact": {
         "title": "10. Contact",
-        "content": "If you have questions about our privacy policy or the processing of your data:\n\nEmail: privacy@financialai.com\nWeb: www.financialai.com/privacy\nAddress: Istanbul, Turkey"
+        "content": "If you have questions about our privacy policy or the processing of your data:\n\nEmail: melihcandemir@protonmail.com"
       }
     }
   },
   "termsOfService": {
     "title": "Terms of Service",
     "legal": "Legal",
-    "lastUpdate": "Last Update: December 9, 2025",
+    "lastUpdate": "Last Update: March 2026",
     "sections": {
       "acceptance": {
         "title": "1. Acceptance and Consent",
@@ -307,7 +307,7 @@
       },
       "contact": {
         "title": "9. Contact",
-        "content": "If you have questions about these terms of service, please contact us:\n\nEmail: support@financialai.com\nWeb: www.financialai.com"
+        "content": "If you have questions about these terms of service, please contact us:\n\nEmail: melihcandemir@protonmail.com"
       }
     }
   }

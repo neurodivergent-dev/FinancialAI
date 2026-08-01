@@ -10,10 +10,11 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
-import Animated, { useAnimatedStyle, useAnimatedRef, useSharedValue } from 'react-native-reanimated';
+import { FlashList } from '@shopify/flash-list';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming, FadeIn, FadeOut, Layout } from 'react-native-reanimated';
 import { useReanimatedKeyboardAnimation, useKeyboardHandler } from 'react-native-keyboard-controller';
 import { useNavigation } from "@react-navigation/native";
-import { Send, Bot, Trash2, Sparkles, Settings } from 'lucide-react-native';
+import { Send, Bot, Trash2, Sparkles, Settings, ChevronDown } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Markdown from 'react-native-markdown-display';
@@ -22,6 +23,7 @@ import { useCurrency } from '../context/CurrencyContext';
 import { useApiKey } from '../context/ApiKeyContext';
 import { useProfile } from '../context/ProfileContext';
 import { useFinanceStore } from '../store/useFinanceStore';
+import { useChatStore } from '../store/useChatStore';
 import { AIChatService, ChatMessage, FinancialContext } from '../services/aiChatService';
 import { useCustomAlert } from '../hooks/useCustomAlert';
 
@@ -35,7 +37,7 @@ export const ChatScreen = () => {
   const navigation = useNavigation<any>();
   const { showAlert, AlertComponent } = useCustomAlert();
   
-  const scrollViewRef = useAnimatedRef<Animated.ScrollView>();
+  const flashListRef = useRef<any>(null);
   const aiChatServiceRef = useRef<AIChatService | null>(null);
 
   const {
@@ -47,10 +49,11 @@ export const ChatScreen = () => {
     installments,
   } = useFinanceStore();
 
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const { messages, addMessage, clearMessages, setMessages } = useChatStore();
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState('');
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
 
   const { height: keyboardHeight } = useReanimatedKeyboardAnimation();
   const isKeyboardOpen = useSharedValue(false);
@@ -136,28 +139,34 @@ export const ChatScreen = () => {
     } else {
       aiChatServiceRef.current.updateApiKey(activeKey);
     }
-  }, [getActiveApiKey]);
+    // Sync store messages with service history
+    aiChatServiceRef.current.setHistory(messages);
+  }, [getActiveApiKey, messages]);
 
   useEffect(() => {
-    if (streamingMessage) {
-      scrollViewRef.current?.scrollToEnd({ animated: false });
+    if (streamingMessage || isLoading) {
+      setTimeout(() => {
+        flashListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
     }
-  }, [streamingMessage]);
+  }, [streamingMessage, isLoading]);
 
   useEffect(() => {
-    const welcomeMsg: ChatMessage = {
-      id: '0',
-      role: 'assistant',
-      content: t('chat.welcomeMessage'),
-      timestamp: Date.now(),
-    };
-    setMessages([welcomeMsg]);
-  }, [i18n.language]);
+    if (messages.length === 0) {
+      const welcomeMsg: ChatMessage = {
+        id: '0',
+        role: 'assistant',
+        content: t('chat.welcomeMessage'),
+        timestamp: Date.now(),
+      };
+      setMessages([welcomeMsg]);
+    }
+  }, [messages.length, t]);
 
   const buildContext = (): FinancialContext => {
-    const totalReceivables = receivables.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+    const totalReceivables = receivables.reduce((sum: number, r: any) => sum + (Number(r.amount) || 0), 0);
     const totalInstallments = installments.reduce(
-      (sum, i) => sum + (Number(i.installmentAmount) || 0),
+      (sum: number, i: any) => sum + (Number(i.installmentAmount) || 0),
       0
     );
 
@@ -180,13 +189,13 @@ export const ChatScreen = () => {
     if (!inputText.trim() || isLoading) return;
 
     const userMessage: ChatMessage = {
-      id: Date.now().toString(),
+      id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       role: 'user',
       content: inputText.trim(),
       timestamp: Date.now(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    addMessage(userMessage);
     setInputText('');
     setIsLoading(true);
     setStreamingMessage('');
@@ -200,16 +209,18 @@ export const ChatScreen = () => {
         setStreamingMessage(fullResponse);
       });
 
+      setStreamingMessage(''); // Important: Clear streaming BEFORE adding to persistent store
+      
       const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: `ai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         role: 'assistant',
         content: fullResponse,
         timestamp: Date.now(),
       };
 
-      setMessages((prev) => [...prev, assistantMessage]);
-      setStreamingMessage('');
+      addMessage(assistantMessage);
     } catch (error: any) {
+      setStreamingMessage('');
       const errorStr = error.message || 'Bilinmeyen hata';
       
       if (errorStr.includes('CONFIG_ERROR')) {
@@ -232,31 +243,48 @@ export const ChatScreen = () => {
           content: `${t('chat.errorTitle')}\n\n${errorStr}`,
           timestamp: Date.now(),
         };
-        setMessages((prev) => [...prev, aiErrorMessage]);
+        addMessage(aiErrorMessage);
       }
     } finally {
       setIsLoading(false);
       setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100);
+        flashListRef.current?.scrollToEnd({ animated: true });
+      }, 200);
     }
   };
 
   const handleClearChat = () => {
     aiChatServiceRef.current?.clearHistory();
-    setMessages([{
-      id: '0',
+    clearMessages();
+    
+    // Add a fresh welcome message after clearing
+    const welcomeMsg: ChatMessage = {
+      id: Date.now().toString(),
       role: 'assistant',
-      content: `## ${t('chat.clearChat')}\n\n${t('chat.clearChatSub')}`,
+      content: t('chat.welcomeMessage'),
       timestamp: Date.now(),
-    }]);
+    };
+    setMessages([welcomeMsg]);
+  };
+
+  const handleScroll = (event: any) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    const contentHeight = event.nativeEvent.contentSize.height;
+    const layoutHeight = event.nativeEvent.layoutMeasurement.height;
+    
+    // Show button if user scrolled up more than 300px from the bottom
+    const isCloseToBottom = contentHeight - layoutHeight - offsetY < 300;
+    setShowScrollToBottom(!isCloseToBottom);
+  };
+
+  const scrollToBottom = () => {
+    flashListRef.current?.scrollToEnd({ animated: true });
+    setShowScrollToBottom(false);
   };
 
   return (
     // 2. Add Animated Padding layer to the main frame.
     <Animated.View style={[styles.container, { backgroundColor: colors.background }, animatedKeyboardPadding]}>
-      
-      {/* 3. Header */}
       <View style={styles.modernHeader}>
         <LinearGradient
           colors={['#FF0080', '#7928CA', '#0070F3', '#00DFD8']}
@@ -293,55 +321,82 @@ export const ChatScreen = () => {
           </View>
         </LinearGradient>
       </View>
-
-      {/* 4. Messages Body */}
       <View style={[styles.messagesContainer, { flex: 1 }]}>
-        <Animated.ScrollView
-          ref={scrollViewRef}
-          contentContainerStyle={[styles.messagesContent, { paddingBottom: 20 }]} 
+        <FlashList
+          ref={flashListRef}
+          data={messages}
+          estimatedItemSize={80}
+          contentContainerStyle={styles.messagesContent}
           showsVerticalScrollIndicator={false}
-          onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
-          keyboardDismissMode="interactive"
-          keyboardShouldPersistTaps="handled"
-        >
-          {messages.map((message) => (
+          onContentSizeChange={() => {
+            if (!isLoading) {
+              flashListRef.current?.scrollToEnd({ animated: true });
+            }
+          }}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          keyExtractor={(item: ChatMessage) => item.id}
+          renderItem={({ item }: { item: ChatMessage }) => (
             <View
-              key={message.id}
               style={[
                 styles.messageBubble,
-                message.role === 'user' ? styles.userBubble : styles.assistantBubble,
-                message.role === 'user' ? { backgroundColor: colors.purple.primary } : { backgroundColor: colors.cardBackground },
+                item.role === 'user' ? styles.userBubble : styles.assistantBubble,
+                item.role === 'user' ? { backgroundColor: colors.purple.primary } : { backgroundColor: colors.cardBackground },
               ]}
             >
-              {message.role === 'user' ? (
-                <Text style={[styles.messageText, { color: '#FFFFFF' }]}>{message.content}</Text>
+              {item.role === 'user' ? (
+                <Text style={[styles.messageText, { color: '#FFFFFF' }]}>{item.content}</Text>
               ) : (
-                <Markdown style={markdownStyles as any}>{message.content}</Markdown>
+                <Markdown style={markdownStyles as any}>{item.content}</Markdown>
               )}
-              <Text style={[styles.messageTime, message.role === 'user' ? { color: 'rgba(255, 255, 255, 0.7)' } : { color: colors.text.tertiary }]}>
-                {new Date(message.timestamp).toLocaleTimeString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+              <Text style={[styles.messageTime, item.role === 'user' ? { color: 'rgba(255, 255, 255, 0.7)' } : { color: colors.text.tertiary }]}>
+                {new Date(item.timestamp).toLocaleTimeString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
               </Text>
             </View>
-          ))}
-          
-          {streamingMessage && (
-            <View style={[styles.messageBubble, styles.assistantBubble, { backgroundColor: colors.cardBackground }]}>
-              <Markdown style={markdownStyles as any}>{streamingMessage}</Markdown>
-            </View>
           )}
-
-          {isLoading && !streamingMessage && (
-            <View style={[styles.messageBubble, styles.assistantBubble, { backgroundColor: colors.cardBackground }]}>
-              <ActivityIndicator size="small" color={colors.purple.primary} />
-            </View>
-          )}
-        </Animated.ScrollView>
+          ListFooterComponent={() => {
+            if (!streamingMessage && !isLoading) return <View style={{ height: 10 }} />;
+            
+            return (
+              <View>
+                {streamingMessage ? (
+                  <View style={[styles.messageBubble, styles.assistantBubble, { backgroundColor: colors.cardBackground }]}>
+                    <Markdown style={markdownStyles as any}>{streamingMessage}</Markdown>
+                  </View>
+                ) : null}
+                {isLoading && !streamingMessage ? (
+                  <View style={[styles.messageBubble, styles.assistantBubble, { backgroundColor: colors.cardBackground }]}>
+                    <ActivityIndicator size="small" color={colors.purple.primary} />
+                  </View>
+                ) : null}
+                <View style={{ height: 10 }} />
+              </View>
+            );
+          }}
+        />
       </View>
 
-      {/* 5. Input Area */}
+      {/* Scroll to Bottom Button */}
+      {showScrollToBottom && (
+        <Animated.View 
+          entering={FadeIn.duration(200)} 
+          exiting={FadeOut.duration(200)}
+          style={styles.scrollToBottomContainer}
+        >
+          <TouchableOpacity 
+            onPress={scrollToBottom}
+            style={[styles.scrollToBottomButton, { backgroundColor: colors.cardBackground, borderColor: colors.text.tertiary + '30' }]}
+            activeOpacity={0.8}
+          >
+            <ChevronDown size={20} color={colors.purple.primary} strokeWidth={3} />
+          </TouchableOpacity>
+        </Animated.View>
+      )}
+
+      {/* Input Area */}
       <View style={[styles.inputContainer, { backgroundColor: colors.cardBackground, paddingBottom: 12 }]}>
         <TextInput
-          style={[styles.input, { color: colors.text.primary, backgroundColor: colors.background }]} 
+          style={[styles.input, { color: colors.text.primary, backgroundColor: colors.background }]}
           placeholder={t('chat.placeholder')}
           placeholderTextColor={colors.text.tertiary}
           value={inputText}
@@ -431,4 +486,23 @@ const styles = StyleSheet.create({
   },
   input: { flex: 1, fontSize: 15, maxHeight: 100, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 20 },
   sendButton: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  scrollToBottomContainer: {
+    position: 'absolute',
+    bottom: 90,
+    right: 20,
+    zIndex: 100,
+  },
+  scrollToBottomButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+  },
 });

@@ -14,7 +14,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as Print from 'expo-print';
 import * as DocumentPicker from 'expo-document-picker';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { storage } from '../store/mmkv-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Moon, Sun, User, Bell, Download, Upload, Info, Trash2, DollarSign, Settings as SettingsIcon, ChevronRight, Key, BookOpen, Smartphone, ShieldCheck, Languages, FileText } from 'lucide-react-native';
 import { useTheme } from '../context/ThemeContext';
@@ -75,7 +75,7 @@ export const SettingsScreen = () => {
 
   const changeLanguage = async (lng: string) => {
     await i18n.changeLanguage(lng);
-    await AsyncStorage.setItem('@app_language', lng);
+    storage.set('@app_language', lng);
   };
 
   const handleToggleBiometrics = async (value: boolean) => {

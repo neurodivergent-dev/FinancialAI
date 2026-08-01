@@ -18,6 +18,7 @@ export interface FinancialContext {
   findeksScore?: number;
   salary?: number;
   additionalIncome?: number;
+  language?: string;
 }
 
 export class AIChatService {
@@ -92,14 +93,17 @@ ${labels.formatList}`;
       throw new Error('CONFIG_ERROR');
     }
 
-    // Add user message
-    const userMsg: ChatMessage = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: userMessage,
-      timestamp: Date.now(),
-    };
-    this.conversationHistory.push(userMsg);
+    // Add user message if not already present as the last message
+    const lastMsg = this.conversationHistory[this.conversationHistory.length - 1];
+    if (!lastMsg || lastMsg.content !== userMessage || lastMsg.role !== 'user') {
+      const userMsg: ChatMessage = {
+        id: `user-${Date.now()}`,
+        role: 'user',
+        content: userMessage,
+        timestamp: Date.now(),
+      };
+      this.conversationHistory.push(userMsg);
+    }
 
     // Prepare content to be sent to Gemini API
     const contents = [
@@ -261,6 +265,10 @@ ${labels.formatList}`;
 
   clearHistory() {
     this.conversationHistory = [];
+  }
+
+  setHistory(history: ChatMessage[]) {
+    this.conversationHistory = history;
   }
 
   getHistory(): ChatMessage[] {
