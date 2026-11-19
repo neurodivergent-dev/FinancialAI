@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   decorativePattern: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   patternCircle1: {
     position: 'absolute',

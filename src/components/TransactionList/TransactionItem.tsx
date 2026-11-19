@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Swipeable } from 'react-native-gesture-handler';
+import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { Transaction } from '../../types';
 
 interface TransactionItemProps {
@@ -27,7 +27,7 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
   );
 
   return (
-    <Swipeable renderRightActions={swipeRight}>
+    <ReanimatedSwipeable renderRightActions={swipeRight}>
       <View style={[styles.transactionItem, bgColor]}>
         <View style={[styles.iconContainer, { backgroundColor: isAsset ? 'rgba(0, 255, 157, 0.1)' : 'rgba(255, 71, 87, 0.1)' }]}>
           <Text style={{ color: iconColor, fontSize: 20, fontWeight: 'bold' }}>
@@ -46,7 +46,7 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
           {isAsset ? '+' : '-'}${transaction.amount.toFixed(2)}
         </Text>
       </View>
-    </Swipeable>
+    </ReanimatedSwipeable>
   );
 };
 

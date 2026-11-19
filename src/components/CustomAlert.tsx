@@ -51,7 +51,6 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
       visible={visible}
       transparent
       animationType="fade"
-      statusBarTranslucent
     >
       <View style={styles.overlay}>
         <View style={[styles.alertContainer, { backgroundColor: colors.cardBackground }]}>

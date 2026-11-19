@@ -42,14 +42,7 @@ const AppContent = () => {
   // Sync System Navigation Bar Buttons (Android) with App Theme
   useEffect(() => {
     if (Platform.OS === 'android') {
-      const syncSystemBars = async () => {
-        try {
-          await NavigationBar.setButtonStyleAsync(isDarkMode ? 'light' : 'dark');
-        } catch (e) {
-          console.log('NavigationBar error:', e);
-        }
-      };
-      syncSystemBars();
+      NavigationBar.setStyle(isDarkMode ? 'light' : 'dark');
     }
   }, [isDarkMode]);
 
@@ -70,8 +63,6 @@ const AppContent = () => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar 
         style={isDarkMode ? 'light' : 'dark'} 
-        translucent={Platform.OS === 'ios'} 
-        backgroundColor={Platform.OS === 'android' ? colors.background : undefined}
       />
       
       {/* Show LockScreen if locked, otherwise continue to navigation */}
@@ -97,7 +88,7 @@ export default function App() {
                 <ApiKeyProvider>
                   <AuthProvider>
                     <SubscriptionProvider>
-                      <KeyboardProvider statusBarTranslucent={false}>
+                      <KeyboardProvider>
                         <AppContent />
                       </KeyboardProvider>
                     </SubscriptionProvider>
